@@ -1,0 +1,4 @@
+*.py[co]
+.nincat
+__pycache__/
+build/

@@ -1,0 +1,3 @@
+[submodule "ninchat/api/spec"]
+	path = ninchat/api/spec
+	url = git://github.com/ninchat/ninchat-api.git

@@ -1,0 +1,145 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2012, Somia Reality Oy
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import argparse
+import json
+import logging
+import sys
+
+import ninchat.client
+
+ninchat.client.log.addHandler(logging.StreamHandler())
+ninchat.client.log.setLevel(logging.INFO)
+
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-u", "--user", metavar="FILE", default=".nincat",
+		help='file for storing credentials (defaults to ".nincat")')
+	parser.add_argument("--create-user", metavar="NAME",
+		help="create a user account and write login info to FILE")
+	parser.add_argument("--delete-user", action="store_true",
+		help="delete the user account specified by FILE")
+	parser.add_argument("--set-email", metavar="ADDRESS",
+		help="make the user permanent (after email verification)")
+	parser.add_argument("-j", "--join", action="store_true",
+		help="join the specified channels (instead of sending)")
+	parser.add_argument("-l", "--listen", action="store_true",
+		help="print received messages to stdout until terminated")
+	parser.add_argument("channels", metavar="ID", nargs="*",
+		help="send lines from stdin to this channel id")
+	args = parser.parse_args()
+
+	if not (args.create_user or args.delete_user or args.set_email or
+			args.listen or args.channels):
+		parser.print_help()
+		return
+
+	session_params = {
+		"message_types": ["ninchat.com/text"] if args.listen else [],
+	}
+
+	if args.create_user:
+		session_params["user_attrs"] = {
+			"name": args.create_user,
+		}
+	else:
+		with open(args.user) as file:
+			session_params["user_id"] = file.readline().strip()
+			session_params["user_auth"] = file.readline().strip()
+
+	with ninchat.client.QueuedSession() as session:
+		event = session.create(**session_params)
+		if event.type != "session_created":
+			print >>sys.stderr, "Error:", event.error_type
+			sys.exit(1)
+
+		if args.create_user:
+			with open(args.user, "w") as file:
+				print >>file, event.user_id
+				print >>file, event.user_auth
+
+		if args.set_email:
+			action_id = session.create_identity(
+					identity_type = "email",
+					identity_name = args.set_email)
+
+			for event in session:
+				if event.type == "error":
+					print >>sys.stderr, "Error: create_identity:", \
+							event.error_type
+					sys.exit(1)
+
+				if event.action_id == action_id:
+					break
+
+		if args.join:
+			for channel_id in args.channels:
+				action_id = session.join_channel(
+						channel_id = channel_id)
+
+				for event in session:
+					if event.type == "error":
+						print >>sys.stderr, "Error: join_channel %s: %s" % (
+								channel_id, event.error_type)
+						if event.error_type != "action_is_futile":
+							sys.exit(1)
+
+					if event.action_id == action_id:
+						break
+		elif args.channels:
+			while True:
+				line = sys.stdin.readline()
+				if not line:
+					break
+
+				for channel_id in args.channels:
+					session.send_message(
+							channel_id   = channel_id,
+							message_type = "ninchat.com/text",
+							payload      = [json.dumps({ "text": line })])
+
+		if args.delete_user:
+			with open(args.user) as file:
+				session.delete_user(
+						user_auth = file.readlines()[1].strip())
+			return
+
+		if args.listen:
+			for event in session:
+				if event.type != "message_received":
+					continue
+
+				if args.channels and event.channel_id not in args.channels:
+					continue
+
+				content = json.loads(event.payload[0].decode("utf-8"))
+				print "<%s> %s" % (event.message_user_name, content["text"])
+
+if __name__ == "__main__":
+	try:
+		main()
+	except KeyboardInterrupt:
+		pass
