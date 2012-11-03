@@ -96,7 +96,7 @@ class Parameter(object):
 		return paramtypes[self.name]
 
 	def validate(self, x):
-		"""Check if X conforms to the type requirements, or is None and the
+		"""Check if x conforms to the type requirements, or is None while the
 		parameter is optional.
 		"""
 		return typechecks[self.type](x) or (x is None and not self.required)

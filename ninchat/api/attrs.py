@@ -26,6 +26,7 @@
 
 user
 identity
+dialoguemember
 channel
 channelmember
 realm
@@ -51,7 +52,7 @@ class Attribute(object):
 		return self.name
 
 	def validate(self, x):
-		"""Check if X conforms to the type requirements.
+		"""Check if x conforms to the type requirements.
 		"""
 		return typechecks[self.type](x)
 

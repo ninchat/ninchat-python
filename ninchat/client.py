@@ -24,6 +24,7 @@
 
 """Tools for implementing Ninchat API clients.
 
+Module contents:
 log -- a logging.Logger which may be configured by the application
 ThreadedSession
 QueuedSession
@@ -48,9 +49,9 @@ from . import api
 log = logging.getLogger("ninchat.client")
 
 class ParameterError(Exception):
-	"""API action parameter is missing a required parameter or has an value.
-	The corresponding ninchat.api.Parameter instance may be read from the param
-	attribute.
+	"""API action is missing a required parameter or the parameter value is
+	invalid.  The corresponding ninchat.api.Parameter instance may be read from
+	the param attribute.
 	"""
 	def __init__(self, param, message):
 		super(ParameterError, self).__init__(message)

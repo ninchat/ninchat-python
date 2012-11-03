@@ -24,6 +24,7 @@
 
 """Standard message type definitions.
 
+Module contents:
 log -- a logging.Logger which may be configured by the application
 factories -- list of message-type-pattern/handler-factory pairs
 Message -- message handler interface
