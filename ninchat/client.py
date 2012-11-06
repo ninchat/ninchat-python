@@ -248,10 +248,18 @@ class ThreadedSession(object):
 		def call(**params):
 			assert self.conn
 
-			self.action_id += 1
-			action_id = self.action_id
+			action_id = None
 
-			self.conn.send_action(Action(name, self.event_id, action_id=action_id, **params))
+			if "action_id" in params:
+				action_id = params["action_id"]
+				if action_id is None:
+					del params["action_id"]
+			else:
+				self.action_id += 1
+				action_id = self.action_id
+				params["action_id"] = action_id
+
+			self.conn.send_action(Action(name, self.event_id, **params))
 			self.event_id = None
 
 			return action_id
