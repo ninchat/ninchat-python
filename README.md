@@ -10,6 +10,9 @@
 
 ### Installation
 
+	$ git clone git://github.com/ninchat/ninchat-python.git
+	$ git submodule update --init
+
 	# pip install ws4py
 	# python setup.py install
 
