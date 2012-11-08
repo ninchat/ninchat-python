@@ -51,9 +51,9 @@ log = logging.getLogger("ninchat.client")
 class ParameterError(Exception):
 	"""API action is missing a required parameter or the parameter value is
 	invalid.  The corresponding ninchat.api.Parameter instance may be read from
-	the param attribute.
+	the param attribute (if one exists).
 	"""
-	def __init__(self, param, message):
+	def __init__(self, message, param=None):
 		super(ParameterError, self).__init__(message)
 		self.param = param
 
@@ -70,13 +70,14 @@ class Action(object):
 			if value is None:
 				if spec.required:
 					raise ParameterError(
-							spec,
-							"%r is missing from %r action" % (name, action))
+							"%r is missing from %r action" % (name, action),
+							spec)
 			else:
 				if not spec.validate(value):
 					raise ParameterError(
 							"%r value is invalid in %r action: %r" %
-							(name, action, value))
+							(name, action, value),
+							spec)
 
 		for name in self._params:
 			if name not in specs:
