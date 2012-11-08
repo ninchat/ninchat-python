@@ -163,7 +163,7 @@ class ThreadedSession(object):
 	class Connection(ws4py.client.threadedclient.WebSocketClient):
 
 		url_format = "wss://{}/socket"
-		protocol = "ninchat.com/1"
+		protocol = "ninchat.com-1"
 
 		def __init__(self, session, action):
 			super(ThreadedSession.Connection, self).__init__(
