@@ -11,10 +11,10 @@
 ### Installation
 
 	$ git clone git://github.com/ninchat/ninchat-python.git
-	$ git submodule update --init
-
-	# pip install ws4py
-	# python setup.py install
+	$ cd ninchat-python
+	ninchat-python$ git submodule update --init
+	ninchat-python$ sudo pip install ws4py
+	ninchat-python$ sudo python setup.py install
 
 ### Nincat usage
 
@@ -26,8 +26,8 @@
 	$ nincat -l
 	<frank> good morning
 
-Running in source tree without installation:
+Running without installation:
 
-	$ export PYTHONPATH=
-	$ bin/nincat
+	ninchat-python$ export PYTHONPATH=
+	ninchat-python$ bin/nincat
 
