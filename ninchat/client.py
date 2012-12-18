@@ -36,11 +36,11 @@ import json
 import logging
 
 try:
-	# Python 3
-	import queue
-except ImportError:
 	# Python 2
 	import Queue as queue
+except ImportError:
+	# Python 3
+	import queue
 
 import ws4py.client.threadedclient
 
