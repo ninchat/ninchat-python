@@ -1,4 +1,4 @@
-# Copyright (c) 2012, Somia Reality Oy
+# Copyright (c) 2012-2013, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,17 @@ A handler factory takes message type and payload, and returns a Message
 implementation or None.
 """
 
+import json
 import logging
+
+try:
+	# Python 2
+	def _decode(x):
+		return unicode(str(x), "utf-8")
+except NameError:
+	# Python 3
+	def _decode(x):
+		return str(x, "utf-8")
 
 log = logging.getLogger("ninchat.api.messages")
 factories = []
@@ -62,6 +72,12 @@ class Message(object):
 		"""
 		return None
 
+	def _decode_json_header(self):
+		try:
+			return json.loads(_decode(self.payload[0]))
+		except:
+			log.warning("%s decoding failed", self.type, exc_info=True)
+
 def declare_messagetype(pattern):
 	def decorator(factory):
 		factories.append((pattern, factory))
@@ -69,4 +85,5 @@ def declare_messagetype(pattern):
 	return decorator
 
 from . import info
+from . import link
 from . import text
