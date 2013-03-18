@@ -1,7 +1,7 @@
 import sys
 from distutils.core import setup
 
-if sys.version_info.major == 2:
+if sys.version_info[0] == 2:
 	scripts = ["bin/nincat"]
 else:
 	scripts = []

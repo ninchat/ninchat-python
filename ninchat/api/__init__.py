@@ -107,7 +107,7 @@ class Interface(object):
 	"""
 	def __init__(self, key, spec):
 		self.name = key
-		self.params = { k: Parameter(k, s) for k, s in spec.items() }
+		self.params = dict((k, Parameter(k, s)) for (k, s) in spec.items())
 
 def load(root, name, cls, target):
 	import os, zipfile
