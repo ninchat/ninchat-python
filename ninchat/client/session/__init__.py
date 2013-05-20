@@ -1,4 +1,4 @@
-# Copyright (c) 2012, Somia Reality Oy
+# Copyright (c) 2012-2013, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,19 +22,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Tools for implementing Ninchat API clients.
-
-Module contents:
-log -- a logging.Logger which may be configured by the application
-ThreadedSession
-QueuedSession
-Event
-ParameterError
-"""
-
-import json
-import logging
-
 try:
 	# Python 2
 	import Queue as queue
@@ -42,117 +29,9 @@ except ImportError:
 	# Python 3
 	import queue
 
-import ws4py.client.threadedclient
-
-from . import api
-
-log = logging.getLogger("ninchat.client")
-
-class ParameterError(Exception):
-	"""API action is missing a required parameter or the parameter value is
-	invalid.  The corresponding ninchat.api.Parameter instance may be read from
-	the param attribute (if one exists).
-	"""
-	def __init__(self, message, param=None):
-		super(ParameterError, self).__init__(message)
-		self.param = param
-
-class Action(object):
-
-	def __init__(self, action, event_id=None, payload=None, **params):
-		self._params = params
-		self.payload = payload or []
-
-		specs = api.actions[action].params
-
-		for name, spec in specs.items():
-			value = self._params.get(name)
-			if value is None:
-				if spec.required:
-					raise ParameterError(
-							"%r is missing from %r action" % (name, action),
-							spec)
-			else:
-				if not spec.validate(value):
-					raise ParameterError(
-							"%r value is invalid in %r action: %r" %
-							(name, action, value),
-							spec)
-
-		for name in self._params:
-			if name not in specs:
-				raise ParameterError(
-						"unknown %r in %r action" % (name, action))
-
-		self._params["action"] = action
-
-		if event_id is not None:
-			self._params["event_id"] = event_id
-
-		if self.payload:
-			self._params["frames"] = len(self.payload)
-
-	def __str__(self):
-		return self._params["action"]
-
-	def __repr__(self):
-		return "<Action %r %s%s>" % (
-			self._params["action"],
-			" ".join(
-					"%s %r" % (k, v) for k, v in sorted(self._params.items())
-					if k not in ("action", "frames")),
-			(" payload " + " ".join(
-					"%r" % p for p in self.payload)) if self.payload else "")
-
-	@property
-	def frames(self):
-		return [json.dumps(self._params, separators=(",", ":"))] + self.payload
-
-class SessionAction(Action):
-
-	def __init__(self, action, session_id=None, event_id=None):
-		self._params = { "action": action }
-		self.payload = []
-
-		if session_id is not None:
-			self._params["session_id"] = session_id
-
-		if event_id is not None:
-			self._params["event_id"] = event_id
-
-class Event(object):
-	"""Holds an API event received from the server.  Event parameters may be
-	accessed as instance attributes (the type name of the event can be read
-	from the type attribute).  Optional parameters default to None.  The
-	payload attribute contains a list of bytes objects.
-	"""
-	def __init__(self, frame):
-		self._params = json.loads(frame.decode("utf-8"))
-		self._length = self._params.pop("frames", 0)
-		self.payload = []
-
-	@property
-	def type(self):
-		return self._params["event"]
-
-	def __getattr__(self, name):
-		spec = api.events[self.type].params[name]
-		value = self._params.get(name)
-		if value is None and spec.required:
-			log.warning("event %r parameter %r is missing", event, name)
-		return value
-
-	def __str__(self):
-		return self._params["event"]
-
-	def __repr__(self):
-		return "<Event %r %s%s>" % (
-			self._params.get("event"),
-			" ".join(
-					"%s %r" % (k, v) for k, v in sorted(self._params.items())
-					if k != "event"),
-			(" payload " + " ".join(
-					"%r" % p for p in self.payload)) if self.payload else "")
+from ninchat.client import log
+from ninchat.client.action import Action, SessionAction
+from ninchat.client.session.websocket import Connection
 
 class ThreadedSession(object):
 	"""Asynchronous Ninchat client.  The received(event) and closed() methods
@@ -161,46 +40,7 @@ class ThreadedSession(object):
 	instance methods with keyword parameters; e.g.
 	session.describe_user(user_id="0h6si071").
 	"""
-	class Connection(ws4py.client.threadedclient.WebSocketClient):
-
-		url_format = "wss://{}/socket"
-		protocol = "ninchat.com-1"
-
-		def __init__(self, session, action):
-			super(ThreadedSession.Connection, self).__init__(
-					self.url_format.format(session.session_host),
-					[self.protocol])
-
-			self.session = session
-			self.action = action
-			self.event = None
-
-		def send_action(self, action):
-			for frame in action.frames:
-				self.send(frame)
-
-		def opened(self):
-			self.send_action(self.action)
-			del self.action
-
-		def received_message(self, message):
-			frame = message.data
-			event = self.event
-			if event:
-				event.payload.append(frame)
-				if len(event.payload) >= event._length:
-					self.event = None
-					self.session._received(event)
-			elif frame:
-				event = Event(frame)
-				if event._length > 0:
-					self.event = event
-				else:
-					self.session._received(event)
-
-		def closed(self, code, reason):
-			self.session._disconnected()
-
+	connection_type = Connection
 	session_host = "api.ninchat.com"
 	session_id = None
 	action_id = 0
@@ -219,14 +59,17 @@ class ThreadedSession(object):
 	def __exit__(self, *exc):
 		self.close()
 
+	def _connect(self, action):
+		self.conn = self.connection_type(self, action)
+		self.conn.connect()
+
 	def create(self, **params):
 		"""Connect to the server and send the create_session action with given
 		parameters.  The session_created (or error) event will be delivered via
 		the received(event) method.
 		"""
 		assert not self.conn
-		self.conn = self.Connection(self, Action("create_session", **params))
-		self.conn.connect()
+		self._connect(Action("create_session", **params))
 
 	def _received(self, event):
 		if event.type == "session_created":
@@ -288,9 +131,7 @@ class ThreadedSession(object):
 			return
 
 		if self.session_id is None:
-			self.conn = self.Connection(
-					self, SessionAction("resume_session", self.session_id))
-			self.conn.connect()
+			self._connect(SessionAction("resume_session", self.session_id))
 
 	def received(self, event):
 		log.debug("ThreadedSession.received method not implemented")
