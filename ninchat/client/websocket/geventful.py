@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, Somia Reality Oy
+# Copyright (c) 2013, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,21 +22,32 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Tools for implementing Ninchat API clients.
+try:
+	# Python 2
+	xrange
+except NameError:
+	# Python 3
+	xrange = range
 
-Module contents:
-log -- a logging.Logger which may be configured by the application
-ThreadedSession
-QueuedSession
-Event
-ParameterError
-"""
+import ws4py.client.geventclient
 
-import logging
-
-log = logging.getLogger("ninchat.client")
-
-from ninchat.client.action import ParameterError
 from ninchat.client.event import Event
-from ninchat.client.session.threaded import QueuedSession
-from ninchat.client.session.threaded import Session as ThreadedSession
+from ninchat.client.websocket import ConnectionBase
+
+class Connection(ConnectionBase, ws4py.client.geventclient.WebSocketClient):
+
+	def receive_event(self):
+		message = self.receive()
+		if message is None:
+			return None
+
+		event = Event(message.data)
+
+		for i in xrange(event._length):
+			message = self.receive()
+			if message is None:
+				return None
+
+			event.payload.append(message.data)
+
+		return event

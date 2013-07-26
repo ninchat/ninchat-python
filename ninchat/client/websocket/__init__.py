@@ -22,21 +22,20 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Tools for implementing Ninchat API clients.
+class ConnectionBase(object):
+	url_format = "wss://{}/socket"
+	protocols = ["ninchat.com-1"]
 
-Module contents:
-log -- a logging.Logger which may be configured by the application
-ThreadedSession
-QueuedSession
-Event
-ParameterError
-"""
+	def __init__(self, session, action):
+		url = self.url_format.format(session.session_host)
+		super(ConnectionBase, self).__init__(url, self.protocols)
+		self.session = session
+		self.action = action
 
-import logging
+	def send_action(self, action):
+		for frame in action.frames:
+			self.send(frame)
 
-log = logging.getLogger("ninchat.client")
-
-from ninchat.client.action import ParameterError
-from ninchat.client.event import Event
-from ninchat.client.session.threaded import QueuedSession
-from ninchat.client.session.threaded import Session as ThreadedSession
+	def opened(self):
+		self.send_action(self.action)
+		del self.action

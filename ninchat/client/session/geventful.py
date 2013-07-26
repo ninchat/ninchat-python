@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, Somia Reality Oy
+# Copyright (c) 2013, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,21 +22,33 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Tools for implementing Ninchat API clients.
+from ninchat.client import log
+from ninchat.client.action import Action, SessionAction
+from ninchat.client.session import SynchronousSessionBase
+from ninchat.client.websocket.geventful import Connection
 
-Module contents:
-log -- a logging.Logger which may be configured by the application
-ThreadedSession
-QueuedSession
-Event
-ParameterError
-"""
+class Session(SynchronousSessionBase):
+	"""A Ninchat client for use with the gevent module.  During the session,
+	actions may be sent by calling corresponding instance methods with keyword
+	parameters; e.g.  session.describe_user(user_id="0h6si071").
+	"""
+	connection_type = Connection
 
-import logging
+	def receive(self):
+		assert self.conn
 
-log = logging.getLogger("ninchat.client")
+		while True:
+			event = self.conn.receive_event()
+			if event is None:
+				self.conn = None
+				if self.closing or self.session_id is None:
+					return None
+				self._connect(SessionAction("resume_session", self.session_id))
+			else:
+				break
 
-from ninchat.client.action import ParameterError
-from ninchat.client.event import Event
-from ninchat.client.session.threaded import QueuedSession
-from ninchat.client.session.threaded import Session as ThreadedSession
+		event = self._process(event)
+
+		# TODO: ack event_id
+
+		return event

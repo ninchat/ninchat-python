@@ -25,27 +25,10 @@
 import ws4py.client.threadedclient
 
 from ninchat.client.event import Event
+from ninchat.client.websocket import ConnectionBase
 
-class Connection(ws4py.client.threadedclient.WebSocketClient):
-	url_format = "wss://{}/socket"
-	protocol = "ninchat.com-1"
-
-	def __init__(self, session, action):
-		super(Connection, self).__init__(
-				self.url_format.format(session.session_host),
-				[self.protocol])
-
-		self.session = session
-		self.action = action
-		self.event = None
-
-	def send_action(self, action):
-		for frame in action.frames:
-			self.send(frame)
-
-	def opened(self):
-		self.send_action(self.action)
-		del self.action
+class Connection(ConnectionBase, ws4py.client.threadedclient.WebSocketClient):
+	event = None
 
 	def received_message(self, message):
 		frame = message.data

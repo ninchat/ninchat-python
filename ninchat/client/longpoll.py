@@ -34,7 +34,6 @@ from ninchat.client import log
 from ninchat.client.event import Event
 
 class Connection(object):
-
 	path = "/poll/1"
 
 	def __init__(self, session, action):
@@ -141,7 +140,6 @@ class Half(object):
 # TODO: exponential back-off, and fail Connection after a while to revert to default session host
 
 class Sender(Half):
-
 	log_name = "sender"
 
 	def main(self):
@@ -182,7 +180,6 @@ class Sender(Half):
 				self.event_received(resp)
 
 class Receiver(Half):
-
 	log_name = "receiver"
 
 	def main(self):

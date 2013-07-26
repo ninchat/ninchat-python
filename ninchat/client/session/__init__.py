@@ -22,25 +22,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-try:
-	# Python 2
-	import Queue as queue
-except ImportError:
-	# Python 3
-	import queue
-
-from ninchat.client import log
 from ninchat.client.action import Action, SessionAction
-from ninchat.client.session.websocket import Connection
 
-class ThreadedSession(object):
-	"""Asynchronous Ninchat client.  The received(event) and closed() methods
-	should be overridden in a subclass.  They will be invoked in a dedicated
-	thread.  During the session, actions may be sent by calling corresponding
-	instance methods with keyword parameters; e.g.
-	session.describe_user(user_id="0h6si071").
-	"""
-	connection_type = Connection
+class SessionBase(object):
 	session_host = "api.ninchat.com"
 	session_id = None
 	action_id = 0
@@ -63,15 +47,7 @@ class ThreadedSession(object):
 		self.conn = self.connection_type(self, action)
 		self.conn.connect()
 
-	def create(self, **params):
-		"""Connect to the server and send the create_session action with given
-		parameters.  The session_created (or error) event will be delivered via
-		the received(event) method.
-		"""
-		assert not self.conn
-		self._connect(Action("create_session", **params))
-
-	def _received(self, event):
+	def _process(self, event):
 		if event.type == "session_created":
 			self.session_id = event._params.pop("session_id")
 			self.session_host = event._params.pop("session_host")
@@ -81,12 +57,30 @@ class ThreadedSession(object):
 		except KeyError:
 			pass
 
-		self.received(event)
+		return event
 
-		if self.event_id is not None:
-			self.conn.send_action(
-					SessionAction("resume_session", event_id=self.event_id))
-			self.event_id = None
+	def create(self, **params):
+		"""Connect to the server and send the create_session action with given
+		parameters.  The session_created (or error) event will be delivered via
+		an implementation-specific mechanism.
+		"""
+		assert not self.conn
+		self._connect(Action("create_session", **params))
+
+	def close(self):
+		"""Close the session and server connection (if any).  Notification
+		about the session closure is delivered via an implementation-specific
+		mechanism.
+		"""
+		if not self.conn or self.closing:
+			return
+
+		session_id = self.session_id
+		self.session_id = None
+		self.closing = True
+
+		if session_id is not None:
+			self.conn.send_action(SessionAction("close_session"))
 
 	def __getattr__(self, name):
 		def call(**params):
@@ -110,60 +104,7 @@ class ThreadedSession(object):
 
 		return call
 
-	def close(self):
-		"""Close the session and server connection (if any).  The closed()
-		method is invoked when finished.
-		"""
-		if not self.conn or self.closing:
-			return
-
-		session_id = self.session_id
-		self.session_id = None
-		self.closing = True
-
-		if session_id is not None:
-			self.conn.send_action(SessionAction("close_session"))
-
-	def _disconnected(self):
-		self.conn = None
-
-		if self.closing or self.session_id is None:
-			self.closed()
-		else:
-			self._connect(SessionAction("resume_session", self.session_id))
-
-	def received(self, event):
-		log.debug("ThreadedSession.received method not implemented")
-
-	def closed(self):
-		log.debug("ThreadedSession.closed method not implemented")
-
-class QueuedSession(ThreadedSession):
-	"""Synchronous Ninchat client.  Events are delivered via the blocking
-	receive() call or iteration.  Between events, actions may be sent by
-	calling corresponding instance methods with keyword parameters; e.g.
-	session.describe_user(user_id="0h6si071").
-	"""
-	def __init__(self):
-		super(QueuedSession, self).__init__()
-		self.queue = queue.Queue()
-
-	def create(self, **params):
-		"""Connect to the server and send the create_session action with given
-		parameters.  Wait for and return the session_created (or error) event.
-		"""
-		super(QueuedSession, self).create(**params)
-		return self.receive()
-
-	def receive(self):
-		"""Get the next event, or None if session closed.
-		"""
-		while True:
-			try:
-				# using a timeout fixes Python 2 uninterruptability problem
-				return self.queue.get(timeout=1 << 31)
-			except queue.Empty:
-				pass
+class SynchronousSessionBase(SessionBase):
 
 	def __iter__(self):
 		while True:
@@ -171,15 +112,3 @@ class QueuedSession(ThreadedSession):
 			if event is None:
 				break
 			yield event
-
-	def close(self):
-		"""Close the session and server connection (if any).  None is delivered
-		via receive() or the iterator when finished.
-		"""
-		super(QueuedSession, self).close()
-
-	def received(self, event):
-		self.queue.put(event)
-
-	def closed(self):
-		self.queue.put(None)
