@@ -125,12 +125,11 @@ class ThreadedSession(object):
 			self.conn.send_action(SessionAction("close_session"))
 
 	def _disconnected(self):
-		if self.closing:
-			self.conn = None
-			self.closed()
-			return
+		self.conn = None
 
-		if self.session_id is None:
+		if self.closing or self.session_id is None:
+			self.closed()
+		else:
 			self._connect(SessionAction("resume_session", self.session_id))
 
 	def received(self, event):
