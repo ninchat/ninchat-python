@@ -135,10 +135,11 @@ from . import attrs
 from . import messages
 
 def __init():
-	from os.path import dirname, basename, join
+	from os.path import dirname, basename, join, realpath
 
-	root = dirname(dirname(dirname(__file__)))
-	pkg = dirname(__file__)[len(root)+1:]
+	filename = realpath(__file__)
+	root = dirname(dirname(dirname(filename)))
+	pkg = dirname(filename)[len(root)+1:]
 
 	load(root, join(pkg, "spec/json/paramtypes.json"), (lambda key, spec: spec), paramtypes)
 	load(root, join(pkg, "spec/json/actions.json"), Interface, actions)
