@@ -66,7 +66,7 @@ class Session(ninchat.client.ThreadedSession):
 			self.user_id = event.user_id
 			opened_queue.put(self)
 		elif event.type == "message_received":
-			n = int(json.loads(event.payload[0])["text"])
+			n = int(json.loads(event.payload[0].decode("utf-8"))["text"])
 			log.debug("%d: %s %s", self.num, n, event.message_id)
 			self.send_message(action_id=None, user_id=self.other.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": str(n + 1) })])
 		else:
