@@ -28,11 +28,12 @@ import sys
 
 sys.path.insert(0, "")
 
-import ninchat.client.session.longpoll
-import test
+import ninchat.client.longpoll
 
-class Session(test.Session):
-	connection_type = ninchat.client.session.longpoll.Connection
+from tests import threaded
+
+class Session(threaded.Session):
+	connection_type = ninchat.client.longpoll.Connection
 
 if __name__ == "__main__":
-	test.main(Session)
+	threaded.main(Session)

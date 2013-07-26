@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # Copyright (c) 2013, Somia Reality Oy
 # All rights reserved.
@@ -25,79 +25,52 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import json
-import logging
-import queue
 import sys
-import threading
-import time
 
 sys.path.insert(0, "")
 
-import ninchat.client
+import gevent
 
-log_handler = logging.StreamHandler()
-log_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-log = logging.getLogger("test")
-log.addHandler(log_handler)
-log.setLevel(logging.DEBUG)
+from ninchat.client.session.geventful import Session
 
-ninchat.client.log.addHandler(log_handler)
-ninchat.client.log.setLevel(logging.DEBUG)
+from tests import log
 
-opened_queue = queue.Queue(2)
-closed_queue = queue.Queue(2)
-
-class Session(ninchat.client.ThreadedSession):
-
-	def __init__(self, num):
-		self.num = num
-		self.user_id = None
-		self.error = False
-		super(Session, self).__init__()
-
-	def received(self, event):
+def handle(session, other_user_id):
+	for num, event in enumerate(session):
 		if event.type == "error":
-			log.error("%d: %r", self.num, event)
-			self.error = True
-			closed_queue.put(self)
-			if self.user_id is None:
-				opened_queue.put(self)
-		elif event.type == "session_created":
-			self.user_id = event.user_id
-			opened_queue.put(self)
+			log.error("%d: %r", num, event)
+			break
 		elif event.type == "message_received":
-			n = int(json.loads(event.payload[0].decode("utf-8"))["text"])
-			log.debug("%d: %s %s", self.num, n, event.message_id)
-			self.send_message(action_id=None, user_id=self.other.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": str(n + 1) })])
+			n = int(json.loads(event.payload[0])["text"])
+			log.debug("%d: %s %s", num, n, event.message_id)
+			session.send_message(action_id=None, user_id=other_user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": str(n + 1) })])
 		else:
-			log.debug("%d: %r", self.num, event)
-
-	def closed(self):
-		log.debug("session closed")
-		if not self.error:
-			closed_queue.put(self)
+			log.debug("%d: %r", num, event)
 
 def main(session_type=Session):
-	s1 = session_type(1)
-	s2 = session_type(2)
-
-	s1.other = s2
-	s2.other = s1
+	s1 = session_type()
+	s2 = session_type()
 
 	s1.create(message_types=["ninchat.com/text"])
 	s2.create(message_types=["ninchat.com/text"])
 
-	opened_queue.get()
-	opened_queue.get()
-
-	if s1.error or s2.error:
+	e1 = s1.receive()
+	if e1.type == "error":
+		log.error("%r", e1)
 		return
 
-	s1.send_message(action_id=None, user_id=s2.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": "0" })])
+	e2 = s2.receive()
+	if e2.type == "error":
+		log.error("%r", e2)
+		return
+
+	s1.send_message(action_id=None, user_id=e2.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": "0" })])
+
+	g1 = gevent.spawn(handle, s1, e2.user_id)
+	g2 = gevent.spawn(handle, s2, e1.user_id)
 
 	try:
-		closed_queue.get()
-		closed_queue.get()
+		gevent.joinall([g1, g2])
 	except KeyboardInterrupt:
 		pass
 
