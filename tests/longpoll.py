@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2013, Somia Reality Oy
 # All rights reserved.
 #
@@ -30,10 +28,10 @@ sys.path.insert(0, "")
 
 import ninchat.client.longpoll
 
-from tests import threaded
+from .threaded import Session, main
 
-class Session(threaded.Session):
+class LongpollSession(Session):
 	connection_type = ninchat.client.longpoll.Connection
 
 if __name__ == "__main__":
-	threaded.main(Session)
+	main(LongpollSession)

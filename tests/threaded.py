@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2013, Somia Reality Oy
 # All rights reserved.
 #
@@ -34,7 +32,7 @@ sys.path.insert(0, "")
 
 import ninchat.client
 
-from tests import log
+from . import log
 
 opened_queue = queue.Queue(2)
 closed_queue = queue.Queue(2)

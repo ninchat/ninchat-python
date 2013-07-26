@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2013, Somia Reality Oy
 # All rights reserved.
 #
@@ -24,6 +22,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import absolute_import, unicode_literals
+
 import json
 import sys
 
@@ -33,7 +33,7 @@ import gevent
 
 from ninchat.client.session.geventful import Session
 
-from tests import log
+from . import log
 
 def handle(session, other_user_id):
 	for num, event in enumerate(session):
