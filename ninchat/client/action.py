@@ -37,7 +37,7 @@ class ParameterError(Exception):
 
 class Action(object):
 
-	def __init__(self, action, event_id=None, payload=None, **params):
+	def __init__(self, action, payload=None, **params):
 		self._params = params
 		self.payload = payload or []
 
@@ -64,9 +64,6 @@ class Action(object):
 
 		self._params["action"] = action
 
-		if event_id is not None:
-			self._params["event_id"] = event_id
-
 		if self.payload:
 			self._params["frames"] = len(self.payload)
 
@@ -85,6 +82,15 @@ class Action(object):
 	@property
 	def frames(self):
 		return [json.dumps(self._params, separators=(",", ":"))] + self.payload
+
+	def set_event_id(self, event_id):
+		if event_id is not None:
+			self._params["event_id"] = event_id
+		else:
+			try:
+				del self._params["event_id"]
+			except KeyError:
+				pass
 
 class SessionAction(Action):
 

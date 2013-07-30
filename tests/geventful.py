@@ -31,7 +31,7 @@ sys.path.insert(0, "")
 
 import gevent
 
-from ninchat.client.session.geventful import Session
+from ninchat.client.session.websocket.geventful import Session
 
 from . import log
 

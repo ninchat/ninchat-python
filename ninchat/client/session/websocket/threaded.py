@@ -22,6 +22,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import threading
+
 try:
 	# Python 2
 	import Queue as queue
@@ -29,12 +31,58 @@ except ImportError:
 	# Python 3
 	import queue
 
-from ninchat.client import log
-from ninchat.client.action import Action, SessionAction
-from ninchat.client.session import SessionBase, SynchronousSessionBase
-from ninchat.client.websocket.threaded import Connection
+import ws4py.client.threadedclient
 
-class Session(SessionBase):
+from ninchat.client import log
+from ninchat.client.event import Event
+from ninchat.client.session import SynchronousSessionBase
+from ninchat.client.session.websocket import ConnectionBase, TransportSessionBase
+
+class Executor(threading.Thread):
+
+	def __init__(self, target):
+		super(Executor, self).__init__(target=target)
+
+class Critical(object):
+
+	def __init__(self, value):
+		self.value = value
+		self._lock = threading.Lock()
+
+	def __enter__(self):
+		self._lock.acquire()
+		return self
+
+	def __exit__(self, *exc):
+		self._lock.release()
+
+class Connection(ConnectionBase, ws4py.client.threadedclient.WebSocketClient):
+
+	def __init__(self, hostname, session):
+		super(Connection, self).__init__(hostname, session)
+		self.event = None
+
+	def received_message(self, message):
+		event = self.event
+		if event:
+			event.payload.append(message.data)
+			if len(event.payload) >= event._length:
+				self.event = None
+				self.session._received(event)
+		elif message.data:
+			event = Event(message.data)
+			if event._length > 0:
+				self.event = event
+			else:
+				self.session._received(event)
+
+	def closed(self, code, reason):
+		if self.event:
+			log.warning("websocket connection closed in mid-event")
+
+		self.session._disconnected()
+
+class Session(TransportSessionBase):
 	"""Asynchronous Ninchat client.  The received(event) and closed() methods
 	should be overridden in a subclass.  They will be invoked in a dedicated
 	thread.  During the session, actions may be sent by calling corresponding
@@ -42,27 +90,24 @@ class Session(SessionBase):
 	session.describe_user(user_id="0h6si071").
 	"""
 	connection_type = Connection
+	critical_type = Critical
+	executor_type = Executor
+	flag_type = threading.Event
+	queue_type = queue.Queue
 
 	def _received(self, event):
-		self.received(self._process(event))
-
-		if self.event_id is not None:
-			self.conn.send_action(SessionAction("resume_session", event_id=self.event_id))
-			self.event_id = None
+		self._handle_receive(event)
+		self.received(event)
 
 	def _disconnected(self):
-		self.conn = None
-
-		if self.closing or self.session_id is None:
+		if self._handle_disconnect():
 			self.closed()
-		else:
-			self._connect(SessionAction("resume_session", self.session_id))
 
 	def received(self, event):
-		log.debug("ThreadedSession.received method not implemented")
+		log.debug("Session.received method not implemented")
 
 	def closed(self):
-		log.debug("ThreadedSession.closed method not implemented")
+		log.debug("Session.closed method not implemented")
 
 class QueuedSession(Session, SynchronousSessionBase):
 	"""Synchronous Ninchat client.  Events are delivered via the blocking

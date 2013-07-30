@@ -38,5 +38,5 @@ log = logging.getLogger("ninchat.client")
 
 from ninchat.client.action import ParameterError
 from ninchat.client.event import Event
-from ninchat.client.session.threaded import QueuedSession
-from ninchat.client.session.threaded import Session as ThreadedSession
+from ninchat.client.session.websocket.threaded import QueuedSession
+from ninchat.client.session.websocket.threaded import Session as ThreadedSession

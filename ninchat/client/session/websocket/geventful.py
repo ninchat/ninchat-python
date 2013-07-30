@@ -22,33 +22,82 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from ninchat.client import log
-from ninchat.client.action import Action, SessionAction
-from ninchat.client.session import SynchronousSessionBase
-from ninchat.client.websocket.geventful import Connection
+try:
+	# Python 2
+	xrange
+except NameError:
+	# Python 3
+	xrange = range
 
-class Session(SynchronousSessionBase):
+import gevent.queue
+
+import ws4py.client.geventclient
+
+from ninchat.client import log
+from ninchat.client.event import Event
+from ninchat.client.session import SynchronousSessionBase
+from ninchat.client.session.websocket import ConnectionBase, TransportSessionBase
+
+class Critical(object):
+
+	def __init__(self, value):
+		self.value = value
+
+	def __enter__(self):
+		return self
+
+	def __exit__(self, *exc):
+		pass
+
+class Connection(ConnectionBase, ws4py.client.geventclient.WebSocketClient):
+
+	def opened(self):
+		gevent.spawn(self._receive_loop)
+
+	def _receive_loop(self):
+		while True:
+			message = self.receive()
+			if message is None:
+				self.session._receive_queue.put(None)
+				return
+
+			if not message.data:
+				continue
+
+			event = Event(message.data)
+
+			for _ in xrange(event._length):
+				message = self.receive()
+				if message is None:
+					log.warning("websocket connection closed in mid-event")
+					self.session._receive_queue.put(None)
+					return
+
+				event.payload.append(message.data)
+
+			self.session._receive_queue.put(event)
+
+class Session(TransportSessionBase, SynchronousSessionBase):
 	"""A Ninchat client for use with the gevent module.  During the session,
 	actions may be sent by calling corresponding instance methods with keyword
 	parameters; e.g.  session.describe_user(user_id="0h6si071").
 	"""
 	connection_type = Connection
+	critical_type = Critical
+	executor_type = gevent.Greenlet
+	flag_type = gevent.event.Event
+	queue_type = gevent.queue.Queue
+
+	def __init__(self):
+		super(Session, self).__init__()
+		self._receive_queue = self.queue_type()
 
 	def receive(self):
-		assert self.conn
-
 		while True:
-			event = self.conn.receive_event()
-			if event is None:
-				self.conn = None
-				if self.closing or self.session_id is None:
-					return None
-				self._connect(SessionAction("resume_session", self.session_id))
-			else:
-				break
+			event = self._receive_queue.get()
+			if event is not None:
+				self._handle_receive(event)
+				return event
 
-		event = self._process(event)
-
-		# TODO: ack event_id
-
-		return event
+			if self._handle_disconnect():
+				return None

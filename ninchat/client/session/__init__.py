@@ -22,20 +22,26 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from ninchat.client.action import Action, SessionAction
+from ninchat.client.action import Action
 
 class SessionBase(object):
+	CLOSE_SESSION = object()
+	SESSION_CLOSED = object()
+
 	session_host = "api.ninchat.com"
-	session_id = None
-	action_id = 0
-	event_id = None
 
 	def __init__(self):
 		"""New, unestablished user session.  The create() method must be called
 		before doind anything productive.
 		"""
-		self.closing = False
-		self.conn = None
+		self.session_id = None
+		self.action_id = self.critical_type(0)
+		self.event_id = None
+		self.__started = False
+		self.__closed = False
+		self._init = self.flag_type()
+		self._send_queue = self.queue_type(1)
+		self._sender = self.executor_type(self._send_loop)
 
 	def __enter__(self):
 		return self
@@ -43,66 +49,81 @@ class SessionBase(object):
 	def __exit__(self, *exc):
 		self.close()
 
-	def _connect(self, action):
-		self.conn = self.connection_type(self, action)
-		self.conn.connect()
+	def __getattr__(self, action):
+		def call(**params):
+			return self.send_action(action, **params)
 
-	def _process(self, event):
+		return call
+
+	def _handle_send(self, action):
+		pass
+
+	def _handle_receive(self, event):
 		if event.type == "session_created":
 			self.session_id = event._params.pop("session_id")
 			self.session_host = event._params.pop("session_host")
 
+		self._init.set()
+
 		try:
-			self.event_id = event._params.pop("event_id")
+			event_id = event._params.pop("event_id")
+			if event_id is not None:
+				self.event_id = event_id
 		except KeyError:
 			pass
 
-		return event
+	def _handle_disconnect(self):
+		self._init.set()
+
+		if self._closing:
+			self._send_queue.put(self.SESSION_CLOSED)
+			return True
+		else:
+			self._reconnect = True
+			self._send_queue.put(None)
+			return False
 
 	def create(self, **params):
 		"""Connect to the server and send the create_session action with given
 		parameters.  The session_created (or error) event will be delivered via
 		an implementation-specific mechanism.
 		"""
-		assert not self.conn
-		self._connect(Action("create_session", **params))
+		self.create_params = params
+		self.__started = True
+		self._sender.start()
+
+	def send_action(self, action, **params):
+		"""Send the named action asynchronously.  The action_id parameter is
+		generated implicitly (if applicable), unless it is disabled by
+		specifying it as None.  The generated action_id is returned.
+		"""
+		assert self.session_id is not None
+
+		action_id = None
+
+		if "action_id" in params:
+			assert params["action_id"] is None
+			del params["action_id"]
+		else:
+			with self.action_id as critical:
+				critical.value += 1
+				action_id = critical.value
+
+			params["action_id"] = action_id
+
+		self._send_queue.put(Action(action, **params))
+
+		return action_id
 
 	def close(self):
 		"""Close the session and server connection (if any).  Notification
 		about the session closure is delivered via an implementation-specific
 		mechanism.
 		"""
-		if not self.conn or self.closing:
-			return
-
-		session_id = self.session_id
-		self.session_id = None
-		self.closing = True
-
-		if session_id is not None:
-			self.conn.send_action(SessionAction("close_session"))
-
-	def __getattr__(self, name):
-		def call(**params):
-			assert self.conn
-
-			action_id = None
-
-			if "action_id" in params:
-				action_id = params["action_id"]
-				if action_id is None:
-					del params["action_id"]
-			else:
-				self.action_id += 1
-				action_id = self.action_id
-				params["action_id"] = action_id
-
-			self.conn.send_action(Action(name, self.event_id, **params))
-			self.event_id = None
-
-			return action_id
-
-		return call
+		if self.__started and not self.__closed:
+			self.__closed = True
+			self._send_queue.put(self.CLOSE_SESSION)
+			self._sender.join()
 
 class SynchronousSessionBase(SessionBase):
 
