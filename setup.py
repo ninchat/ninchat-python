@@ -8,7 +8,7 @@ else:
 
 setup(
 	name             = "ninchat-python",
-	version          = "1.0",
+	version          = "1.0-pre",
 	maintainer       = "Timo Savola",
 	maintainer_email = "timo@ninchat.com",
 	url              = "https://github.com/ninchat/ninchat-python",

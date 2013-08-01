@@ -23,21 +23,21 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import json
-import queue
 import sys
 import threading
 import time
 
 sys.path.insert(0, "")
 
-import ninchat.client
+import ninchat.client.thread
 
 from . import log
 
-opened_queue = queue.Queue(2)
-closed_queue = queue.Queue(2)
+queue_type = ninchat.client.thread.QueueSession.queue_type
+opened_queue = queue_type(2)
+closed_queue = queue_type(2)
 
-class Session(ninchat.client.ThreadedSession):
+class Session(ninchat.client.thread.CallbackSession):
 
 	def __init__(self, num):
 		self.num = num

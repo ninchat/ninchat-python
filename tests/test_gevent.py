@@ -31,7 +31,7 @@ sys.path.insert(0, "")
 
 import gevent
 
-from ninchat.client.session.websocket.geventful import Session
+from ninchat.client.gevent import QueueSession as Session
 
 from . import log
 
@@ -54,12 +54,12 @@ def main(session_type=Session):
 	s1.create(message_types=["ninchat.com/text"])
 	s2.create(message_types=["ninchat.com/text"])
 
-	e1 = s1.receive()
+	e1 = s1.receive_event()
 	if e1.type == "error":
 		log.error("%r", e1)
 		return
 
-	e2 = s2.receive()
+	e2 = s2.receive_event()
 	if e2.type == "error":
 		log.error("%r", e2)
 		return

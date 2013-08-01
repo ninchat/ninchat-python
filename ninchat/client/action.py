@@ -36,7 +36,8 @@ class ParameterError(Exception):
 		self.param = param
 
 class Action(object):
-
+	"""Holds an API action to be sent to the server.
+	"""
 	def __init__(self, action, payload=None, **params):
 		self._params = params
 		self.payload = payload or []
@@ -80,10 +81,10 @@ class Action(object):
 					"%r" % p for p in self.payload)) if self.payload else "")
 
 	@property
-	def frames(self):
+	def _frames(self):
 		return [json.dumps(self._params, separators=(",", ":"))] + self.payload
 
-	def set_event_id(self, event_id):
+	def _set_event_id(self, event_id):
 		if event_id is not None:
 			self._params["event_id"] = event_id
 		else:

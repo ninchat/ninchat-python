@@ -22,6 +22,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from ninchat import api
 from ninchat.client.action import Action
 
 class SessionBase(object):
@@ -31,17 +32,14 @@ class SessionBase(object):
 	session_host = "api.ninchat.com"
 
 	def __init__(self):
-		"""New, unestablished user session.  The create() method must be called
-		before doind anything productive.
-		"""
+		self.action_queue = self.queue_type()
 		self.session_id = None
-		self.action_id = self.critical_type(0)
-		self.event_id = None
+		self._action_id = self.critical_type(0)
+		self._event_id = None
+		self._sender = self.executor_type(self._send_loop)
+		self._init = self.flag_type()
 		self.__started = False
 		self.__closed = False
-		self._init = self.flag_type()
-		self._send_queue = self.queue_type(1)
-		self._sender = self.executor_type(self._send_loop)
 
 	def __enter__(self):
 		return self
@@ -50,6 +48,9 @@ class SessionBase(object):
 		self.close()
 
 	def __getattr__(self, action):
+		if action not in api.actions:
+			raise AttributeError(action)
+
 		def call(**params):
 			return self.send_action(action, **params)
 
@@ -68,7 +69,7 @@ class SessionBase(object):
 		try:
 			event_id = event._params.pop("event_id")
 			if event_id is not None:
-				self.event_id = event_id
+				self._event_id = event_id
 		except KeyError:
 			pass
 
@@ -76,11 +77,11 @@ class SessionBase(object):
 		self._init.set()
 
 		if self._closing:
-			self._send_queue.put(self.SESSION_CLOSED)
+			self.action_queue.put(self.SESSION_CLOSED)
 			return True
 		else:
 			self._reconnect = True
-			self._send_queue.put(None)
+			self.action_queue.put(None)
 			return False
 
 	def create(self, **params):
@@ -92,26 +93,28 @@ class SessionBase(object):
 		self.__started = True
 		self._sender.start()
 
+	def next_action_id(self):
+		"""Generate an action_id for an Action."""
+		with self._action_id as critical:
+			critical.value += 1
+			return critical.value
+
 	def send_action(self, action, **params):
 		"""Send the named action asynchronously.  The action_id parameter is
-		generated implicitly (if applicable), unless it is disabled by
-		specifying it as None.  The generated action_id is returned.
+		generated implicitly (if applicable) unless specified by the caller.
+		The action_id is returned.
 		"""
-		assert self.session_id is not None
-
 		action_id = None
 
 		if "action_id" in params:
-			assert params["action_id"] is None
-			del params["action_id"]
+			action_id = params["action_id"]
+			if action_id is None:
+				del params["action_id"]
 		else:
-			with self.action_id as critical:
-				critical.value += 1
-				action_id = critical.value
-
+			action_id = self.next_action_id()
 			params["action_id"] = action_id
 
-		self._send_queue.put(Action(action, **params))
+		self.action_queue.put(Action(action, **params))
 
 		return action_id
 
@@ -122,14 +125,55 @@ class SessionBase(object):
 		"""
 		if self.__started and not self.__closed:
 			self.__closed = True
-			self._send_queue.put(self.CLOSE_SESSION)
+			self.action_queue.put(self.CLOSE_SESSION)
 			self._sender.join()
 
-class SynchronousSessionBase(SessionBase):
+class CallbackSessionBase(SessionBase):
+	"""Asynchronous Ninchat client.  The received(event) and closed() methods
+	should be overridden in a subclass; they will be invoked when events are
+	received.  Actions may be sent via send_action(), the action_queue or by
+	calling corresponding instance methods with keyword parameters;
+	e.g. session.describe_user(user_id="0h6si071").  The session must be
+	established by calling create() and waiting for the "session_created"
+	event.
+	"""
+
+	def received(self, event):
+		log.debug("CallbackSessionBase.received method not implemented")
+
+	def closed(self):
+		log.debug("CallbackSessionBase.closed method not implemented")
+
+class QueueSessionBase(SessionBase):
+	"""Synchronous Ninchat client.  Events are delivered via receive_event(),
+	the event_queue or via iteration.  Actions may be sent via send_action(),
+	the action_queue or by calling corresponding instance methods with keyword
+	parameters; e.g. session.describe_user(user_id="0h6si071").  The session
+	must be established by calling create() and waiting for the
+	"session_created" event.
+	"""
+	def __init__(self):
+		super(QueueSessionBase, self).__init__()
+		self.event_queue = self.queue_type()
+		self.__closed = False
 
 	def __iter__(self):
 		while True:
-			event = self.receive()
+			event = self.receive_event()
 			if event is None:
 				break
+
 			yield event
+
+	def receive_event(self):
+		"""Blocks until a new event is availeble.  Returns None when the
+		session has been closed.
+		"""
+		if self.__closed:
+			return None
+
+		event = self.event_queue.get()
+		if event is None:
+			self.__closed = True
+
+		return event

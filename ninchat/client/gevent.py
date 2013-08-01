@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, Somia Reality Oy
+# Copyright (c) 2013, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,20 +22,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Tools for implementing Ninchat API clients.
+"""Session implementations using the third-party gevent module.
 
 Module contents:
-log -- a logging.Logger which may be configured by the application
-Action
-Event
-ParameterError
-thread -- a module containing session implementations
-gevent -- a module containing session implementations (if gevent is available)
+CallbackSession
+QueueSession
 """
 
-import logging
-log = logging.getLogger("ninchat.client")
-del logging
-
-from ninchat.client.action import Action, ParameterError
-from ninchat.client.event import Event
+from ninchat.client.session.websocket.geventful import CallbackSession, QueueSession

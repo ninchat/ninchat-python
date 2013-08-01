@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2012, Somia Reality Oy
+# Copyright (c) 2012-2013, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@ import json
 import logging
 import sys
 
-import ninchat.client
+import ninchat.client.thread
 
 ninchat.client.log.addHandler(logging.StreamHandler())
 ninchat.client.log.setLevel(logging.INFO)
@@ -70,8 +70,9 @@ def main():
 			session_params["user_id"] = file.readline().strip()
 			session_params["user_auth"] = file.readline().strip()
 
-	with ninchat.client.QueuedSession() as session:
-		event = session.create(**session_params)
+	with ninchat.client.thread.QueueSession() as session:
+		session.create(**session_params)
+		event = session.receive_event()
 		if event.type != "session_created":
 			print >>sys.stderr, "Error:", event.error_type
 			sys.exit(1)

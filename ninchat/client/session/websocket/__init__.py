@@ -37,8 +37,28 @@ class ConnectionBase(object):
 		self.session = session
 
 	def send_action(self, action):
-		for frame in action.frames:
+		for frame in action._frames:
 			self.send(frame)
+
+class CallbackConnectionBase(ConnectionBase):
+
+	def _received(self, event):
+		self.session._handle_receive(event)
+		self.session.received(event)
+
+	def _closed(self):
+		if self.session._handle_disconnect():
+			self.session.closed()
+
+class QueueConnectionBase(ConnectionBase):
+
+	def _received(self, event):
+		self.session._handle_receive(event)
+		self.session.event_queue.put(event)
+
+	def _closed(self):
+		if self.session._handle_disconnect():
+			self.session.event_queue.put(None)
 
 class TransportSessionBase(SessionBase):
 
@@ -75,12 +95,12 @@ class TransportSessionBase(SessionBase):
 					time.sleep(1)
 					continue
 			else:
-				last_event_id = self.event_id
+				last_event_id = self._event_id
 				conn = self._connect(SessionAction("resume_session", self.session_id, last_event_id))
 
 			while True:
 				if next_action is None:
-					next_action = self._send_queue.get()
+					next_action = self.action_queue.get()
 
 				if self._reconnect:
 					self._reconnect = False
@@ -94,11 +114,11 @@ class TransportSessionBase(SessionBase):
 				elif next_action is self.SESSION_CLOSED:
 					break
 
-				next_event_id = self.event_id
+				next_event_id = self._event_id
 				if next_event_id == last_event_id:
 					next_event_id = None
 
-				next_action.set_event_id(next_event_id)
+				next_action._set_event_id(next_event_id)
 
 				try:
 					self._send(conn, next_action)

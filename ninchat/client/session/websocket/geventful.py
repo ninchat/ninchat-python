@@ -35,8 +35,9 @@ import ws4py.client.geventclient
 
 from ninchat.client import log
 from ninchat.client.event import Event
-from ninchat.client.session import SynchronousSessionBase
-from ninchat.client.session.websocket import ConnectionBase, TransportSessionBase
+from ninchat.client.session import CallbackSessionBase, QueueSessionBase
+from ninchat.client.session.websocket import (
+		CallbackConnectionBase, ConnectionBase, QueueConnectionBase, TransportSessionBase)
 
 class Critical(object):
 
@@ -49,7 +50,7 @@ class Critical(object):
 	def __exit__(self, *exc):
 		pass
 
-class Connection(ConnectionBase, ws4py.client.geventclient.WebSocketClient):
+class AbstractConnection(ConnectionBase, ws4py.client.geventclient.WebSocketClient):
 
 	def opened(self):
 		gevent.spawn(self._receive_loop)
@@ -58,7 +59,7 @@ class Connection(ConnectionBase, ws4py.client.geventclient.WebSocketClient):
 		while True:
 			message = self.receive()
 			if message is None:
-				self.session._receive_queue.put(None)
+				self._closed()
 				return
 
 			if not message.data:
@@ -70,34 +71,27 @@ class Connection(ConnectionBase, ws4py.client.geventclient.WebSocketClient):
 				message = self.receive()
 				if message is None:
 					log.warning("websocket connection closed in mid-event")
-					self.session._receive_queue.put(None)
+					self._closed()
 					return
 
 				event.payload.append(message.data)
 
-			self.session._receive_queue.put(event)
+			self._received(event)
 
-class Session(TransportSessionBase, SynchronousSessionBase):
-	"""A Ninchat client for use with the gevent module.  During the session,
-	actions may be sent by calling corresponding instance methods with keyword
-	parameters; e.g.  session.describe_user(user_id="0h6si071").
-	"""
-	connection_type = Connection
+class AbstractSession(TransportSessionBase):
 	critical_type = Critical
 	executor_type = gevent.Greenlet
 	flag_type = gevent.event.Event
 	queue_type = gevent.queue.Queue
 
-	def __init__(self):
-		super(Session, self).__init__()
-		self._receive_queue = self.queue_type()
+class CallbackConnection(AbstractConnection, CallbackConnectionBase):
+	pass
 
-	def receive(self):
-		while True:
-			event = self._receive_queue.get()
-			if event is not None:
-				self._handle_receive(event)
-				return event
+class CallbackSession(AbstractSession, CallbackSessionBase):
+	connection_type = CallbackConnection
 
-			if self._handle_disconnect():
-				return None
+class QueueConnection(AbstractConnection, QueueConnectionBase):
+	pass
+
+class QueueSession(AbstractSession, QueueSessionBase):
+	connection_type = QueueConnection
