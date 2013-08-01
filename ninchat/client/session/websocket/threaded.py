@@ -98,19 +98,21 @@ class AbstractConnection(ConnectionBase, ws4py.client.threadedclient.WebSocketCl
 		self._closed()
 
 class AbstractSession(TransportSessionBase):
-	critical_type = Critical
-	executor_type = Executor
-	flag_type = threading.Event
 	queue_type = Queue
+	_critical_type = Critical
+	_executor_type = Executor
+	_flag_type = threading.Event
 
 class CallbackConnection(AbstractConnection, CallbackConnectionBase):
 	pass
 
 class CallbackSession(AbstractSession, CallbackSessionBase):
-	connection_type = CallbackConnection
+	__doc__ = CallbackSessionBase.__doc__
+	_connection_type = CallbackConnection
 
 class QueueConnection(AbstractConnection, QueueConnectionBase):
 	pass
 
 class QueueSession(AbstractSession, QueueSessionBase):
-	connection_type = QueueConnection
+	__doc__ = QueueSessionBase.__doc__
+	_connection_type = QueueConnection

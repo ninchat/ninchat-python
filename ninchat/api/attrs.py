@@ -1,4 +1,4 @@
-# Copyright (c) 2012, Somia Reality Oy
+# Copyright (c) 2012-2013, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,23 +22,67 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""This module contains the following names-to-Attributes dictionaries:
+"""Attributes for each entity type.
 
-user
-identity
-dialoguemember
-channel
-channelmember
-realm
-realmmember
+.. data:: user
+
+   Dictionary; maps name strings to Attribute instances.
+
+.. data:: identity
+
+   Dictionary; maps name strings to Attribute instances.
+
+.. data:: dialoguemember
+
+   Dictionary; maps name strings to Attribute instances.
+
+.. data:: channel
+
+   Dictionary; maps name strings to Attribute instances.
+
+.. data:: channelmember
+
+   Dictionary; maps name strings to Attribute instances.
+
+.. data:: realm
+
+   Dictionary; maps name strings to Attribute instances.
+
+.. data:: realmmember
+
+   Dictionary; maps name strings to Attribute instances.
+
 """
 
 from . import typechecks
 
 class Attribute(object):
-	"""Description of an API entity attribute with name, type (string),
-	initable, writable, settable and unsettable (boolean) instance
-	attributes.
+	"""Description of an entity attribute.
+
+	.. attribute:: name
+
+	   String
+
+	.. attribute:: type
+
+	   String
+
+	.. attribute:: initable
+
+	   Boolean
+
+	.. attribute:: writable
+
+	   Boolean
+
+	.. attribute:: settable
+
+	   Boolean
+
+	.. attribute:: unsettable
+
+	   Boolean
+
 	"""
 	def __init__(self, name, spec):
 		self.name = name
@@ -51,10 +95,10 @@ class Attribute(object):
 	def __str__(self):
 		return self.name
 
-	def validate(self, x):
-		"""Check if x conforms to the type requirements.
+	def validate(self, value):
+		"""Check if *value* conforms to the type requirements.
 		"""
-		return typechecks[self.type](x)
+		return typechecks[self.type](value)
 
 def init(root, dirname):
 	import os, zipfile

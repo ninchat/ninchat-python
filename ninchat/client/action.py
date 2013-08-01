@@ -28,8 +28,12 @@ from ninchat import api
 
 class ParameterError(Exception):
 	"""API action is missing a required parameter or the parameter value is
-	invalid.  The corresponding ninchat.api.Parameter instance may be read from
-	the param attribute (if one exists).
+	invalid.
+
+	.. attribute:: param
+
+	   The associated ninchat.api.Parameter instance (if applicable).
+
 	"""
 	def __init__(self, message, param=None):
 		super(ParameterError, self).__init__(message)

@@ -26,6 +26,17 @@ from ninchat import api
 from ninchat.client.action import Action
 
 class SessionBase(object):
+	"""Actions may be sent via the send_action() method, the action_queue
+	attribute or by calling corresponding instance methods with keyword
+	parameters; e.g. session.describe_user(user_id="0h6si071").  The session
+	must be established by calling create() and waiting for the
+	"session_created" event.
+
+	.. attribute:: action_queue
+
+	   Queue for sending Action objects.
+
+	"""
 	CLOSE_SESSION = object()
 	SESSION_CLOSED = object()
 
@@ -34,10 +45,10 @@ class SessionBase(object):
 	def __init__(self):
 		self.action_queue = self.queue_type()
 		self.session_id = None
-		self._action_id = self.critical_type(0)
+		self._action_id = self._critical_type(0)
 		self._event_id = None
-		self._sender = self.executor_type(self._send_loop)
-		self._init = self.flag_type()
+		self._sender = self._executor_type(self._send_loop)
+		self._init = self._flag_type()
 		self.__started = False
 		self.__closed = False
 
@@ -129,14 +140,10 @@ class SessionBase(object):
 			self._sender.join()
 
 class CallbackSessionBase(SessionBase):
-	"""Asynchronous Ninchat client.  The received(event) and closed() methods
-	should be overridden in a subclass; they will be invoked when events are
-	received.  Actions may be sent via send_action(), the action_queue or by
-	calling corresponding instance methods with keyword parameters;
-	e.g. session.describe_user(user_id="0h6si071").  The session must be
-	established by calling create() and waiting for the "session_created"
-	event.
-	"""
+	__doc__ = """Asynchronous Ninchat client base class.  The received(event)
+	and closed() methods should be overridden in a subclass; they will be
+	invoked when events are received.
+	""" + SessionBase.__doc__
 
 	def received(self, event):
 		log.debug("CallbackSessionBase.received method not implemented")
@@ -145,12 +152,14 @@ class CallbackSessionBase(SessionBase):
 		log.debug("CallbackSessionBase.closed method not implemented")
 
 class QueueSessionBase(SessionBase):
-	"""Synchronous Ninchat client.  Events are delivered via receive_event(),
-	the event_queue or via iteration.  Actions may be sent via send_action(),
-	the action_queue or by calling corresponding instance methods with keyword
-	parameters; e.g. session.describe_user(user_id="0h6si071").  The session
-	must be established by calling create() and waiting for the
-	"session_created" event.
+	__doc__ = """Synchronous Ninchat client.  Events are delivered via the
+	receive_event() method, the event_queue attribute or via iteration.
+	""" + SessionBase.__doc__ + """
+
+	.. attribute:: event_queue
+
+	   Queue for receiving Event objects; terminated by None.
+
 	"""
 	def __init__(self):
 		super(QueueSessionBase, self).__init__()
@@ -166,7 +175,7 @@ class QueueSessionBase(SessionBase):
 			yield event
 
 	def receive_event(self):
-		"""Blocks until a new event is availeble.  Returns None when the
+		"""Blocks until a new event is available.  Returns None when the
 		session has been closed.
 		"""
 		if self.__closed:

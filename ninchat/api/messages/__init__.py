@@ -24,13 +24,19 @@
 
 """Standard message type definitions.
 
-Module contents:
-log -- a logging.Logger which may be configured by the application
-factories -- list of message-type-pattern/handler-factory pairs
-Message -- message handler interface
+.. data:: log
 
-A handler factory takes message type and payload, and returns a Message
-implementation or None.
+   A logging.Logger instance which may be configured by the application.
+
+.. data:: factories
+
+   List of pairs; maps message-type-pattern strings to handler-factory
+   callables.
+
+   A handler-factory callable takes a message-type string and a payload list as
+   positional parameters, and returns an instance of a Message implementation
+   or None.
+
 """
 
 import json
@@ -49,9 +55,17 @@ log = logging.getLogger("ninchat.api.messages")
 factories = []
 
 class Message(object):
-	"""Contains the type and payload attributes.  Subclasses should override
-	the validate(), stringify() and get_property(name) methods if
-	applicable.
+	"""Message handler interface.  Subclasses should override the validate(),
+	stringify() and get_property(name) methods if applicable.
+
+	.. attribute:: type
+
+	   String
+
+	.. attribute:: payload
+
+	   List of some kind of objects.
+
 	"""
 	def __init__(self, messagetype, payload):
 		self.type = messagetype

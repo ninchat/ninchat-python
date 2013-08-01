@@ -1,4 +1,4 @@
-# Copyright (c) 2012, Somia Reality Oy
+# Copyright (c) 2012-2013, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,13 +22,17 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Ninchat API metadata.
+"""Python data structures describing various aspects of the api.ninchat.com
+service.
 
-Module contents:
-actions -- names-to-Interfaces dictionary
-events -- names-to-Interfaces dictionary
-Interface
-Parameter
+.. data:: actions
+
+   Dictionary; maps name strings to Interface instances.
+
+.. data:: events
+
+   Dictionary; maps name strings to Interface instances.
+
 """
 
 try:
@@ -84,8 +88,16 @@ actions = {}
 events = {}
 
 class Parameter(object):
-	"""Description of an action/event parameter with name, type (string) and
-	required (boolean) attributes.
+	"""Description of an action's or an event's parameter.
+
+	.. attribute:: name
+
+	   String
+
+	.. attribute:: required
+
+	   Boolean
+
 	"""
 	def __init__(self, key, spec):
 		self.name = key
@@ -95,15 +107,23 @@ class Parameter(object):
 	def type(self):
 		return paramtypes[self.name]
 
-	def validate(self, x):
-		"""Check if x conforms to the type requirements, or is None while the
-		parameter is optional.
+	def validate(self, value):
+		"""Check if *value* conforms to the type requirements, or is None while
+		the parameter is optional.
 		"""
-		return typechecks[self.type](x) or (x is None and not self.required)
+		return typechecks[self.type](value) or (value is None and not self.required)
 
 class Interface(object):
-	"""Description of an action or an event with name (string) and params
-	(name-to-Parameter dictionary) attributes.
+	"""Description of an action or an event.
+
+	.. attribute:: name
+
+	   String
+
+	.. attribute:: params
+
+	   Dictionary; maps name strings to Parameter instances.
+
 	"""
 	def __init__(self, key, spec):
 		self.name = key

@@ -133,7 +133,7 @@ class TransportSessionBase(SessionBase):
 
 	def _connect(self, action):
 		while True:
-			conn = self.connection_type(self.session_host, self)
+			conn = self._connection_type(self.session_host, self)
 
 			try:
 				conn.connect()

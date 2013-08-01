@@ -79,19 +79,21 @@ class AbstractConnection(ConnectionBase, ws4py.client.geventclient.WebSocketClie
 			self._received(event)
 
 class AbstractSession(TransportSessionBase):
-	critical_type = Critical
-	executor_type = gevent.Greenlet
-	flag_type = gevent.event.Event
 	queue_type = gevent.queue.Queue
+	_critical_type = Critical
+	_executor_type = gevent.Greenlet
+	_flag_type = gevent.event.Event
 
 class CallbackConnection(AbstractConnection, CallbackConnectionBase):
 	pass
 
 class CallbackSession(AbstractSession, CallbackSessionBase):
-	connection_type = CallbackConnection
+	__doc__ = CallbackSessionBase.__doc__
+	_connection_type = CallbackConnection
 
 class QueueConnection(AbstractConnection, QueueConnectionBase):
 	pass
 
 class QueueSession(AbstractSession, QueueSessionBase):
-	connection_type = QueueConnection
+	__doc__ = QueueSessionBase.__doc__
+	_connection_type = QueueConnection

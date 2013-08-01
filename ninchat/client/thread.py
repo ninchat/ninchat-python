@@ -22,11 +22,16 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Session implementations using the standard threading module.
+"""Session implementations using standard multithreading.
 
-Module contents:
-CallbackSession
-QueueSession
+.. autoclass:: CallbackSession
+   :members:
+   :inherited-members:
+
+.. autoclass:: QueueSession
+   :members:
+   :inherited-members:
+
 """
 
 from ninchat.client.session.websocket.threaded import CallbackSession, QueueSession

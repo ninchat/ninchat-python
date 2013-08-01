@@ -24,9 +24,12 @@
 
 """Session implementations using the third-party gevent module.
 
-Module contents:
-CallbackSession
-QueueSession
+.. autoclass:: CallbackSession
+   :members: close, create, next_action_id, send_action
+
+.. autoclass:: QueueSession
+   :members: close, create, next_action_id, receive_event, send_action
+
 """
 
 from ninchat.client.session.websocket.geventful import CallbackSession, QueueSession

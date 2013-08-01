@@ -29,9 +29,12 @@ from ninchat.client import log
 
 class Event(object):
 	"""Holds an API event received from the server.  Event parameters may be
-	accessed as instance attributes (the type name of the event can be read
-	from the type attribute).  Optional parameters default to None.  The
-	payload attribute contains a list of bytes objects.
+	accessed as instance attributes.  Optional parameters default to None.
+
+	.. attribute:: payload
+
+	   List of bytes objects.
+
 	"""
 	def __init__(self, frame):
 		self._params = json.loads(frame.decode("utf-8"))
@@ -40,6 +43,8 @@ class Event(object):
 
 	@property
 	def type(self):
+		"""String
+		"""
 		return self._params["event"]
 
 	def __getattr__(self, name):

@@ -24,13 +24,18 @@
 
 """Tools for implementing Ninchat API clients.
 
-Module contents:
-log -- a logging.Logger which may be configured by the application
-Action
-Event
-ParameterError
-thread -- a module containing session implementations
-gevent -- a module containing session implementations (if gevent is available)
+.. data:: log
+
+   A logging.Logger which may be configured by the application.
+
+.. autoclass:: Action
+
+.. autoclass:: Event
+   :members:
+
+.. autoclass:: ParameterError
+   :members:
+
 """
 
 import logging
