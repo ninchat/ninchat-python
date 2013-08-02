@@ -62,8 +62,8 @@ class QueueConnectionBase(ConnectionBase):
 
 class TransportSessionBase(SessionBase):
 
-	def __init__(self, *args, **kwargs):
-		super(TransportSessionBase, self).__init__(*args, **kwargs)
+	def __init__(self):
+		super(TransportSessionBase, self).__init__()
 		self._reconnect = False
 		self._closing = False
 

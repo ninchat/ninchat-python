@@ -103,16 +103,16 @@ class AbstractSession(TransportSessionBase):
 	_executor_type = Executor
 	_flag_type = threading.Event
 
-class CallbackConnection(AbstractConnection, CallbackConnectionBase):
+class CallbackConnection(CallbackConnectionBase, AbstractConnection):
 	pass
 
-class CallbackSession(AbstractSession, CallbackSessionBase):
+class CallbackSession(CallbackSessionBase, AbstractSession):
 	__doc__ = CallbackSessionBase.__doc__
 	_connection_type = CallbackConnection
 
-class QueueConnection(AbstractConnection, QueueConnectionBase):
+class QueueConnection(QueueConnectionBase, AbstractConnection):
 	pass
 
-class QueueSession(AbstractSession, QueueSessionBase):
+class QueueSession(QueueSessionBase, AbstractSession):
 	__doc__ = QueueSessionBase.__doc__
 	_connection_type = QueueConnection
