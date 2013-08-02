@@ -26,11 +26,11 @@ from ninchat import api
 from ninchat.client.action import Action
 
 class SessionBase(object):
-	"""Actions may be sent via the send_action() method, the action_queue
-	attribute or by calling corresponding instance methods with keyword
-	parameters; e.g. session.describe_user(user_id="0h6si071").  The session
-	must be established by calling create() and waiting for the
-	"session_created" event.
+	"""Actions may be sent via the send_action() method, the action_queue or by
+	calling corresponding instance methods with keyword parameters;
+	e.g. session.describe_user(user_id="0h6si071").  The session must be
+	established by calling create() and waiting for the "session_created"
+	event.
 
 	.. attribute:: action_queue
 
@@ -140,20 +140,20 @@ class SessionBase(object):
 			self._sender.join()
 
 class CallbackSessionBase(SessionBase):
-	__doc__ = """Asynchronous Ninchat client base class.  The received(event)
-	and closed() methods should be overridden in a subclass; they will be
+	__doc__ = """Either the received(event) and closed() methods should be
+	implemented in a subclass, or the received(session, event) and
+	closed(session) callables should be passed to the constructor; they will be
 	invoked when events are received.
 	""" + SessionBase.__doc__
 
-	def received(self, event):
-		log.debug("CallbackSessionBase.received method not implemented")
-
-	def closed(self):
-		log.debug("CallbackSessionBase.closed method not implemented")
+	def __init__(self, received=None, closed=None):
+		super(CallbackSessionBase, self).__init__()
+		self._received_callback = received or self.__class__.received
+		self._closed_callback = closed or self.__class__.closed
 
 class QueueSessionBase(SessionBase):
-	__doc__ = """Synchronous Ninchat client.  Events are delivered via the
-	receive_event() method, the event_queue attribute or via iteration.
+	__doc__ = """Events are delivered via the receive_event() method, the
+	event_queue or iteration.
 	""" + SessionBase.__doc__ + """
 
 	.. attribute:: event_queue

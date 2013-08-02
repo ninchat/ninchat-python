@@ -31,46 +31,61 @@ sys.path.insert(0, "")
 
 import gevent
 
-from ninchat.client.gevent import QueueSession as Session
+from ninchat.client.call import SyncQueueAdapter
+from ninchat.client.gevent import QueueSession
 
 from . import log
 
-def handle(session, other_user_id):
-	for num, event in enumerate(session):
-		if event.type == "error":
-			log.error("%d: %r", num, event)
-			break
-		elif event.type == "message_received":
-			n = int(json.loads(event.payload[0])["text"])
-			log.debug("%d: %s %s", num, n, event.message_id)
-			session.send_message(action_id=None, user_id=other_user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": str(n + 1) })])
-		else:
-			log.debug("%d: %r", num, event)
+class State(object):
 
-def main(session_type=Session):
-	s1 = session_type()
-	s2 = session_type()
+	def __init__(self, session_type):
+		self.session = SyncQueueAdapter(session_type())
+		self.greenlet = gevent.spawn(self.loop)
 
-	s1.create(message_types=["ninchat.com/text"])
-	s2.create(message_types=["ninchat.com/text"])
+		event = self.session.create(message_types=["ninchat.com/text"])
+		if event is None or event.type == "error":
+			log.error("create: %r", event)
+			return
 
-	e1 = s1.receive_event()
-	if e1.type == "error":
-		log.error("%r", e1)
-		return
+		self.user_id = event.user_id
 
-	e2 = s2.receive_event()
-	if e2.type == "error":
-		log.error("%r", e2)
-		return
+	def loop(self):
+		for num, event in enumerate(self.session):
+			if event.type == "error":
+				log.error("%d: %r", num, event)
+				break
+			elif event.type == "message_received":
+				n = int(json.loads(event.payload[0])["text"])
+				log.debug("%d: %s %s", num, n, event.message_id)
+				gevent.spawn(self.send, n + 1)
+			else:
+				log.debug("%d: spurious: %r", num, event)
 
-	s1.send_message(action_id=None, user_id=e2.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": "0" })])
+	def init(self):
+		event = self.session.create(message_types=["ninchat.com/text"])
+		if event is None or event.type == "error":
+			log.error("create: %r", event)
+			return
 
-	g1 = gevent.spawn(handle, s1, e2.user_id)
-	g2 = gevent.spawn(handle, s2, e1.user_id)
+		self.user_id = event.user_id
+
+	def send(self, n):
+		event = self.session.send_message(user_id=self.other.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": str(n) })])
+		if event is None or event.type == "error":
+			log.error("send_message: %r", event)
+			return
+
+def main(session_type=QueueSession):
+	s1 = State(session_type)
+	s2 = State(session_type)
+
+	s1.other = s2
+	s2.other = s1
+
+	s1.send(0)
 
 	try:
-		gevent.joinall([g1, g2])
+		gevent.joinall([s1.greenlet, s2.greenlet])
 	except KeyboardInterrupt:
 		pass
 

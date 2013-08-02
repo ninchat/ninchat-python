@@ -97,6 +97,16 @@ class Action(object):
 			except KeyError:
 				pass
 
+	@property
+	def multiple_events(self):
+		return self._params["action"] == "load_history"
+
+	def get_pending_events(self, event):
+		if self.multiple_events:
+			return event._params.get("history_length", 0)
+		else:
+			return 0
+
 class SessionAction(Action):
 
 	def __init__(self, action, session_id=None, event_id=None):

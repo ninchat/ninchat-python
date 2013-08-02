@@ -44,11 +44,11 @@ class CallbackConnectionBase(ConnectionBase):
 
 	def _received(self, event):
 		self.session._handle_receive(event)
-		self.session.received(event)
+		self.session._received_callback(self.session, event)
 
 	def _closed(self):
 		if self.session._handle_disconnect():
-			self.session.closed()
+			self.session._closed_callback(self.session)
 
 class QueueConnectionBase(ConnectionBase):
 
@@ -62,8 +62,8 @@ class QueueConnectionBase(ConnectionBase):
 
 class TransportSessionBase(SessionBase):
 
-	def __init__(self):
-		super(TransportSessionBase, self).__init__()
+	def __init__(self, *args, **kwargs):
+		super(TransportSessionBase, self).__init__(*args, **kwargs)
 		self._reconnect = False
 		self._closing = False
 
