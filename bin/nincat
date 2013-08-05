@@ -24,15 +24,36 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import absolute_import, print_function
+
 import argparse
 import json
 import logging
+import select
 import sys
 
-import ninchat.client.thread
+from ninchat.client import log
+from ninchat.client.call import SyncCallbackAdapter, SyncQueueAdapter
+from ninchat.client.thread import CallbackSession, QueueSession
 
-ninchat.client.log.addHandler(logging.StreamHandler())
-ninchat.client.log.setLevel(logging.INFO)
+log.addHandler(logging.StreamHandler())
+log.setLevel(logging.INFO)
+
+errors = False
+
+def error(message, error_event):
+	global errors
+	errors = True
+
+	if error_event.error_reason:
+		details = ["(%s)" % error_event.error_reason]
+	else:
+		details = []
+
+	print("error:", message, error_event.error_type, *details, file=sys.stderr)
+
+def debug(*args):
+	print(*args, file=sys.stderr)
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -46,19 +67,28 @@ def main():
 		help="make the user permanent (after email verification)")
 	parser.add_argument("-j", "--join", action="store_true",
 		help="join the specified channels (instead of sending)")
+	parser.add_argument("-p", "--part", action="store_true",
+		help="part from the specified channels (instead of sending)")
 	parser.add_argument("-l", "--listen", action="store_true",
 		help="print received messages to stdout until terminated")
 	parser.add_argument("channels", metavar="ID", nargs="*",
 		help="send lines from stdin to this channel id")
 	args = parser.parse_args()
 
-	if not (args.create_user or args.delete_user or args.set_email or
-			args.listen or args.channels):
+	echo = args.channels and not (args.join or args.part)
+
+	if not (args.create_user or
+	        args.set_email or
+	        args.join or
+	        echo or
+	        args.part or
+	        args.delete_user or
+	        args.listen):
 		parser.print_help()
-		return
+		sys.exit(1)
 
 	session_params = {
-		"message_types": ["ninchat.com/text"] if args.listen else [],
+		"message_types": ["ninchat.com/text"] if (echo or args.listen) else [],
 	}
 
 	if args.create_user:
@@ -70,74 +100,91 @@ def main():
 			session_params["user_id"] = file.readline().strip()
 			session_params["user_auth"] = file.readline().strip()
 
-	with ninchat.client.thread.QueueSession() as session:
-		session.create(**session_params)
-		event = session.receive_event()
+	def on_received(session, event):
+		if event.type != "message_received":
+			return
+
+		if not args.listen:
+			return
+
+		if args.channels and event.channel_id not in args.channels:
+			return
+
+		content = json.loads(event.payload[0].decode("utf-8"))
+		print("<%s> %s" % (event.message_user_name, content["text"]))
+
+	def on_closed(session):
+		pass
+
+	with SyncCallbackAdapter(CallbackSession(on_received, on_closed)) as session:
+		event = session.create(**session_params)
 		if event.type != "session_created":
-			print >>sys.stderr, "Error:", event.error_type
-			sys.exit(1)
+			error("create_session:", event)
+			sys.exit(2)
 
 		if args.create_user:
 			with open(args.user, "w") as file:
-				print >>file, event.user_id
-				print >>file, event.user_auth
+				print(event.user_id, file=file)
+				print(event.user_auth, file=file)
 
 		if args.set_email:
-			action_id = session.create_identity(
+			event = session.create_identity(
 					identity_type = "email",
 					identity_name = args.set_email)
-
-			for event in session:
-				if event.type == "error":
-					print >>sys.stderr, "Error: create_identity:", \
-							event.error_type
-					sys.exit(1)
-
-				if event.action_id == action_id:
-					break
+			if event.type == "error":
+				error("create_identity:", event)
+			else:
+				debug(event)
 
 		if args.join:
 			for channel_id in args.channels:
-				action_id = session.join_channel(
+				event = session.join_channel(
 						channel_id = channel_id)
+				if event.type == "error":
+					error("join_channel %s:" % channel_id, event)
+				else:
+					debug(event)
 
-				for event in session:
-					if event.type == "error":
-						print >>sys.stderr, "Error: join_channel %s: %s" % (
-								channel_id, event.error_type)
-						if event.error_type != "action_is_futile":
-							sys.exit(1)
-
-					if event.action_id == action_id:
-						break
-		elif args.channels:
+		if echo:
 			while True:
 				line = sys.stdin.readline()
 				if not line:
 					break
 
 				for channel_id in args.channels:
-					session.send_message(
+					event = session.send_message(
 							channel_id   = channel_id,
 							message_type = "ninchat.com/text",
 							payload      = [json.dumps({ "text": line })])
+					if event.type == "error":
+						error("send_message %s:" % channel_id, event)
+
+		if args.listen:
+			try:
+				select.select([], [], [])
+			except KeyboardInterrupt:
+				pass
+
+		if args.part:
+			for channel_id in args.channels:
+				event = session.part_channel(
+						channel_id = channel_id)
+				if event.type == "error":
+					error("part_channel %s:" % channel_id, event)
+				else:
+					debug(event)
 
 		if args.delete_user:
 			with open(args.user) as file:
-				session.delete_user(
+				event = session.delete_user(
 						user_auth = file.readlines()[1].strip())
-			return
+				if event.type == "error":
+					error("delete_user:", event)
+				else:
+					debug(event)
 
-		if args.listen:
-			for event in session:
-				if event.type != "message_received":
-					continue
-
-				if args.channels and event.channel_id not in args.channels:
-					continue
-
-				content = json.loads(event.payload[0].decode("utf-8"))
-				print "<%s> %s" % (event.message_user_name, content["text"])
+	if errors:
+		sys.exit(3)
 
 if __name__ == "__main__":
 	try:

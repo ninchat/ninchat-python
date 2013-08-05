@@ -1,24 +1,22 @@
 import sys
 from distutils.core import setup
 
-if sys.version_info[0] == 2:
-	scripts = ["bin/nincat"]
-else:
-	scripts = []
-
 setup(
 	name             = "ninchat-python",
 	version          = "1.0-pre",
 	maintainer       = "Timo Savola",
 	maintainer_email = "timo@ninchat.com",
 	url              = "https://github.com/ninchat/ninchat-python",
-	scripts          = scripts,
+	scripts          = ["bin/nincat"],
 
 	packages = [
 		"ninchat",
 		"ninchat/api",
 		"ninchat/api/messages",
 		"ninchat/api/spec/json",
+		"ninchat/client",
+		"ninchat/client/session",
+		"ninchat/client/session/websocket",
 	],
 
 	package_data = {
