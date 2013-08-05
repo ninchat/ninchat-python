@@ -38,9 +38,11 @@
 
 """
 
+from __future__ import absolute_import
+
 import logging
 log = logging.getLogger("ninchat.client")
 del logging
 
-from ninchat.client.action import Action, ParameterError
-from ninchat.client.event import Event
+from .action import Action, ParameterError
+from .event import Event

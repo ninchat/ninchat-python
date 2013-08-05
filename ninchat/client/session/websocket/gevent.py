@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, Somia Reality Oy
+# Copyright (c) 2013, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,86 +22,68 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-import threading
+from __future__ import absolute_import
 
-import ws4py.client.threadedclient
+try:
+	# Python 2
+	xrange
+except NameError:
+	# Python 3
+	xrange = range
 
-from ninchat.client import log
-from ninchat.client.event import Event
-from ninchat.client.session import CallbackSessionBase, QueueSessionBase
-from ninchat.client.session.websocket import (
-		CallbackConnectionBase, ConnectionBase, QueueConnectionBase, TransportSessionBase)
+import gevent.queue
 
-if sys.version_info[0] == 2:
-	import Queue as queue
+import ws4py.client.geventclient
 
-	class Queue(queue.Queue):
-
-		def __init__(self, *args, **kwargs):
-			self.__impl = queue.Queue(*args, **kwargs)
-
-		def __getattr__(self, name):
-			return getattr(self.__impl, name)
-
-		def get(self, timeout=None):
-			# using a timeout fixes Python 2 uninterruptability problem
-			if timeout is None:
-				timeout = 0x7fffffff
-
-			return self.__impl.get(timeout=timeout)
-else:
-	from queue import Queue
-
-class Executor(threading.Thread):
-
-	def __init__(self, target):
-		super(Executor, self).__init__(target=target)
+from ... import log
+from ...event import Event
+from .. import CallbackSessionBase, QueueSessionBase
+from . import CallbackConnectionBase, ConnectionBase, QueueConnectionBase, TransportSessionBase
 
 class Critical(object):
 
 	def __init__(self, value):
 		self.value = value
-		self._lock = threading.Lock()
 
 	def __enter__(self):
-		self._lock.acquire()
 		return self
 
 	def __exit__(self, *exc):
-		self._lock.release()
+		pass
 
-class AbstractConnection(ConnectionBase, ws4py.client.threadedclient.WebSocketClient):
+class AbstractConnection(ConnectionBase, ws4py.client.geventclient.WebSocketClient):
 
-	def __init__(self, hostname, session):
-		super(AbstractConnection, self).__init__(hostname, session)
-		self._event = None
+	def opened(self):
+		gevent.spawn(self._receive_loop)
 
-	def received_message(self, message):
-		event = self._event
-		if event:
-			event.payload.append(message.data)
-			if len(event.payload) >= event._length:
-				self._event = None
-				self._received(event)
-		elif message.data:
+	def _receive_loop(self):
+		while True:
+			message = self.receive()
+			if message is None:
+				self._closed()
+				return
+
+			if not message.data:
+				continue
+
 			event = Event(message.data)
-			if event._length > 0:
-				self._event = event
-			else:
-				self._received(event)
 
-	def closed(self, code, reason):
-		if self._event:
-			log.warning("websocket connection closed in mid-event")
+			for _ in xrange(event._length):
+				message = self.receive()
+				if message is None:
+					log.warning("websocket connection closed in mid-event")
+					self._closed()
+					return
 
-		self._closed()
+				event.payload.append(message.data)
+
+			self._received(event)
 
 class AbstractSession(TransportSessionBase):
-	queue_type = Queue
+	queue_type = gevent.queue.Queue
 	_critical_type = Critical
-	_executor_type = Executor
-	_flag_type = threading.Event
+	_executor_type = gevent.Greenlet
+	_flag_type = gevent.event.Event
 
 class CallbackConnection(CallbackConnectionBase, AbstractConnection):
 	pass

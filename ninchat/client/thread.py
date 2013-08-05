@@ -34,4 +34,6 @@
 
 """
 
-from ninchat.client.session.websocket.threaded import CallbackSession, QueueSession
+from __future__ import absolute_import
+
+from .session.websocket.thread import CallbackSession, QueueSession

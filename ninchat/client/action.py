@@ -22,9 +22,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import absolute_import
+
 import json
 
-from ninchat import api
+from .. import api
 
 class ParameterError(Exception):
 	"""API action is missing a required parameter or the parameter value is

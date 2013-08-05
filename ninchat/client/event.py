@@ -22,10 +22,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import absolute_import
+
 import json
 
-from ninchat import api
-from ninchat.client import log
+from .. import api
+from . import log
 
 class Event(object):
 	"""Holds an API event received from the server.  Event parameters may be

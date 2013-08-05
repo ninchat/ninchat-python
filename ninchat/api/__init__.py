@@ -35,6 +35,8 @@ service.
 
 """
 
+from __future__ import absolute_import
+
 try:
 	# Python 2
 	_ints = int, long

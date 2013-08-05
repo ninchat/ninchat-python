@@ -22,11 +22,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import absolute_import
+
 import time
 
-from ninchat.client import log
-from ninchat.client.action import Action, SessionAction
-from ninchat.client.session import SessionBase
+from ... import log
+from ...action import Action, SessionAction
+from .. import SessionBase
 
 class ConnectionBase(object):
 	url_format = "wss://{}/socket"

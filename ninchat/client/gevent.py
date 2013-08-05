@@ -32,4 +32,6 @@
 
 """
 
-from ninchat.client.session.websocket.geventful import CallbackSession, QueueSession
+from __future__ import absolute_import
+
+from .session.websocket.gevent import CallbackSession, QueueSession

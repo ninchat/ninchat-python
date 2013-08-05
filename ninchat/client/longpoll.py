@@ -22,6 +22,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import absolute_import
+
 import http.client
 import json
 import queue
@@ -30,8 +32,8 @@ import threading
 import time
 import urllib
 
-from ninchat.client import log
-from ninchat.client.event import Event
+from . import log
+from .event import Event
 
 class Connection(object):
 	path = "/poll/1"

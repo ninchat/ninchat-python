@@ -22,8 +22,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from ninchat import api
-from ninchat.client.action import Action
+from ... import api
+from ..action import Action
 
 class SessionBase(object):
 	"""Actions may be sent via the send_action() method, the action_queue or by

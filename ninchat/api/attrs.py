@@ -54,6 +54,8 @@
 
 """
 
+from __future__ import absolute_import
+
 from . import typechecks
 
 class Attribute(object):
