@@ -45,8 +45,8 @@ class ConnectionBase(object):
 class CallbackConnectionBase(ConnectionBase):
 
 	def _received(self, event):
-		self.session._handle_receive(event)
-		self.session._received_callback(self.session, event)
+		if self.session._handle_receive(event):
+			self.session._received_callback(self.session, event)
 
 	def _closed(self):
 		if self.session._handle_disconnect():
@@ -55,19 +55,77 @@ class CallbackConnectionBase(ConnectionBase):
 class QueueConnectionBase(ConnectionBase):
 
 	def _received(self, event):
-		self.session._handle_receive(event)
-		self.session.event_queue.put(event)
+		if self.session._handle_receive(event):
+			self.session.event_queue.put(event)
 
 	def _closed(self):
 		if self.session._handle_disconnect():
 			self.session.event_queue.put(None)
 
 class TransportSessionBase(SessionBase):
+	TERMINATE = object()
 
 	def __init__(self):
 		super(TransportSessionBase, self).__init__()
-		self._reconnect = False
+		self._init = self._flag_type()
+		self._reset = False
 		self._closing = False
+
+	def _handle_send(self, action):
+		pass
+
+	def _handle_receive(self, event):
+		caller_handles = True
+
+		if not self._init.is_set():
+			if event.type == "session_created":
+				self.session_id = event._params.pop("session_id")
+				self.session_host = event._params.pop("session_host")
+			elif event.type == "error":
+				if event.error_type == "session_not_found" and self.session_id is not None:
+					self.__reset_session()
+					caller_handles = False
+				else:
+					self.__terminate()
+			else:
+				log.error("unexpected reply to create_session from server: %s", event)
+				self.__reset_session()
+				caller_handles = False
+			self._init.set()
+		elif event.type == "error":
+			if event.error_type == "session_not_found":
+				self.__reset_session()
+				caller_handles = False
+
+		try:
+			event_id = event._params.pop("event_id")
+			if event_id is not None:
+				self._event_id = event_id
+		except KeyError:
+			pass
+
+		return caller_handles
+
+	def __reset_session(self):
+		self.session_id = None
+		self._reset = True
+		self.action_queue.put(None)
+
+	def __terminate(self):
+		self._closing = True
+		self._reset = True
+		self.action_queue.put(None)
+
+	def _handle_disconnect(self):
+		self._init.set()
+
+		if self._closing:
+			self.action_queue.put(self.TERMINATE)
+			return True
+		else:
+			self._reset = True
+			self.action_queue.put(None)
+			return False
 
 	def _send_loop(self):
 		conn = None
@@ -104,8 +162,8 @@ class TransportSessionBase(SessionBase):
 				if next_action is None:
 					next_action = self.action_queue.get()
 
-				if self._reconnect:
-					self._reconnect = False
+				if self._reset:
+					self._reset = False
 					break
 
 				if next_action is None:
@@ -113,7 +171,7 @@ class TransportSessionBase(SessionBase):
 				elif next_action is self.CLOSE_SESSION:
 					next_action = SessionAction("close_session")
 					self._closing = True
-				elif next_action is self.SESSION_CLOSED:
+				elif next_action is self.TERMINATE:
 					break
 
 				next_event_id = self._event_id

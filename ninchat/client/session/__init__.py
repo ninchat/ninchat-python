@@ -38,7 +38,6 @@ class SessionBase(object):
 
 	"""
 	CLOSE_SESSION = object()
-	SESSION_CLOSED = object()
 
 	session_host = "api.ninchat.com"
 
@@ -48,7 +47,6 @@ class SessionBase(object):
 		self._action_id = self._critical_type(0)
 		self._event_id = None
 		self._sender = self._executor_type(self._send_loop)
-		self._init = self._flag_type()
 		self.__started = False
 		self.__closed = False
 
@@ -66,34 +64,6 @@ class SessionBase(object):
 			return self.send_action(action, **params)
 
 		return call
-
-	def _handle_send(self, action):
-		pass
-
-	def _handle_receive(self, event):
-		if event.type == "session_created":
-			self.session_id = event._params.pop("session_id")
-			self.session_host = event._params.pop("session_host")
-
-		self._init.set()
-
-		try:
-			event_id = event._params.pop("event_id")
-			if event_id is not None:
-				self._event_id = event_id
-		except KeyError:
-			pass
-
-	def _handle_disconnect(self):
-		self._init.set()
-
-		if self._closing:
-			self.action_queue.put(self.SESSION_CLOSED)
-			return True
-		else:
-			self._reconnect = True
-			self.action_queue.put(None)
-			return False
 
 	def create(self, **params):
 		"""Connect to the server and send the create_session action with given
