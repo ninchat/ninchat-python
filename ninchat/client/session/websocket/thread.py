@@ -45,12 +45,12 @@ if sys.version_info[0] == 2:
 		def __getattr__(self, name):
 			return getattr(self.__impl, name)
 
-		def get(self, timeout=None):
+		def get(self, block=True, timeout=None):
 			# using a timeout fixes Python 2 uninterruptability problem
 			if timeout is None:
 				timeout = 0x7fffffff
 
-			return self.__impl.get(timeout=timeout)
+			return self.__impl.get(block, timeout)
 else:
 	from queue import Queue
 
