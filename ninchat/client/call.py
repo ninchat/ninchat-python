@@ -210,16 +210,19 @@ class SyncAdapterBase(AdapterBase):
 	_call_type = SyncCall
 
 	def create(self, **params):
-		"""Call the session instances's create method, and wait for and return
-		the response event.  None is returned if the session is closed before
-		it could be established.
+		"""Like the session object's create method, but wait for and return the
+		response event.  None is returned if the session is closed before it
+		could be established.
+
+		Additional "session_created" events are delivered with the other
+		unsolicited events if the server session needs to be reset.
 		"""
 		self._creation = c = SyncCreation(self._session._flag_type)
 		self._session.create(**params)
 		return c.result
 
 	def call_action(self, name, **params):
-		"""Call the session instance's send_action method, and wait for a
+		"""Like the session object's send_action method, but wait for a
 		response.  The action_id parameter is generated implicitly unless
 		specified by the caller.  Depending on action type, either a single
 		event or a list of events is returned.  None is returned if the session
@@ -236,16 +239,19 @@ class AsyncAdapterBase(AdapterBase):
 	_call_type = AsyncCall
 
 	def create(self, callback, **params):
-		"""Call the session instances's create method, and call
-		callback(session, event) when a response is received.  The event
-		parameter will be None if the session is closed before it could be
-		established.
+		"""Like the session object's create method, and call callback(session,
+		event) when a response is received.  The event parameter will be None
+		if the session is closed before it could be established.
+
+		Somewhat surprisingly, additional "session_created" events are
+		delivered with the other unsolicited events if the server session needs
+		to be reset.
 		"""
 		self._creation = AsyncCreation(self._session, callback)
 		self._session.create(**params)
 
 	def call_action(self, name, callback, **params):
-		"""Call the session instance's send_action method, and call
+		"""Like the session object's send_action method, and call
 		callback(session, action, event_or_events) when a response is received.
 		The action_id parameter is generated implicitly unless specified by the
 		caller.  Depending on action type, either a single event or a list of
