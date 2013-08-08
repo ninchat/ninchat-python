@@ -130,7 +130,6 @@ class TransportSessionBase(SessionBase):
 	def _send_loop(self):
 		conn = None
 		next_action = None
-		last_event_id = None
 
 		while True:
 			if conn:
@@ -146,6 +145,10 @@ class TransportSessionBase(SessionBase):
 
 			if self.session_id is None:
 				self.session_host = self.__class__.session_host
+
+				self._event_id = None
+				last_event_id = None
+
 				self._init.clear()
 				conn = self._connect(Action("create_session", **self.create_params))
 				self._init.wait()
