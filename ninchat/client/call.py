@@ -108,7 +108,7 @@ class Registry(object):
 		if transient:
 			self.transients.add(action_id)
 
-	def __delattr__(self, action_id):
+	def __delitem__(self, action_id):
 		del self.calls[action_id]
 		try:
 			self.transients.remove(action_id)
