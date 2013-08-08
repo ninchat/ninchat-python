@@ -135,6 +135,12 @@ class CallbackSessionBase(SessionBase):
 		self._received_callback = received or self.__class__.received
 		self._closed_callback = closed or self.__class__.closed
 
+	def received(self, event):
+		pass
+
+	def closed(self):
+		pass
+
 class QueueSessionBase(SessionBase):
 	__doc__ = """Events are delivered via the receive_event() method, the
 	event_queue or iteration.
