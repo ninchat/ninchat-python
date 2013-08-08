@@ -44,6 +44,8 @@ class ParameterError(Exception):
 class Action(object):
 	"""Holds an API action to be sent to the server.
 	"""
+	_transient_for_session_id = None
+
 	def __init__(self, action, payload=None, **params):
 		self._params = params
 		self.payload = payload or []

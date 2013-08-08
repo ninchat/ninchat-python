@@ -74,16 +74,30 @@ class SessionBase(object):
 		self.__started = True
 		self._sender.start()
 
-	def next_action_id(self):
+	def new_action_id(self):
 		"""Generate an action_id for an Action."""
 		with self._action_id as critical:
 			critical.value += 1
 			return critical.value
 
-	def send_action(self, action, **params):
-		"""Send the named action asynchronously.  The action_id parameter is
+	def new_action(self, action, transient=False, **params):
+		"""Create an Action, to be sent later.  The action_id parameter is
 		generated implicitly (if applicable) unless specified by the caller.
-		The action_id is returned.
+		If transient is set, the action is relevant only during the current
+		server session; it will not be retried if the session needs to be
+		recreated.
+		"""
+		action = Action(action, **params)
+
+		if transient:
+			assert self.session_id is not None
+			action._transient_for_session_id = self.session_id
+
+		return action
+
+	def send_action(self, action, transient=False, **params):
+		"""Create and send the action asynchronously.  See new_action for
+		details.  The action_id is returned (if any).
 		"""
 		action_id = None
 
@@ -92,10 +106,10 @@ class SessionBase(object):
 			if action_id is None:
 				del params["action_id"]
 		else:
-			action_id = self.next_action_id()
+			action_id = self.new_action_id()
 			params["action_id"] = action_id
 
-		self.action_queue.put(Action(action, **params))
+		self.action_queue.put(self.new_action(action, transient, **params))
 
 		return action_id
 

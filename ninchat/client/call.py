@@ -99,17 +99,25 @@ class AsyncCall(Call):
 
 class AdapterBase(object):
 	"""
-	.. method:: next_action_id()
+	.. attribute:: event_queue
 
-	   Forwarded to the session instance.
+	   See session.
 
-	.. method:: send_action(action, **params)
+	.. method:: new_action_id()
 
-	   Forwarded to the session instance.
+	   See session.
+
+	.. method:: new_action(action, transient=False, **params)
+
+	   See session.
+
+	.. method:: send_action(action, transient=False, **params)
+
+	   See session.
 
 	.. method:: close()
 
-	   Forwarded to the session instance.
+	   See session.
 
 	"""
 	def __init__(self, session):
@@ -142,10 +150,10 @@ class AdapterBase(object):
 			action_id = action_params["action_id"]
 			assert action_id is not None
 		else:
-			action_id = self._session.next_action_id()
+			action_id = self._session.new_action_id()
 			action_params["action_id"] = action_id
 
-		action = Action(name, **action_params)
+		action = self._session.new_action(name, **action_params)
 		call = self._call_type(self._session, action, *call_args)
 
 		with self._calls as critical:

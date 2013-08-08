@@ -25,10 +25,10 @@
 """Session implementations using the third-party gevent module.
 
 .. autoclass:: CallbackSession
-   :members: close, create, next_action_id, send_action
+   :members: close, create, new_action_id, new_action, send_action
 
 .. autoclass:: QueueSession
-   :members: close, create, next_action_id, receive_event, send_action
+   :members: close, create, new_action_id, new_action, receive_event, send_action
 
 """
 

@@ -174,6 +174,11 @@ class TransportSessionBase(SessionBase):
 				elif next_action is self.TERMINATE:
 					break
 
+				if next_action._transient_for_session_id is not None and next_action._transient_for_session_id != self.session_id:
+					log.debug("skipping transient %s", next_action)
+					next_action = None
+					continue
+
 				next_event_id = self._event_id
 				if next_event_id == last_event_id:
 					next_event_id = None
