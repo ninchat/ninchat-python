@@ -131,7 +131,7 @@ class Registry(object):
 
 class AdapterBase(object):
 	"""
-	.. attribute:: event_queue
+	.. attribute:: action_queue
 
 	   See session.
 
