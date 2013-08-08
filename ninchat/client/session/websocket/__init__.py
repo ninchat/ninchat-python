@@ -24,7 +24,15 @@
 
 from __future__ import absolute_import
 
+import bisect
 import time
+
+try:
+	# Python 2
+	import Queue as queue
+except ImportError:
+	# Python 3
+	import queue
 
 from ... import log
 from ...action import Action, SessionAction
@@ -62,11 +70,85 @@ class QueueConnectionBase(ConnectionBase):
 		if self.session._handle_disconnect():
 			self.session.event_queue.put(None)
 
+class Pending(object):
+
+	def __init__(self, critical_type):
+		self.critical = critical_type()
+		self.list = []
+		self.map = {}
+
+	def get(self):
+		"""Get an action which should be resent now (or None) and the time
+		after which one might be available for resending (or None).
+		"""
+		with self.critical:
+			if not self.list:
+				return None, None
+
+			action = self.list[0]
+
+		timeout = action._resend_time - time.time()
+		if timeout > 0:
+			return None, timeout
+		else:
+			return action, None
+
+	def sent(self, action):
+		"""An action was just (re)sent.
+		"""
+		action_id = action._params.get("action_id")
+		if action_id is None:
+			return
+
+		with self.critical:
+			if self.list and action is self.list[0]:
+				del self.list[0]
+				new = False
+			else:
+				new = True
+
+			if action._sent():
+				bisect.insort(self.list, action)
+				if new:
+					self.map[action_id] = action
+
+	def drop(self, action):
+		"""An action up for (re)sending is obsolete.
+		"""
+		with self.critical:
+			if self.list and action is self.list[0]:
+				del self.list[0]
+				del self.map[action._params["action_id"]]
+
+	def ack(self, action_id):
+		"""An event was received.  Returns True if the action_id was pending
+		(hasn't been ack'ed before), otherwise the event is a duplicate caused
+		by retrying too hard.
+		"""
+		ok = False
+
+		with self.critical:
+			action = self.map.get(action_id)
+			if action is not None:
+				i = bisect.bisect_left(self.list, action)
+				assert self.list[i] is action
+
+				del self.list[i]
+				del self.map[action_id]
+
+				ok = True
+
+		if not ok:
+			log.warning("received action_id was not pending: %s", action_id)
+
+		return ok
+
 class TransportSessionBase(SessionBase):
 	TERMINATE = object()
 
 	def __init__(self):
 		super(TransportSessionBase, self).__init__()
+		self._pending = Pending(self._critical_type)
 		self._init = self._flag_type()
 		self._reset = False
 		self._closing = False
@@ -103,6 +185,11 @@ class TransportSessionBase(SessionBase):
 				self._event_id = event_id
 		except KeyError:
 			pass
+
+		# TODO: don't ack before all events of a multi-event action have been received?
+		action_id = event._params.get("action_id")
+		if action_id is not None and not self._pending.ack(action_id):
+			caller_handles = False
 
 		return caller_handles
 
@@ -163,7 +250,12 @@ class TransportSessionBase(SessionBase):
 
 			while True:
 				if next_action is None:
-					next_action = self.action_queue.get()
+					next_action, timeout = self._pending.get()
+					if next_action is None:
+						try:
+							next_action = self.action_queue.get(timeout=timeout)
+						except queue.Empty:
+							continue
 
 				if self._reset:
 					self._reset = False
@@ -178,7 +270,8 @@ class TransportSessionBase(SessionBase):
 					break
 
 				if next_action._transient_for_session_id is not None and next_action._transient_for_session_id != self.session_id:
-					log.debug("skipping transient %s", next_action)
+					log.debug("dropping transient %s", next_action)
+					self._pending.drop(next_action)
 					next_action = None
 					continue
 
@@ -194,6 +287,7 @@ class TransportSessionBase(SessionBase):
 					log.exception("websocket send")
 					break
 
+				self._pending.sent(next_action)
 				next_action = None
 
 				if next_event_id is not None:

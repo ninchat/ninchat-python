@@ -61,9 +61,10 @@ class Executor(threading.Thread):
 
 class Critical(object):
 
-	def __init__(self, value):
-		self.value = value
+	def __init__(self, value=None):
 		self._lock = threading.Lock()
+		if value is not None:
+			self.value = value
 
 	def __enter__(self):
 		self._lock.acquire()

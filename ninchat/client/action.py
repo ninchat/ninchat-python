@@ -25,6 +25,7 @@
 from __future__ import absolute_import
 
 import json
+import time
 
 from .. import api
 
@@ -44,7 +45,12 @@ class ParameterError(Exception):
 class Action(object):
 	"""Holds an API action to be sent to the server.
 	"""
+	retry_count = 3
+	retry_timeout = 15
+
 	_transient_for_session_id = None
+	_resend_num = 0
+	_resend_time = None
 
 	def __init__(self, name, payload=None, **params):
 		assert "action" not in params
@@ -90,6 +96,57 @@ class Action(object):
 			(" payload " + " ".join(
 					"%r" % p for p in self.payload)) if self.payload else "")
 
+	def __hash__(self):
+		return hash(self._params.get("action_id"))
+
+	def __eq__(self, other):
+		if self._resend_time == other._resend_time:
+			return self._params.get("action_id") == other._params.get("action_id")
+
+		return False
+
+	def __ne__(self, other):
+		if self._resend_time != other._resend_time:
+			return self._params.get("action_id") != other._params.get("action_id")
+
+		return False
+
+	def __lt__(self, other):
+		if self._resend_time < other._resend_time:
+			return True
+
+		if self._resend_time == other._resend_time:
+			return self._params.get("action_id") < other._params.get("action_id")
+
+		return False
+
+	def __le__(self, other):
+		if self._resend_time <= other._resend_time:
+			return True
+
+		if self._resend_time == other._resend_time:
+			return self._params.get("action_id") <= other._params.get("action_id")
+
+		return False
+
+	def __gt__(self, other):
+		if self._resend_time > other._resend_time:
+			return True
+
+		if self._resend_time == other._resend_time:
+			return self._params.get("action_id") > other._params.get("action_id")
+
+		return False
+
+	def __ge__(self, other):
+		if self._resend_time >= other._resend_time:
+			return True
+
+		if self._resend_time == other._resend_time:
+			return self._params.get("action_id") >= other._params.get("action_id")
+
+		return False
+
 	@property
 	def _frames(self):
 		return [json.dumps(self._params, separators=(",", ":"))] + self.payload
@@ -112,6 +169,15 @@ class Action(object):
 			return event._params.get("history_length", 0)
 		else:
 			return 0
+
+	def _sent(self):
+		self._resend_num += 1
+		if self._resend_num >= self.retry_count:
+			self._resend_time = None
+			return False
+		else:
+			self._resend_time = time.time() + self.retry_timeout
+			return True
 
 class SessionAction(Action):
 

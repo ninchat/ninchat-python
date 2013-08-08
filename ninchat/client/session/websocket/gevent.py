@@ -42,8 +42,9 @@ from . import CallbackConnectionBase, ConnectionBase, QueueConnectionBase, Trans
 
 class Critical(object):
 
-	def __init__(self, value):
-		self.value = value
+	def __init__(self, value=None):
+		if value is not None:
+			self.value = value
 
 	def __enter__(self):
 		return self
