@@ -92,6 +92,16 @@ class SessionBase(object):
 		server session; it will not be retried if the session needs to be
 		recreated.
 		"""
+		action_id = None
+
+		if "action_id" in params:
+			action_id = params["action_id"]
+			if action_id is None:
+				del params["action_id"]
+		else:
+			action_id = self.new_action_id()
+			params["action_id"] = action_id
+
 		action = Action(name, **params)
 
 		if transient:
@@ -104,19 +114,8 @@ class SessionBase(object):
 		"""Create and send an action asynchronously.  See new_action for
 		details.  The action_id is returned (if any).
 		"""
-		action_id = None
-
-		if "action_id" in params:
-			action_id = params["action_id"]
-			if action_id is None:
-				del params["action_id"]
-		else:
-			action_id = self.new_action_id()
-			params["action_id"] = action_id
-
 		self.action_queue.put(self.new_action(name, transient, **params))
-
-		return action_id
+		return action._params.get("action_id")
 
 	def close(self):
 		if self.__started and not self.__closed:

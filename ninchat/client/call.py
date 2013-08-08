@@ -146,14 +146,9 @@ class AdapterBase(object):
 		return call
 
 	def _call(self, name, action_params, *call_args):
-		if "action_id" in action_params:
-			action_id = action_params["action_id"]
-			assert action_id is not None
-		else:
-			action_id = self._session.new_action_id()
-			action_params["action_id"] = action_id
-
 		action = self._session.new_action(name, **action_params)
+		action_id = action._params["action_id"]
+
 		call = self._call_type(self._session, action, *call_args)
 
 		with self._calls as critical:
