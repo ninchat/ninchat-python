@@ -103,10 +103,6 @@ class AdapterBase(object):
 
 	   See session.
 
-	.. method:: new_action_id()
-
-	   See session.
-
 	.. method:: new_action(name, transient=False, **params)
 
 	   See session.

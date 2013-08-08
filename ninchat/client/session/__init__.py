@@ -80,7 +80,6 @@ class SessionBase(object):
 		self._sender.start()
 
 	def new_action_id(self):
-		"""Generate an action_id for an Action."""
 		with self._action_id as critical:
 			critical.value += 1
 			return critical.value
