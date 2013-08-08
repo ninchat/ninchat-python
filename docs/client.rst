@@ -8,7 +8,7 @@ Client support
 Session implementations
 =======================
 
-Note: similarly named session classes expose similar interface.
+Note: session classes with the same name have the same interface.
 
 
 Threading
