@@ -97,6 +97,38 @@ class AsyncCall(Call):
 	def close(self):
 		self.callback(self.session, self.action, None)
 
+class Registry(object):
+
+	def __init__(self):
+		self.calls = {}
+		self.transients = set()
+
+	def register(self, action_id, call, transient):
+		self.calls[action_id] = call
+		if transient:
+			self.transients.add(action_id)
+
+	def __delattr__(self, action_id):
+		del self.calls[action_id]
+		try:
+			self.transients.remove(action_id)
+		except KeyError:
+			pass
+
+	def get(self, action_id):
+		return self.calls.get(action_id)
+
+	def pop_transients(self):
+		transients = self.transients
+		self.transients = set()
+		return [self.calls.pop(action_id) for action_id in transients]
+
+	def rip_all(self):
+		calls = self.calls
+		self.calls = None
+		self.transients = None
+		return calls
+
 class AdapterBase(object):
 	"""
 	.. attribute:: event_queue
@@ -120,7 +152,7 @@ class AdapterBase(object):
 		super(AdapterBase, self).__init__()
 		self._session = session
 		self._creation = None
-		self._calls = session._critical_type({})
+		self._registry = session._critical_type(Registry())
 
 	def __enter__(self):
 		return self
@@ -141,14 +173,14 @@ class AdapterBase(object):
 
 		return call
 
-	def _call(self, name, action_params, *call_args):
-		action = self._session.new_action(name, **action_params)
+	def _call(self, name, transient, action_params, *call_args):
+		action = self._session.new_action(name, transient, **action_params)
 		action_id = action._params["action_id"]
 
 		call = self._call_type(self._session, action, *call_args)
 
-		with self._calls as critical:
-			critical.value[action_id] = call
+		with self._registry as critical:
+			critical.value.register(action_id, call, transient)
 
 		self._session.action_queue.put(action)
 
@@ -161,11 +193,20 @@ class AdapterBase(object):
 			c.done(event)
 			return True
 
+		if event.type == "session_created":
+			with self._registry as critical:
+				transient_calls = critical.value.pop_transients()
+
+			for call in transient_calls:
+				call.close()
+
+			return False
+
 		action_id = event._params.get("action_id")
 		if action_id is None:
 			return False
 
-		with self._calls as critical:
+		with self._registry as critical:
 			call = critical.value.get(action_id)
 			if not call:
 				return False
@@ -180,11 +221,10 @@ class AdapterBase(object):
 		return True
 
 	def _handle_close(self):
-		with self._calls as critical:
-			calls = critical.value
-			critical.value = None
+		with self._registry as critical:
+			all_calls = critical.value.rip_all()
 
-		for call in calls.itervalues():
+		for call in all_calls.itervalues():
 			call.close()
 
 		if self._creation is not None:
@@ -212,14 +252,14 @@ class SyncAdapterBase(AdapterBase):
 		self._session.create(**params)
 		return c.result
 
-	def call_action(self, name, **params):
+	def call_action(self, name, transient=False, **params):
 		"""Like the session object's send_action method, but wait for a
 		response.  The action_id parameter is generated implicitly unless
 		specified by the caller.  Depending on action type, either a single
 		event or a list of events is returned.  None is returned if the session
 		is closed before the response is received.
 		"""
-		return self._call(name, params, self._session._flag_type).result
+		return self._call(name, transient, params, self._session._flag_type).result
 
 class AsyncAdapterBase(AdapterBase):
 	__doc__ = """The instance methods corresponding to API actions are
@@ -241,7 +281,7 @@ class AsyncAdapterBase(AdapterBase):
 		self._creation = AsyncCreation(self._session, callback)
 		self._session.create(**params)
 
-	def call_action(self, name, callback, **params):
+	def call_action(self, name, callback, transient=False, **params):
 		"""Like the session object's send_action method, and call
 		callback(session, action, event_or_events) when a response is received.
 		The action_id parameter is generated implicitly unless specified by the
@@ -249,7 +289,7 @@ class AsyncAdapterBase(AdapterBase):
 		events are passed to the callback.  The event_or_events parameter will
 		be None if the session is closed before the response is received.
 		"""
-		self._call(name, params, callback)
+		self._call(name, transient, params, callback)
 
 class CallbackBase(object):
 
