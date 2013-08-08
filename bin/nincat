@@ -127,6 +127,8 @@ def main():
 				print(event.user_id, file=file)
 				print(event.user_auth, file=file)
 
+			debug(event)
+
 		if args.set_email:
 			event = session.create_identity(
 					identity_type = "email",
