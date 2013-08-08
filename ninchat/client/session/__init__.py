@@ -28,10 +28,16 @@ from ..action import Action
 class SessionBase(object):
 	"""Actions may be sent via the send_action() method, the action_queue or by
 	calling corresponding instance methods with keyword parameters;
-	e.g. session.describe_user(user_id="0h6si071").  The session must be
-	established by calling create() and waiting for the "session_created"
-	event.  The context manager protocol is supported: the session is closed in
-	a blocking manner after the with-suite.
+	e.g. session.describe_user(user_id="0h6si071").
+
+	A server session must be established by calling the create method and
+	waiting for a "session_created" (or an "error") event.  If the server drops
+	the session (due to network timeout or some other exceptional reason), a
+	new server session is created automatically, and another "session_created"
+	event is delivered.
+
+	The context manager protocol is supported: the session is closed in a
+	blocking manner after the with-suite.
 
 	.. attribute:: action_queue
 
@@ -69,10 +75,6 @@ class SessionBase(object):
 		return call
 
 	def create(self, **params):
-		"""Connect to the server and send the create_session action with given
-		parameters.  The session_created (or error) event will be delivered via
-		an implementation-specific mechanism.
-		"""
 		self.create_params = params
 		self.__started = True
 		self._sender.start()
@@ -128,6 +130,13 @@ class CallbackSessionBase(SessionBase):
 	invoked when events are received.
 	""" + SessionBase.__doc__ + """
 
+	.. method:: create(**params)
+
+	   Connect to the server and send the "create_session" action with given
+	   parameters.  The received(event) method or the received(session, event)
+	   callable will be invoked with a "session_created" event whenever a new
+	   server session is established.
+
 	.. method:: close()
 
 	   Close the session (if created).  The closed() method or the
@@ -154,6 +163,12 @@ class QueueSessionBase(SessionBase):
 	.. attribute:: event_queue
 
 	   Queue for receiving Event objects; terminated by None.
+
+	.. method:: create(**params)
+
+	   Connect to the server and send the "create_session" action with given
+	   parameters.  A "session_created" event will be delivered via the
+	   event_queue whenever a new server session is established.
 
 	.. method:: close()
 
