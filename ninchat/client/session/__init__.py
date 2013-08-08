@@ -30,7 +30,8 @@ class SessionBase(object):
 	calling corresponding instance methods with keyword parameters;
 	e.g. session.describe_user(user_id="0h6si071").  The session must be
 	established by calling create() and waiting for the "session_created"
-	event.
+	event.  The context manager protocol is supported: the session is closed in
+	a blocking manner after the with-suite.
 
 	.. attribute:: action_queue
 
@@ -54,7 +55,9 @@ class SessionBase(object):
 		return self
 
 	def __exit__(self, *exc):
-		self.close()
+		if self.__started:
+			self.close()
+			self._sender.join()
 
 	def __getattr__(self, action):
 		if action not in api.actions:
@@ -114,21 +117,23 @@ class SessionBase(object):
 		return action_id
 
 	def close(self):
-		"""Close the session and server connection (if any).  Notification
-		about the session closure is delivered via an implementation-specific
-		mechanism.
-		"""
 		if self.__started and not self.__closed:
 			self.__closed = True
 			self.action_queue.put(self.CLOSE_SESSION)
-			self._sender.join()
 
 class CallbackSessionBase(SessionBase):
 	__doc__ = """Either the received(event) and closed() methods should be
 	implemented in a subclass, or the received(session, event) and
 	closed(session) callables should be passed to the constructor; they will be
 	invoked when events are received.
-	""" + SessionBase.__doc__
+	""" + SessionBase.__doc__ + """
+
+	.. method:: close()
+
+	   Close the session (if created).  The closed() method or the
+	   closed(session) callable will be invoked when done.
+
+	"""
 
 	def __init__(self, received=None, closed=None):
 		super(CallbackSessionBase, self).__init__()
@@ -149,6 +154,11 @@ class QueueSessionBase(SessionBase):
 	.. attribute:: event_queue
 
 	   Queue for receiving Event objects; terminated by None.
+
+	.. method:: close()
+
+	   Close the session (if created).  None will be delivered via event_queue
+	   when done.
 
 	"""
 	def __init__(self):
