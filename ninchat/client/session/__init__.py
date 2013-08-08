@@ -59,12 +59,12 @@ class SessionBase(object):
 			self.close()
 			self._sender.join()
 
-	def __getattr__(self, action):
-		if action not in api.actions:
-			raise AttributeError(action)
+	def __getattr__(self, name):
+		if name not in api.actions:
+			raise AttributeError(name)
 
 		def call(**params):
-			return self.send_action(action, **params)
+			return self.send_action(name, **params)
 
 		return call
 
@@ -83,14 +83,14 @@ class SessionBase(object):
 			critical.value += 1
 			return critical.value
 
-	def new_action(self, action, transient=False, **params):
+	def new_action(self, name, transient=False, **params):
 		"""Create an Action, to be sent later.  The action_id parameter is
 		generated implicitly (if applicable) unless specified by the caller.
 		If transient is set, the action is relevant only during the current
 		server session; it will not be retried if the session needs to be
 		recreated.
 		"""
-		action = Action(action, **params)
+		action = Action(name, **params)
 
 		if transient:
 			assert self.session_id is not None
@@ -98,8 +98,8 @@ class SessionBase(object):
 
 		return action
 
-	def send_action(self, action, transient=False, **params):
-		"""Create and send the action asynchronously.  See new_action for
+	def send_action(self, name, transient=False, **params):
+		"""Create and send an action asynchronously.  See new_action for
 		details.  The action_id is returned (if any).
 		"""
 		action_id = None
@@ -112,7 +112,7 @@ class SessionBase(object):
 			action_id = self.new_action_id()
 			params["action_id"] = action_id
 
-		self.action_queue.put(self.new_action(action, transient, **params))
+		self.action_queue.put(self.new_action(name, transient, **params))
 
 		return action_id
 

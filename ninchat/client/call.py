@@ -107,11 +107,11 @@ class AdapterBase(object):
 
 	   See session.
 
-	.. method:: new_action(action, transient=False, **params)
+	.. method:: new_action(name, transient=False, **params)
 
 	   See session.
 
-	.. method:: send_action(action, transient=False, **params)
+	.. method:: send_action(name, transient=False, **params)
 
 	   See session.
 
@@ -218,14 +218,14 @@ class SyncAdapterBase(AdapterBase):
 		self._session.create(**params)
 		return c.result
 
-	def call_action(self, action, **params):
+	def call_action(self, name, **params):
 		"""Call the session instance's send_action method, and wait for a
 		response.  The action_id parameter is generated implicitly unless
 		specified by the caller.  Depending on action type, either a single
 		event or a list of events is returned.  None is returned if the session
 		is closed before the response is received.
 		"""
-		return self._call(action, params, self._session._flag_type).result
+		return self._call(name, params, self._session._flag_type).result
 
 class AsyncAdapterBase(AdapterBase):
 	__doc__ = """The instance methods corresponding to API actions are
@@ -244,7 +244,7 @@ class AsyncAdapterBase(AdapterBase):
 		self._creation = AsyncCreation(self._session, callback)
 		self._session.create(**params)
 
-	def call_action(self, action, callback, **params):
+	def call_action(self, name, callback, **params):
 		"""Call the session instance's send_action method, and call
 		callback(session, action, event_or_events) when a response is received.
 		The action_id parameter is generated implicitly unless specified by the
@@ -252,7 +252,7 @@ class AsyncAdapterBase(AdapterBase):
 		events are passed to the callback.  The event_or_events parameter will
 		be None if the session is closed before the response is received.
 		"""
-		self._call(action, params, callback)
+		self._call(name, params, callback)
 
 class CallbackBase(object):
 

@@ -46,32 +46,34 @@ class Action(object):
 	"""
 	_transient_for_session_id = None
 
-	def __init__(self, action, payload=None, **params):
+	def __init__(self, name, payload=None, **params):
+		assert "action" not in params
+
 		self._params = params
 		self.payload = payload or []
 
-		specs = api.actions[action].params
+		specs = api.actions[name].params
 
-		for name, spec in specs.items():
-			value = self._params.get(name)
+		for key, spec in specs.items():
+			value = self._params.get(key)
 			if value is None:
 				if spec.required:
 					raise ParameterError(
-							"%r is missing from %r action" % (name, action),
+							"%r is missing from %r action" % (key, name),
 							spec)
 			else:
 				if not spec.validate(value):
 					raise ParameterError(
 							"%r value is invalid in %r action: %r" %
-							(name, action, value),
+							(key, name, value),
 							spec)
 
-		for name in self._params:
-			if name not in specs:
+		for key in self._params:
+			if key not in specs:
 				raise ParameterError(
-						"unknown %r in %r action" % (name, action))
+						"unknown %r in %r action" % (key, name))
 
-		self._params["action"] = action
+		self._params["action"] = name
 
 		if self.payload:
 			self._params["frames"] = len(self.payload)
