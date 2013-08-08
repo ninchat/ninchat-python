@@ -79,8 +79,8 @@ class TransportSessionBase(SessionBase):
 
 		if not self._init.is_set():
 			if event.type == "session_created":
-				self.session_id = event._params.pop("session_id")
-				self.session_host = event._params.pop("session_host")
+				self.session_id = event._params["session_id"]
+				self.session_host = event._params["session_host"]
 			elif event.type == "error":
 				if event.error_type == "session_not_found" and self.session_id is not None:
 					self.__reset_session()
