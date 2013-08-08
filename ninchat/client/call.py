@@ -158,7 +158,7 @@ class AdapterBase(object):
 		return self
 
 	def __exit__(self, *exc):
-		self.close()
+		self._session.__exit__(*exc)
 
 	def __getattr__(self, name):
 		if name not in api.actions:
