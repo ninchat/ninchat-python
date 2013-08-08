@@ -108,9 +108,11 @@ class Pending(object):
 				new = True
 
 			if action._sent():
-				bisect.insort(self.list, action)
+				bisect.insort_left(self.list, action)
 				if new:
 					self.map[action_id] = action
+			elif not new:
+				del self.map[action_id]
 
 	def drop(self, action):
 		"""An action up for (re)sending is obsolete.
