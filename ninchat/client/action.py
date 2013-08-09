@@ -30,7 +30,7 @@ import time
 from .. import api
 
 class ParameterError(Exception):
-	"""API action is missing a required parameter or the parameter value is
+	"""Action is missing a required parameter or the parameter value is
 	invalid.
 
 	.. attribute:: param
@@ -43,7 +43,11 @@ class ParameterError(Exception):
 		self.param = param
 
 class Action(object):
-	"""Holds an API action to be sent to the server.
+	"""Holds an action to be sent to the server.  `Parameters are
+	action-specific <https://ninchat.com/api#actions>`_.  If supported by the
+	action type, the payload should be a list of bytes objects.
+
+	Note: reusing an Action instance isn't supported.
 	"""
 	retry_count = 3
 	retry_timeout = 15
@@ -152,13 +156,14 @@ class Action(object):
 
 	@property
 	def name(self):
-		"""String
+		"""String (corresponds to the "action" parameter in the API
+		specification).
 		"""
 		return self._params["action"]
 
 	@property
 	def action_id(self):
-		"""Integer or None
+		"""Integer or None.
 		"""
 		return self._params.get("action_id")
 

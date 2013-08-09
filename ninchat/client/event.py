@@ -30,8 +30,9 @@ from .. import api
 from . import log
 
 class Event(object):
-	"""Holds an API event received from the server.  Event parameters may be
-	accessed as instance attributes.  Optional parameters default to None.
+	"""Holds an event received from the server.  `Event-specific parameters
+	<https://ninchat.com/api#events>`_ may be read as instance attributes.
+	Optional parameters default to None.
 
 	.. attribute:: payload
 
@@ -64,6 +65,7 @@ class Event(object):
 
 	@property
 	def name(self):
-		"""String
+		"""String (corresponds to the "event" parameter in the API
+		specification).
 		"""
 		return self._params["event"]
