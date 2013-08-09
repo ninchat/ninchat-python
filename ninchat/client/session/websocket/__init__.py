@@ -39,11 +39,10 @@ from ...action import Action, SessionAction
 from .. import SessionBase
 
 class ConnectionBase(object):
-	url_format = "wss://{}/socket"
 	protocols = ["ninchat.com-1"]
 
-	def __init__(self, hostname, session):
-		super(ConnectionBase, self).__init__(self.url_format.format(hostname), self.protocols)
+	def __init__(self, url, session):
+		super(ConnectionBase, self).__init__(url, self.protocols)
 		self.session = session
 
 	def send_action(self, action):
@@ -149,6 +148,8 @@ class Pending(object):
 
 class TransportSessionBase(SessionBase):
 	TERMINATE = object()
+
+	url_format = "wss://{}/socket"
 
 	def __init__(self):
 		super(TransportSessionBase, self).__init__()
@@ -298,8 +299,10 @@ class TransportSessionBase(SessionBase):
 					last_event_id = next_event_id
 
 	def _connect(self, action):
+		url = self.url_format.format(self.session_host)
+
 		while True:
-			conn = self._connection_type(self.session_host, self)
+			conn = self._connection_type(url, self)
 
 			try:
 				conn.connect()
