@@ -96,56 +96,37 @@ class Action(object):
 			(" payload " + " ".join(
 					"%r" % p for p in self.payload)) if self.payload else "")
 
-	def __hash__(self):
-		return hash(self._params.get("action_id"))
-
-	def __eq__(self, other):
-		if self._resend_time == other._resend_time:
-			return self._params.get("action_id") == other._params.get("action_id")
-
-		return False
-
-	def __ne__(self, other):
-		if self._resend_time != other._resend_time:
-			return self._params.get("action_id") != other._params.get("action_id")
-
-		return False
-
 	def __lt__(self, other):
 		if self._resend_time < other._resend_time:
 			return True
-
-		if self._resend_time == other._resend_time:
-			return self._params.get("action_id") < other._params.get("action_id")
-
-		return False
+		elif self._resend_time == other._resend_time:
+			return id(self) < id(other)
+		else:
+			return False
 
 	def __le__(self, other):
-		if self._resend_time <= other._resend_time:
+		if self._resend_time < other._resend_time:
 			return True
-
-		if self._resend_time == other._resend_time:
-			return self._params.get("action_id") <= other._params.get("action_id")
-
-		return False
+		elif self._resend_time == other._resend_time:
+			return id(self) <= id(other)
+		else:
+			return False
 
 	def __gt__(self, other):
 		if self._resend_time > other._resend_time:
 			return True
-
-		if self._resend_time == other._resend_time:
-			return self._params.get("action_id") > other._params.get("action_id")
-
-		return False
+		elif self._resend_time == other._resend_time:
+			return id(self) > id(other)
+		else:
+			return False
 
 	def __ge__(self, other):
-		if self._resend_time >= other._resend_time:
+		if self._resend_time > other._resend_time:
 			return True
-
-		if self._resend_time == other._resend_time:
-			return self._params.get("action_id") >= other._params.get("action_id")
-
-		return False
+		elif self._resend_time == other._resend_time:
+			return id(self) >= id(other)
+		else:
+			return False
 
 	@property
 	def _frames(self):
