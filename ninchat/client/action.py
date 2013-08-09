@@ -85,11 +85,11 @@ class Action(object):
 			self._params["frames"] = len(self.payload)
 
 	def __str__(self):
-		return self._params["action"]
+		return self.name
 
 	def __repr__(self):
 		return "<Action %r %s%s>" % (
-			self._params["action"],
+			self.name,
 			" ".join(
 					"%s %r" % (k, v) for k, v in sorted(self._params.items())
 					if k not in ("action", "frames")),
@@ -141,16 +141,6 @@ class Action(object):
 			except KeyError:
 				pass
 
-	@property
-	def multiple_events(self):
-		return self._params["action"] == "load_history"
-
-	def get_pending_events(self, event):
-		if self.multiple_events:
-			return event._params.get("history_length", 0)
-		else:
-			return 0
-
 	def _sent(self):
 		self._resend_num += 1
 		if self._resend_num >= self.retry_count:
@@ -159,6 +149,28 @@ class Action(object):
 		else:
 			self._resend_time = time.time() + self.retry_timeout
 			return True
+
+	@property
+	def name(self):
+		"""String
+		"""
+		return self._params["action"]
+
+	@property
+	def action_id(self):
+		"""Integer or None
+		"""
+		return self._params.get("action_id")
+
+	@property
+	def multiple_events(self):
+		return self.name == "load_history"
+
+	def get_pending_events(self, event):
+		if self.multiple_events:
+			return event._params.get("history_length", 0)
+		else:
+			return 0
 
 class SessionAction(Action):
 

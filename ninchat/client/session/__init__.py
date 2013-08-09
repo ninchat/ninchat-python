@@ -114,7 +114,7 @@ class SessionBase(object):
 		details.  The action_id is returned (if any).
 		"""
 		self.action_queue.put(self.new_action(name, transient, **params))
-		return action._params.get("action_id")
+		return action.action_id
 
 	def close(self):
 		if self.__started and not self.__closed:

@@ -96,8 +96,7 @@ class Pending(object):
 	def sent(self, action):
 		"""An action was just (re)sent.
 		"""
-		action_id = action._params.get("action_id")
-		if action_id is None:
+		if action.action_id is None:
 			return
 
 		with self.critical:
@@ -110,17 +109,20 @@ class Pending(object):
 			if action._sent():
 				bisect.insort_left(self.list, action)
 				if new:
-					self.map[action_id] = action
+					self.map[action.action_id] = action
 			elif not new:
-				del self.map[action_id]
+				del self.map[action.action_id]
 
 	def drop(self, action):
 		"""An action up for (re)sending is obsolete.
 		"""
+		if action.action_id is None:
+			return
+
 		with self.critical:
 			if self.list and action is self.list[0]:
 				del self.list[0]
-				del self.map[action._params["action_id"]]
+				del self.map[action.action_id]
 
 	def ack(self, action_id):
 		"""An event was received.  Returns True if the action_id was pending

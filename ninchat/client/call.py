@@ -175,12 +175,12 @@ class AdapterBase(object):
 
 	def _call(self, name, transient, action_params, *call_args):
 		action = self._session.new_action(name, transient, **action_params)
-		action_id = action._params["action_id"]
+		assert action.action_id is not None
 
 		call = self._call_type(self._session, action, *call_args)
 
 		with self._registry as critical:
-			critical.value.register(action_id, call, transient)
+			critical.value.register(action.action_id, call, transient)
 
 		self._session.action_queue.put(action)
 

@@ -29,6 +29,7 @@
    A logging.Logger which may be configured by the application.
 
 .. autoclass:: Action
+   :members:
 
 .. autoclass:: Event
    :members:
