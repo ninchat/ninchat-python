@@ -1,5 +1,22 @@
-import sys
-from distutils.core import setup
+import os
+
+if not os.path.exists("ninchat/api/spec/json"):
+	raise Exception("ninchat-api submodule not found")
+
+try:
+	import setuptools
+	import sys
+
+	def setup(**kwargs):
+		with open("requirements.txt") as file:
+			lines = file.read().strip().split("\n")
+			if getattr(sys, "subversion", [None])[0] != "CPython" or sys.version_info[0] != 2:
+				lines = [l for l in lines if "!cpython2" not in l]
+
+		setuptools.setup(install_requires=lines, **kwargs)
+
+except ImportError:
+	from distutils.core import setup
 
 setup(
 	name             = "ninchat-python",

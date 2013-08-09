@@ -6,7 +6,7 @@
 ### Requirements
 
 - Python 2.6, 2.7 or 3.x
-- ws4py
+- ws4py package
 
 ### Installation
 

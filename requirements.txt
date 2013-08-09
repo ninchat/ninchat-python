@@ -1,2 +1,2 @@
-ws4py
-gevent
+ws4py >= 0.2, != 0.3.0-beta
+gevent >= 0.13                  # !cpython2
