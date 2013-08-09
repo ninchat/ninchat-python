@@ -43,7 +43,7 @@ class State(object):
 		self.greenlet = gevent.spawn(self.loop)
 
 		event = self.session.create(message_types=["ninchat.com/text"])
-		if event is None or event.type == "error":
+		if event is None or event.name == "error":
 			log.error("create: %r", event)
 			return
 
@@ -51,10 +51,10 @@ class State(object):
 
 	def loop(self):
 		for num, event in enumerate(self.session):
-			if event.type == "error":
+			if event.name == "error":
 				log.error("%d: %r", num, event)
 				break
-			elif event.type == "message_received":
+			elif event.name == "message_received":
 				n = int(json.loads(event.payload[0])["text"])
 				log.debug("%d: %s %s", num, n, event.message_id)
 				gevent.spawn(self.send, n + 1)
@@ -63,7 +63,7 @@ class State(object):
 
 	def init(self):
 		event = self.session.create(message_types=["ninchat.com/text"])
-		if event is None or event.type == "error":
+		if event is None or event.name == "error":
 			log.error("create: %r", event)
 			return
 
@@ -71,7 +71,7 @@ class State(object):
 
 	def send(self, n):
 		event = self.session.send_message(user_id=self.other.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": str(n) })])
-		if event is None or event.type == "error":
+		if event is None or event.name == "error":
 			log.error("send_message: %r", event)
 			return
 

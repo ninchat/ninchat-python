@@ -193,7 +193,7 @@ class AdapterBase(object):
 			c.done(event)
 			return True
 
-		if event.type == "session_created":
+		if event.name == "session_created":
 			with self._registry as critical:
 				transient_calls = critical.value.pop_transients()
 

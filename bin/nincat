@@ -101,7 +101,7 @@ def main():
 			session_params["user_auth"] = file.readline().strip()
 
 	def on_received(session, event):
-		if event.type != "message_received":
+		if event.name != "message_received":
 			return
 
 		if not args.listen:
@@ -118,7 +118,7 @@ def main():
 
 	with SyncCallbackAdapter(CallbackSession(on_received, on_closed)) as session:
 		event = session.create(**session_params)
-		if event.type != "session_created":
+		if event.name != "session_created":
 			error("create_session:", event)
 			sys.exit(2)
 
@@ -133,7 +133,7 @@ def main():
 			event = session.create_identity(
 					identity_type = "email",
 					identity_name = args.set_email)
-			if event.type == "error":
+			if event.name == "error":
 				error("create_identity:", event)
 			else:
 				debug(event)
@@ -142,7 +142,7 @@ def main():
 			for channel_id in args.channels:
 				event = session.join_channel(
 						channel_id = channel_id)
-				if event.type == "error":
+				if event.name == "error":
 					error("join_channel %s:" % channel_id, event)
 				else:
 					debug(event)
@@ -158,7 +158,7 @@ def main():
 							channel_id   = channel_id,
 							message_type = "ninchat.com/text",
 							payload      = [json.dumps({ "text": line })])
-					if event.type == "error":
+					if event.name == "error":
 						error("send_message %s:" % channel_id, event)
 
 		if args.listen:
@@ -171,7 +171,7 @@ def main():
 			for channel_id in args.channels:
 				event = session.part_channel(
 						channel_id = channel_id)
-				if event.type == "error":
+				if event.name == "error":
 					error("part_channel %s:" % channel_id, event)
 				else:
 					debug(event)
@@ -180,7 +180,7 @@ def main():
 			with open(args.user) as file:
 				event = session.delete_user(
 						user_auth = file.readlines()[1].strip())
-				if event.type == "error":
+				if event.name == "error":
 					error("delete_user:", event)
 				else:
 					debug(event)

@@ -43,14 +43,8 @@ class Event(object):
 		self._length = self._params.pop("frames", 0)
 		self.payload = []
 
-	@property
-	def type(self):
-		"""String
-		"""
-		return self._params["event"]
-
 	def __getattr__(self, name):
-		spec = api.events[self.type].params[name]
+		spec = api.events[self.name].params[name]
 		value = self._params.get(name)
 		if value is None and spec.required:
 			log.warning("event %r parameter %r is missing", event, name)
@@ -67,3 +61,9 @@ class Event(object):
 					if k != "event"),
 			(" payload " + " ".join(
 					"%r" % p for p in self.payload)) if self.payload else "")
+
+	@property
+	def name(self):
+		"""String
+		"""
+		return self._params["event"]

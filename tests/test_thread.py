@@ -49,7 +49,7 @@ class State(object):
 		self.error = False
 
 	def _error(self, event):
-		if event is None or event.type == "error":
+		if event is None or event.name == "error":
 			log.error("%d: %r", self.num, event)
 			if not self.error:
 				self.error = True
@@ -70,7 +70,7 @@ class State(object):
 
 	def spurious(self, session, event):
 		if not self._error(event):
-			if event.type == "message_received":
+			if event.name == "message_received":
 				s = event.payload[0]
 				if isinstance(s, bytes):
 					s = s.decode("utf-8")
