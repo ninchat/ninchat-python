@@ -22,114 +22,479 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
 import json
 import socket
+import time
 
 import gevent
 import gevent.queue
 
-from ninchat.client.call import SyncQueueAdapter
-from ninchat.client.gevent import QueueSession
+from ..client.call import SyncQueueAdapter
+from ..client.gevent import QueueSession
 
 from . import log
 
-command_handlers = {}
+SERVER = "ninchat"
 
-class Client(object):
+def async(func):
+	def spawner(*args, **kwargs):
+		gevent.spawn(func, *args, **kwargs)
+	return spawner
 
-	def __init__(self, to_irc):
-		self.to_irc = to_irc
+class Queue(gevent.queue.Queue):
+
+	def __iter__(self):
+		return self
+
+	def next(self):
+		while True:
+			return self.get()
+
+class TerminatedQueue(gevent.queue.Queue):
+
+	class Termination(object):
+
+		def __init__(self, queue):
+			self.queue = queue
+
+		def __enter__(self):
+			return self.queue
+
+		def __exit__(self, *exc):
+			self.queue.put(None)
+
+	def __init__(self, maxsize=0, terminators=1):
+		super(TerminatedQueue, self).__init__(max(maxsize, terminators))
+		self.__terminators = terminators
+
+	def __iter__(self):
+		return self
+
+	def next(self):
+		while True:
+			item = self.get()
+			if item is None:
+				self.__terminators -= 1
+				if self.__terminators <= 0:
+					raise StopIteration
+			else:
+				return item
+
+	def termination(self):
+		return self.Termination(self)
+
+class User(object):
+
+	def __init__(self, client, client_send_queue):
+		self.client = client
+		self.client_send_queue = client_send_queue
 		self.user_id = None
 		self.user_auth = None
-		self.name = None
+		self.user_name = None
 		self.session = None
+		self.search_queues = {}
+
+	def __str__(self):
+		if self.user_id is not None:
+			return "user {}!{}".format(self.user_name, self.user_id)
+		elif self.user_name is not None:
+			return "user {}?".format(self.user_name)
+		else:
+			return "user unknown"
 
 	@property
 	def ident(self):
-		return "%s!%s@ninchat".format(self.name, self.user_id)
+		return "{}^{}!{}".format(self.user_name, self.user_id, SERVER)
 
-	def send_to_irc(self, line):
-		self.to_irc.put(line.encode("utf-8"))
+	def log_call_error(self, action, event):
+		if event.error_reason:
+			log.error("%s %s error: %s (%s)", self, action, event.error_type, event.error_reason)
+		else:
+			log.error("%s %s error: %s", self, action, event.error_type)
+
+	def send(self, line):
+		self.client_send_queue.put(line.encode("utf-8"))
+
+	def set_auth(self, user_auth):
+		if self.user_auth is None:
+			self.user_auth = user_auth
+		else:
+			log.error("%s resent PASS command", self)
+			self.client.disconnect = True
 
 	def set_name(self, name):
-		if self.name is None:
-			self.name = name
+		if "^" in name:
+			name, _ = name.split("^", 1)
+
+		if self.user_name is None:
+			self.user_name = name
 		else:
-			self.session.update_user("")
+			self._update_name(name)
 
-	def init_auth(self, user_auth):
-		if self.user_auth is not None:
-			log.error("user_id and/or user_auth already set")
-			return
+	@async
+	def _update_name(self, name):
+		event = self.session.update_user(user_attrs={ "name": name })
+		if event.name == "error":
+			self.log_call_error("update_user", event)
+		else:
+			self.user_name = event.user_attrs.get("name", "")
+			self.send(":{} NICK :{}^{}".format(self.ident, self.user_name, self.user_id))
 
-		self.user_auth = user_auth
-
-	def init_session(self, user_id, realname):
+	def init(self, user_id, realname):
 		if self.user_id is not None:
-			log.error("user_id already set")
+			log.error("%s resent USER command", self)
+			self.client.disconnect = True
 			return
 
 		self.user_id = user_id
 
 		session = SyncQueueAdapter(QueueSession())
-		gevent.spawn(self._receive, session)
+		self._session_recv_loop(session)
 
-		event = session.create(
-				message_types = ["ninchat.com/*"],
-				user_id       = self.user_id,
-				user_auth     = self.user_auth,
-				user_attrs    = {
-					"name":     self.name,
-					"realname": realname,
-				})
+		try:
+			event = session.create(
+					message_types = ["ninchat.com/*"],
+					user_id       = self.user_id,
+					user_auth     = self.user_auth,
+					user_attrs    = {
+						"name":     self.user_name,
+						"realname": realname,
+					})
 
+			if event.name == "error":
+				self.log_call_error("create_session", event)
+				self.client.disconnect = True
+			else:
+				self.user_name = event.user_attrs["name"]
+				self.session = session
+
+				log.info("%s is %s", self.client, self)
+
+				self.send(":{} NICK :{}^{}".format(self.ident, self.user_name, self.user_id))
+				self.send(":{} 001 {}^{} :Welcome to Ninchat".format(SERVER, self.user_name, self.user_id))
+				for channel_id, channel_info in event.user_channels.iteritems():
+					self.send(":{} JOIN #{}".format(
+							self.ident,
+							channel_id))
+
+					self.send(":{} 332 * #{} :{}: {}".format(
+							SERVER,
+							channel_id,
+							channel_info["channel_attrs"].get("name", ""),
+							channel_info["channel_attrs"].get("topic", "")))
+
+					event = self.session.describe_channel(channel_id=channel_id)
+					if event.name == "error":
+						self.log_call_error("describe_channel %s" % channel_id, event)
+					else:
+						self.send(":{} 353 * #{} :{}".format(
+								SERVER,
+								channel_id,
+								" ".join(
+									"{}^{}".format(info["user_attrs"].get("name", ""), id)
+									for id, info
+									in (event.channel_members or {}).iteritems()
+								)))
+
+						self.send(":{} 366 * #{} :End of NAMES list".format(
+								SERVER,
+								channel_id))
+
+		finally:
+			if self.session is not session:
+				session.close()
+
+	@async
+	def _session_recv_loop(self, session):
+		for event in session:
+			log.debug("%s received %s event", self, event)
+
+			if event.name == "user_updated":
+				if event.user_id == self.user_id:
+					name = event.user_attrs.get("name", "")
+					if name != self.user_name:
+						self.user_name = name
+						self.send(":{} NICK :{}^{}".format(self.ident, self.user_name, self.user_id))
+			elif event.name == "message_received":
+				if event.message_type == "ninchat.com/text":
+					text = json.loads(event.payload[0])["text"]
+
+					if event.channel_id is not None:
+						self.send(":{}^{}!{} PRIVMSG #{} :{}".format(
+								event.message_user_name or "",
+								event.message_user_id,
+								SERVER,
+								event.channel_id,
+								text))
+					elif event.user_id is not None:
+						self.send(":{}^{}!{} PRIVMSG {}^{} :{}".format(
+								event.message_user_name or "",
+								event.message_user_id,
+								SERVER,
+								self.user_name,
+								self.user_id,
+								text))
+			elif event.name == "search_results":
+				queue = self.search_queues.get(event.action_id)
+				if queue:
+					queue.put(event)
+				else:
+					log.error("%s received search_results event for unknown search %s", self, event.action_id)
+
+	@async
+	def send_channel(self, channel_id, text):
+		event = self._send_message(text, channel_id=channel_id)
 		if event.name == "error":
-			log.error("error: %r", event)
-			return
+			self.log_call_error("send_message channel %s" % channel_id, event)
 
-		self.name = event.user_attrs.get("name")
-		self.session = session
+	@async
+	def send_user(self, target, text):
+		_, user_id = target.split("^", 1)
+		event = self._send_message(text, user_id=user_id)
+		if event.name == "error":
+			self.log_call_error("send_message user %s" % user_id, event)
 
-		self.send_to_irc(":{} NICK :{}".format(self.ident, self.name))
-		self.send_to_irc(":ninchat 020 * :Ninchat IRC adapter")
+	def _send_message(self, text, **params):
+		return self.session.send_message(
+				message_type = "ninchat.com/text",
+				payload      = [json.dumps({ "text": text }).encode("utf-8")],
+				**params)
 
-	def _receive(self, session):
-		while True:
-			event = session.receive_event()
-			if event is None:
-				break
+	@async
+	def ping(self):
+		event = self.session.ping()
+		if event.name == "error":
+			self.log_call_error("ping", event)
+		else:
+			self.send(":{} PONG %s".format(SERVER, SERVER))
 
-			log.debug("event: %r", event)
+	@async
+	def whois(self, param):
+		if "^" in param:
+			_, user_id = param.split("^", 1)
+			event = self.__describe_user(user_id)
+			if event:
+				self._send_whois_reply(event.user_id, event.user_attrs)
+		else:
+			param = param.lower()
+			queue = TerminatedQueue(terminators=2)
 
-			if event.name == "message_received" and event.message_type == "ninchat.com/text":
-				self.send_to_irc(":{}!{}@ninchat PRIVMSG {} {}".format(
-						event.message_user_name or event.message_user_id,
-						event.message_user_id,
-						self.name,
-						json.loads(event.payload[0])["text"]))
+			self._describe_user(param, queue)
+			self._search(param, queue)
 
-class Command(object):
+			for item in queue:
+				if event.name == "user_found":
+					self._send_whois_reply(event.user_id, event.user_attrs)
+				elif event.name == "search_results":
+					for user_id, user_attrs in event.users.iteritems():
+						if user_attrs.get("name", "").lower() == param:
+							self._send_whois_reply(user_id, user_attrs)
 
-	def __init__(self, raw):
-		self.raw = raw
+		self.send(":{} 318 {} :End of WHOIS list".format(SERVER, param))
+
+	def _send_whois_reply(self, user_id, user_attrs):
+		self.send(":{} 311 {}^{} {} {} * :{}".format(
+				SERVER,
+				user_attrs.get("name", ""),
+				user_id,
+				user_id,
+				SERVER,
+				user_attrs.get("realname", "")))
+
+		idle_since = user_attrs.get("idle")
+		if idle_since:
+			self.send(":{} 317 {}^{} {} :seconds idle".format(
+					SERVER,
+					user_attrs.get("name", ""),
+					user_id,
+					int(time.time() - idle_since)))
+
+	@async
+	def _describe_user(self, user_id, result_queue):
+		with result_queue.termination():
+			event = self.__describe_user(user_id)
+			if event:
+				result_queue.put(event)
+
+	def __describe_user(self, user_id):
+		event = self.session.describe_user(user_id=user_id)
+		if event.name == "error":
+			if event.error_type != "user_not_found":
+				self.log_call_error("describe_user %r" % user_id, event)
+		else:
+			return event
+
+	@async
+	def _search(self, name, result_queue):
+		with result_queue.termination():
+			action_id = self.session.new_action_id()
+			search_queue = TerminatedQueue()
+
+			self.search_queues[action_id] = search_queue
+
+			try:
+				log.debug("%s search %s began", self, action_id)
+
+				event = self.session.search(action_id=action_id, search_term=name)
+				if event.name == "error":
+					self.log_call_error("search %r" % name, event)
+				else:
+					for event in search_queue:
+						if event.users:
+							result_queue.put(event)
+						elif event.channels:
+							pass
+						else:
+							break
+			finally:
+				del self.search_queues[action_id]
+
+				log.debug("%s search %s ended", self, action_id)
+
+	def close(self):
+		if self.session:
+			self.session.close()
+
+class Client(object):
+
+	class Commands(dict):
+		handlers = {}
+
+		@classmethod
+		def handle(cls, name):
+			def decorator(func):
+				assert name not in cls.handlers
+				cls.handlers[name] = func
+			return decorator
+
+	def __init__(self, (conn, addr)):
+		self.conn = conn
+		self.addr = addr
+		self.disconnect = False
+
+		self._main_loop()
 
 	def __str__(self):
-		return repr(self.raw)
+		return "client {}:{}".format(*self.addr)
 
-	def parse(self):
-		line = self.raw.decode("utf-8")
+	@async
+	def _main_loop(self):
+		log.info("%s connection", self)
 
-		if line.startswith(":"):
-			parts = line.split(" ", 2)
-			self.prefix = parts[0]
+		try:
+			recv_queue = TerminatedQueue()
+			send_queue = TerminatedQueue()
+			close_queue = TerminatedQueue(terminators=2)
+
+			self._recv_loop(recv_queue, close_queue)
+			self._send_loop(send_queue, close_queue)
+
+			user = User(self, send_queue)
+
+			try:
+				with send_queue.termination():
+					for line in recv_queue:
+						if self.disconnect:
+							break
+
+						try:
+							line = line.decode("utf-8")
+							if line.startswith(":"):
+								parts = line.split(" ", 2)
+							else:
+								parts = line.split(" ", 1)
+							command = parts[-2]
+							params = parts[-1]
+						except:
+							log.exception("%s command parse error: %r", self, line)
+							continue
+
+						handler = self.Commands.handlers.get(command)
+						if handler is None:
+							log.warning("%s command unknown: %r", self, line)
+							continue
+
+						handler(self, user, params)
+			finally:
+				user.close()
+
+			for _ in close_queue:
+				pass
+		finally:
+			log.info("%s disconnecting %s", self, user)
+			self.conn.close()
+
+	@async
+	def _recv_loop(self, recv_queue, close_queue):
+		with close_queue.termination(), recv_queue.termination():
+			buf = b""
+
+			while not self.disconnect:
+				data = self.conn.recv(512)
+				if not data:
+					break
+
+				buf += data
+
+				while True:
+					i = buf.find(b"\r\n")
+					if i < 0:
+						break
+
+					recv_queue.put(buf[:i])
+					buf = buf[i+2:]
+
+	@async
+	def _send_loop(self, send_queue, close_queue):
+		with close_queue.termination():
+			for line in send_queue:
+				self.conn.send(line + b"\r\n")
+
+	@Commands.handle("PASS")
+	def _(self, user, params):
+		user.set_auth(params)
+
+	@Commands.handle("NICK")
+	def _(self, user, params):
+		user.set_name(params)
+
+	@Commands.handle("USER")
+	def _(self, user, params):
+		user_id, _, _, realname = params.split(" ", 3)
+		user.init(user_id, realname)
+
+	@Commands.handle("MODE")
+	def _(self, user, params):
+		pass
+
+	@Commands.handle("PING")
+	def _(self, user, params):
+		if " " not in params and params == SERVER:
+			user.ping()
 		else:
-			parts = line.split(" ", 1)
-			self.prefix = None
+			log.warning("%s %s sent unsupported PING parameters: %s", self, user, params)
 
-		self.name = parts[-2]
-		self.params = parts[-1]
+	@Commands.handle("PRIVMSG")
+	def _(self, user, params):
+		target, text = params.split(" ", 1)
+		text = text[1:]
+		if target[0] == "#":
+			user.send_channel(target[1:], text)
+		else:
+			user.send_user(target, text)
+
+	@Commands.handle("WHOIS")
+	def _(self, user, params):
+		if " " in params:
+			params, _ = params.split(" ", 1)
+
+		user.whois(params)
+
+	@Commands.handle("QUIT")
+	def _(self, user, params):
+		self.disconnect = True
 
 def main():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -138,88 +503,4 @@ def main():
 	sock.listen(socket.SOMAXCONN)
 
 	while True:
-		gevent.spawn(handle_client, sock.accept())
-
-def handle_client((conn, addr)):
-	host, _ = addr
-	log.info("connection from %s", host)
-
-	commands = gevent.queue.Queue()
-	gevent.spawn(read_commands, conn, commands)
-
-	to_irc = gevent.queue.Queue()
-	gevent.spawn(write_to_irc, conn, to_irc)
-
-	client = Client(to_irc)
-
-	try:
-		while True:
-			command = commands.get()
-			if command is None:
-				break
-
-			try:
-				command.parse()
-			except:
-				log.exception("failed to parse command: %s", command)
-				continue
-
-			handler = command_handlers.get(command.name)
-			if handler is None:
-				log.warning("unknown command: %s", command)
-				continue
-
-			handler(client, command.params)
-
-		log.info("disconnect from %s", host)
-	finally:
-		to_irc.put(None)
-
-def read_commands(conn, queue):
-	try:
-		buf = b""
-
-		while True:
-			data = conn.recv(512)
-			if not data:
-				break
-
-			buf += data
-
-			while True:
-				i = buf.find(b"\r\n")
-				if i < 0:
-					break
-
-				queue.put(Command(buf[:i]))
-				buf = buf[i+2:]
-	finally:
-		queue.put(None)
-
-def write_to_irc(conn, queue):
-	while True:
-		line = queue.get()
-		if line is None:
-			break
-
-		conn.send(line)
-		conn.send(b"\r\n")
-
-def handle_command(name):
-	def decorator(func):
-		command_handlers[name] = func
-
-	return decorator
-
-@handle_command("PASS")
-def _(client, params):
-	client.init_auth(params)
-
-@handle_command("NICK")
-def _(client, params):
-	client.set_name(params)
-
-@handle_command("USER")
-def _(client, params):
-	user_id, _, _, realname = params.split(" ", 3)
-	client.init_session(user_id, realname)
+		Client(sock.accept())
