@@ -123,12 +123,12 @@ class Pending(object):
 				del self.list[0]
 				del self.map[action.action_id]
 
-	def ack(self, action_id):
-		"""An event was received.  Returns True if the action_id was pending
-		(hasn't been ack'ed before), otherwise the event is a duplicate caused
-		by retrying too hard.
+	def ack(self, event):
+		"""An event was received.
 		"""
-		ok = False
+		action_id = event._params.get("action_id")
+		if action_id is None:
+			return
 
 		with self.critical:
 			action = self.map.get(action_id)
@@ -138,13 +138,6 @@ class Pending(object):
 
 				del self.list[i]
 				del self.map[action_id]
-
-				ok = True
-
-		if not ok:
-			log.warning("received action_id was not pending: %s", action_id)
-
-		return ok
 
 class TransportSessionBase(SessionBase):
 	TERMINATE = object()
@@ -191,10 +184,7 @@ class TransportSessionBase(SessionBase):
 		except KeyError:
 			pass
 
-		# TODO: don't ack before all events of a multi-event action have been received?
-		action_id = event._params.get("action_id")
-		if action_id is not None and not self._pending.ack(action_id):
-			caller_handles = False
+		self._pending.ack(event)
 
 		return caller_handles
 
