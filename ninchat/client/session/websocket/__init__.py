@@ -161,17 +161,18 @@ class TransportSessionBase(SessionBase):
 			if event.name == "session_created":
 				self.session_id = event._params["session_id"]
 				self.session_host = event._params["session_host"]
+				self._init.set()
 			elif event.name == "error":
 				if event.error_type == "session_not_found" and self.session_id is not None:
 					self.__reset_session()
 					caller_handles = False
 				else:
 					self.__terminate()
+
+				self._init.set()
 			else:
-				log.error("unexpected reply to create_session from server: %s", event)
-				self.__reset_session()
+				log.warning("dropping unexpected event received before session_created: %r", event)
 				caller_handles = False
-			self._init.set()
 		elif event.name == "error":
 			if event.error_type == "session_not_found":
 				self.__reset_session()
