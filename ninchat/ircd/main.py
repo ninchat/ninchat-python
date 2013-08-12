@@ -95,6 +95,7 @@ class User(object):
 		self.user_name = None
 		self.session = None
 		self.search_queues = {}
+		self.channels_attrs = {}
 
 	def __str__(self):
 		if self.user_id is not None:
@@ -175,33 +176,8 @@ class User(object):
 				self.send(":{} NICK :{}^{}".format(self.ident, self.user_name, self.user_id))
 				self.send(":{} 001 {}^{} :Welcome to Ninchat".format(SERVER, self.user_name, self.user_id))
 				for channel_id, channel_info in event.user_channels.iteritems():
-					self.send(":{} JOIN #{}".format(
-							self.ident,
-							channel_id))
-
-					self.send(":{} 332 * #{} :{}: {}".format(
-							SERVER,
-							channel_id,
-							channel_info["channel_attrs"].get("name", ""),
-							channel_info["channel_attrs"].get("topic", "")))
-
-					event = self.session.describe_channel(channel_id=channel_id)
-					if event.name == "error":
-						self.log_call_error("describe_channel %s" % channel_id, event)
-					else:
-						self.send(":{} 353 * #{} :{}".format(
-								SERVER,
-								channel_id,
-								" ".join(
-									"{}^{}".format(info["user_attrs"].get("name", ""), id)
-									for id, info
-									in (event.channel_members or {}).iteritems()
-								)))
-
-						self.send(":{} 366 * #{} :End of NAMES list".format(
-								SERVER,
-								channel_id))
-
+					self.channels_attrs[channel_id] = channel_info["channel_attrs"]
+					self._joined(channel_id, channel_info["channel_attrs"])
 		finally:
 			if self.session is not session:
 				session.close()
@@ -261,6 +237,48 @@ class User(object):
 				message_type = "ninchat.com/text",
 				payload      = [json.dumps({ "text": text }).encode("utf-8")],
 				**params)
+
+	def join(self, channel_id):
+		channel_attrs = self.channels_attrs.get(channel_id)
+		if channel_attrs is None:
+			event = self.session.join_channel(channel_id=channel_id)
+			if event.name == "error":
+				self.log_call_error("join_channel", event)
+				return
+
+			self.channels_attrs[channel_id] = event.channel_attrs
+			channel_attrs = event.channel_attrs
+
+		self._joined(channel_id, channel_attrs)
+		self._names(channel_id)
+
+	def _joined(self, channel_id, channel_attrs):
+		self.send(":{} JOIN #{}".format(
+				self.ident,
+				channel_id))
+		self.send(":{} 332 * #{} :{}: {}".format(
+				SERVER,
+				channel_id,
+				channel_attrs.get("name", ""),
+				channel_attrs.get("topic", "")))
+
+	def _names(self, channel_id):
+		event = self.session.describe_channel(channel_id=channel_id)
+		if event.name == "error":
+			self.log_call_error("describe_channel %s" % channel_id, event)
+		else:
+			self.send(":{} 353 * #{} :{}".format(
+					SERVER,
+					channel_id,
+					" ".join(
+						"{}^{}".format(info["user_attrs"].get("name", ""), id)
+						for id, info
+						in (event.channel_members or {}).iteritems()
+					)))
+
+			self.send(":{} 366 * #{} :End of NAMES list".format(
+					SERVER,
+					channel_id))
 
 	@async
 	def ping(self):
@@ -484,6 +502,15 @@ class Client(object):
 			user.send_channel(target[1:], text)
 		else:
 			user.send_user(target, text)
+
+	@Commands.handle("JOIN")
+	def _(self, user, params):
+		self._join(user, params)
+
+	@async
+	def _join(self, user, params):
+		for channel in params.split(","):
+			user.join(channel[1:])
 
 	@Commands.handle("WHOIS")
 	def _(self, user, params):
