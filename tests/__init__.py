@@ -24,6 +24,13 @@
 
 from __future__ import absolute_import
 
+try:
+	import gevent.monkey
+except ImportError:
+	pass
+else:
+	gevent.monkey.patch_all()
+
 import logging
 
 import ninchat.client
