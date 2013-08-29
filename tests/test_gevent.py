@@ -61,14 +61,6 @@ class State(object):
 			else:
 				log.debug("%d: spurious: %r", num, event)
 
-	def init(self):
-		event = self.session.create(message_types=["ninchat.com/text"])
-		if event is None or event.name == "error":
-			log.error("create: %r", event)
-			return
-
-		self.user_id = event.user_id
-
 	def send(self, n):
 		event = self.session.send_message(user_id=self.other.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": str(n) })])
 		if event is None or event.name == "error":
