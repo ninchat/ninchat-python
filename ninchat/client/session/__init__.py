@@ -113,7 +113,8 @@ class SessionBase(object):
 		"""Create and send an action asynchronously.  See new_action for
 		details.  The action_id is returned (if any).
 		"""
-		self.action_queue.put(self.new_action(name, transient, **params))
+		action = self.new_action(name, transient, **params)
+		self.action_queue.put(action)
 		return action.action_id
 
 	def close(self):
