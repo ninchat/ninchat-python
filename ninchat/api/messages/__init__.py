@@ -102,4 +102,5 @@ def declare_messagetype(pattern):
 
 from . import info
 from . import link
+from . import notice
 from . import text
