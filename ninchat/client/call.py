@@ -224,7 +224,7 @@ class AdapterBase(object):
 		with self._registry as critical:
 			all_calls = critical.value.rip_all()
 
-		for call in all_calls.itervalues():
+		for call in all_calls.values():
 			call.close()
 
 		if self._creation is not None:

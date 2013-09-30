@@ -52,7 +52,7 @@ class LinkMessage(Message):
 			log.warning("%s has no data", self.type)
 			return
 
-		for name, (checkfunc, required) in self._specs.iteritems():
+		for name, (checkfunc, required) in self._specs.items():
 			value = data.get(name)
 			if value is not None:
 				if not checkfunc(value):
