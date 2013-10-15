@@ -5,6 +5,7 @@ Ninchat Python library
    :maxdepth: 3
 
    api
+   master
    client
 
 

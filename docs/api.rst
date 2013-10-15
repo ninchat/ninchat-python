@@ -1,5 +1,5 @@
-API metadata
-############
+API specifications
+##################
 
 .. automodule:: ninchat.api
    :members:
