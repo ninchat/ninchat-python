@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Somia Reality Oy
+# Copyright (c) 2013-2014, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@ import time
 import gevent
 import gevent.queue
 
-from ..client.call import SyncQueueAdapter
-from ..client.gevent import QueueSession
+from ..client.adapter import SyncQueueAdapter
+from ..client.session.gevent import QueueSession
 
 from . import log
 

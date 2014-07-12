@@ -14,14 +14,14 @@ Note: session classes with the same name have the same interface.
 Threading
 ---------
 
-.. automodule:: ninchat.client.thread
+.. automodule:: ninchat.client.session.thread
    :members:
 
 
 Gevent interoperability
 -----------------------
 
-.. automodule:: ninchat.client.gevent
+.. automodule:: ninchat.client.session.gevent
    :members:
 
 
@@ -32,11 +32,11 @@ Calling conventions
 Blocking
 --------
 
-.. autoclass:: ninchat.client.call.SyncCallbackAdapter
+.. autoclass:: ninchat.client.adapter.SyncCallbackAdapter
    :members:
    :inherited-members:
 
-.. autoclass:: ninchat.client.call.SyncQueueAdapter
+.. autoclass:: ninchat.client.adapter.SyncQueueAdapter
    :members:
    :inherited-members:
 
@@ -44,11 +44,11 @@ Blocking
 Callbacks
 ---------
 
-.. autoclass:: ninchat.client.call.AsyncCallbackAdapter
+.. autoclass:: ninchat.client.adapter.AsyncCallbackAdapter
    :members:
    :inherited-members:
 
-.. autoclass:: ninchat.client.call.AsyncQueueAdapter
+.. autoclass:: ninchat.client.adapter.AsyncQueueAdapter
    :members:
    :inherited-members:
 

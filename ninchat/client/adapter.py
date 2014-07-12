@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Somia Reality Oy
+# Copyright (c) 2013-2014, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

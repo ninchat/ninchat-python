@@ -22,7 +22,21 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+"""Session implementations using standard multithreading.
+
+.. autoclass:: CallbackSession
+   :members:
+   :inherited-members:
+
+.. autoclass:: QueueSession
+   :members:
+   :inherited-members:
+
+"""
+
 from __future__ import absolute_import
+
+__all__ = ["CallbackSession", "QueueSession"]
 
 import sys
 import threading

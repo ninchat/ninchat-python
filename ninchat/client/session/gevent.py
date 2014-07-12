@@ -22,7 +22,19 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+"""Session implementations using the third-party gevent module.
+
+.. autoclass:: CallbackSession
+   :members: create, close, new_action, send_action
+
+.. autoclass:: QueueSession
+   :members: create, close, new_action, send_action, receive_event
+
+"""
+
 from __future__ import absolute_import
+
+__all__ = ["CallbackSession", "QueueSession"]
 
 try:
 	# Python 2

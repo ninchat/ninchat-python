@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Somia Reality Oy
+# Copyright (c) 2013-2014, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@ import time
 
 sys.path.insert(0, "")
 
-from ninchat.client.call import AsyncCallbackAdapter
-from ninchat.client.thread import CallbackSession, QueueSession
+from ninchat.client.adapter import AsyncCallbackAdapter
+from ninchat.client.session.thread import CallbackSession, QueueSession
 
 from . import log
 

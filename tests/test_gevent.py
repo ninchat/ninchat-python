@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Somia Reality Oy
+# Copyright (c) 2013-2014, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@ sys.path.insert(0, "")
 
 import gevent
 
-from ninchat.client.call import SyncQueueAdapter
-from ninchat.client.gevent import QueueSession
+from ninchat.client.adapter import SyncQueueAdapter
+from ninchat.client.session.gevent import QueueSession
 
 from . import log
 
