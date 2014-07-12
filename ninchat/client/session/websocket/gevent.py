@@ -31,6 +31,7 @@ except NameError:
 	# Python 3
 	xrange = range
 
+import gevent.event
 import gevent.queue
 
 import ws4py.client.geventclient
