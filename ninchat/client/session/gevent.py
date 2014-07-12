@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Somia Reality Oy
+# Copyright (c) 2013-2014, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,10 +36,17 @@ import gevent.queue
 
 import ws4py.client.geventclient
 
-from ... import log
-from ...event import Event
-from .. import CallbackSessionBase, QueueSessionBase
-from . import CallbackConnectionBase, ConnectionBase, QueueConnectionBase, TransportSessionBase
+from .. import log
+from ..event import Event
+
+from . import (
+	CallbackConnectionBase,
+	ConnectionBase,
+	QueueConnectionBase,
+	SessionBase,
+	CallbackSessionBase,
+	QueueSessionBase,
+)
 
 class Critical(object):
 
@@ -81,7 +88,7 @@ class AbstractConnection(ConnectionBase, ws4py.client.geventclient.WebSocketClie
 
 			self._received(event)
 
-class AbstractSession(TransportSessionBase):
+class AbstractSession(SessionBase):
 	queue_type = gevent.queue.Queue
 	_critical_type = Critical
 	_executor_type = gevent.Greenlet

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, Somia Reality Oy
+# Copyright (c) 2012-2014, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,17 @@ import threading
 
 import ws4py.client.threadedclient
 
-from ... import log
-from ...event import Event
-from .. import CallbackSessionBase, QueueSessionBase
-from . import CallbackConnectionBase, ConnectionBase, QueueConnectionBase, TransportSessionBase
+from .. import log
+from ..event import Event
+
+from . import (
+	CallbackConnectionBase,
+	ConnectionBase,
+	QueueConnectionBase,
+	SessionBase,
+	CallbackSessionBase,
+	QueueSessionBase,
+)
 
 if sys.version_info[0] == 2:
 	import Queue as queue
@@ -99,7 +106,7 @@ class AbstractConnection(ConnectionBase, ws4py.client.threadedclient.WebSocketCl
 
 		self._closed()
 
-class AbstractSession(TransportSessionBase):
+class AbstractSession(SessionBase):
 	queue_type = Queue
 	_critical_type = Critical
 	_executor_type = Executor

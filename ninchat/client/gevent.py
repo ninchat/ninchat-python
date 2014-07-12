@@ -34,4 +34,4 @@
 
 from __future__ import absolute_import
 
-from .session.websocket.gevent import CallbackSession, QueueSession
+from .session.gevent import CallbackSession, QueueSession

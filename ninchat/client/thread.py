@@ -36,4 +36,4 @@
 
 from __future__ import absolute_import
 
-from .session.websocket.thread import CallbackSession, QueueSession
+from .session.thread import CallbackSession, QueueSession
