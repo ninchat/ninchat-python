@@ -40,7 +40,7 @@ from .. import log
 from ..action import Action, SessionAction
 
 class ConnectionBase(object):
-	protocols = ["ninchat.com-1"]
+	protocols = ["ninchat.com"]
 
 	def __init__(self, url, session):
 		super(ConnectionBase, self).__init__(url, self.protocols)
@@ -163,7 +163,7 @@ class SessionBase(object):
 	TERMINATE = object()
 
 	session_host = "api.ninchat.com"
-	url_format = "wss://{}/socket"
+	url_format = "wss://{}/v2/socket"
 
 	def __init__(self):
 		self.action_queue = self.queue_type()
