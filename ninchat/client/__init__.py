@@ -31,7 +31,7 @@
 .. autoclass:: Action
    :members:
 
-.. autoclass:: Event
+.. autoclass:: Event()
    :members:
 
 .. autoclass:: ParameterError
