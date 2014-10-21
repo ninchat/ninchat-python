@@ -90,7 +90,7 @@ def _sign(key, expire, msg):
 
 	msg_json = json.dumps(msg, separators=(",", ":")).encode("utf-8")
 
-	digest = hmac.new(base64.b64decode(key_secret), msg_json, hashlib.sha512).digest()
+	digest = hmac.new(base64.b64decode(key_secret.encode()), msg_json, hashlib.sha512).digest()
 	digest_base64 = base64.b64encode(digest)
 
 	return "%s-%s-%s-%s" % (key_id, expire, nonce, digest_base64)
