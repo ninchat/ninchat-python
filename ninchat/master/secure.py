@@ -70,4 +70,4 @@ def _secure_metadata(key, expire, metadata, msg):
 	msg_iv = iv + msg_encrypted
 	msg_base64 = base64.b64encode(msg_iv)
 
-	return "{}-{}".format(key_id, msg_base64)
+	return "%s-%s" % (key_id, msg_base64)
