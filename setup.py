@@ -33,7 +33,6 @@ setup(
 		"ninchat/api/spec/json",
 		"ninchat/client",
 		"ninchat/client/session",
-		"ninchat/client/session/websocket",
 	],
 
 	package_data = {
