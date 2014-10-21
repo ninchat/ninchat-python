@@ -1,3 +1,5 @@
+[![status](https://travis-ci.org/ninchat/ninchat-python.svg)](https://travis-ci.org/ninchat/ninchat-python)
+
 ### Overview
 
 - Python library for writing [Ninchat](https://ninchat.com) API clients
