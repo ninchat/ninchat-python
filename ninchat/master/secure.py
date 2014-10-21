@@ -64,7 +64,7 @@ def _secure_metadata(key, expire, metadata, msg):
 
 	iv = Crypto.Random.new().read(Crypto.Cipher.AES.block_size)
 
-	cipher = Crypto.Cipher.AES.new(base64.b64decode(key_secret), Crypto.Cipher.AES.MODE_CBC, iv)
+	cipher = Crypto.Cipher.AES.new(base64.b64decode(key_secret.encode()), Crypto.Cipher.AES.MODE_CBC, iv)
 	msg_encrypted = cipher.encrypt(msg_padded)
 
 	msg_iv = iv + msg_encrypted
