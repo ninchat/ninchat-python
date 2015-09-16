@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, Somia Reality Oy
+# Copyright (c) 2012-2015, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -94,6 +94,50 @@ class Message(object):
 		except:
 			log.warning("%s decoding failed", self.type, exc_info=True)
 
+class _AbstractObjectMessage(Message):
+	_valid = None
+	_data = None
+
+	def _decode(self):
+		if self._valid is not None:
+			return
+
+		self._valid = False
+
+		data = self._decode_json_header()
+		if not isinstance(data, dict):
+			log.warning("%s has no data", self.type)
+			return
+
+		for name, (checkfunc, required) in self._specs.items():
+			value = data.get(name)
+			if value is not None:
+				if not checkfunc(value):
+					log.warning("%s %s is invalid", self.type, name)
+					return
+			elif required:
+				log.warning("%s %s is missing", self.type, name)
+				return
+
+		if set(data.keys()) - set(self._specs.keys()):
+			log.warning("%s entry contains extraneous properties", self.type)
+			return
+
+		self._valid = True
+		self._data = data
+
+	def validate(self):
+		self._decode()
+		return self._valid
+
+	def stringify(self):
+		return ""
+
+	def get_property(self, name):
+		self._decode()
+		if self._valid:
+			return self._data.get(name)
+
 def declare_messagetype(pattern):
 	def decorator(factory):
 		factories.append((pattern, factory))
@@ -103,5 +147,6 @@ def declare_messagetype(pattern):
 from . import file
 from . import info
 from . import link
+from . import metadata
 from . import notice
 from . import text
