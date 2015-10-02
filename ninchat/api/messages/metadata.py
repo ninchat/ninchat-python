@@ -25,7 +25,7 @@
 from __future__ import absolute_import
 
 from . import _AbstractObjectMessage, declare_messagetype, log
-from .. import is_float, is_object
+from .. import is_float, is_object, is_string
 
 def _is_time(x):
 	return is_float(x) and x > 0
@@ -38,3 +38,24 @@ class MetadataMessage(_AbstractObjectMessage):
 		"data": (is_object, True),
 		"time": (_is_time,  False),
 	}
+
+	def _decode(self):
+		data = _AbstractObjectMessage._decode(self)
+		if data is None:
+			return
+
+		for v in data["data"].values():
+			if not is_string(v):
+				log.warning("%s values must be strings", self.type)
+				return None
+
+		return data
+
+	def stringify(self):
+		entries = []
+
+		if self.validate():
+			for i in self._data["data"].items():
+				entries.append("%s: %s" % i)
+
+		return "\n".join(entries)
