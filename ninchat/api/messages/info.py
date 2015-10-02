@@ -1,4 +1,4 @@
-# Copyright (c) 2012, Somia Reality Oy
+# Copyright (c) 2012-2015, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,32 @@ from __future__ import absolute_import
 
 from . import Message, declare_messagetype
 
-@declare_messagetype("ninchat.com/info")
-class InfoMessage(Message):
-	"""Stub for the ninchat.com/info message type.
+@declare_messagetype("ninchat.com/info/user")
+class UserInfoMessage(Message):
+	"""Stub for the ninchat.com/info/user message type.
+	"""
+
+@declare_messagetype("ninchat.com/info/channel")
+class ChannelInfoMessage(Message):
+	"""Stub for the ninchat.com/info/channel message type.
+	"""
+
+@declare_messagetype("ninchat.com/info/join")
+class JoinInfoMessage(Message):
+	"""Stub for the ninchat.com/info/join message type.
+	"""
+
+@declare_messagetype("ninchat.com/info/part")
+class PartInfoMessage(Message):
+	"""Stub for the ninchat.com/info/part message type.
+	"""
+
+@declare_messagetype("ninchat.com/info/member")
+class MemberInfoMessage(Message):
+	"""Stub for the ninchat.com/info/member message type.
+	"""
+
+@declare_messagetype("ninchat.com/info/access")
+class AccessInfoMessage(Message):
+	"""Stub for the ninchat.com/info/access message type.
 	"""
