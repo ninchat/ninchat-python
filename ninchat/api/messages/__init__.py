@@ -91,7 +91,7 @@ class Message(object):
 	def _decode_json_header(self):
 		try:
 			return json.loads(_decode(self.payload[0]))
-		except:
+		except Exception:
 			log.warning("%s decoding failed", self.type, exc_info=True)
 
 class _AbstractObjectMessage(Message):
