@@ -100,6 +100,7 @@ def declare_messagetype(pattern):
 		return factory
 	return decorator
 
+from . import file
 from . import info
 from . import link
 from . import notice
