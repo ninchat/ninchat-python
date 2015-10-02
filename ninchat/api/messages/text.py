@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, Somia Reality Oy
+# Copyright (c) 2012-2015, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,45 +24,16 @@
 
 from __future__ import absolute_import
 
-from . import log, Message, declare_messagetype
-
-try:
-	# Python 2
-	_string = unicode
-except NameError:
-	# Python 3
-	_string = str
+from . import _AbstractObjectMessage, declare_messagetype
+from .. import is_string
 
 @declare_messagetype("ninchat.com/text")
-class TextMessage(Message):
+class TextMessage(_AbstractObjectMessage):
 	"""Handler for ninchat.com/text messages.  Supports the "text" property.
 	"""
-	_valid = None
-	_text = None
-
-	def _decode(self):
-		if self._valid is not None:
-			return
-
-		self._valid = False
-
-		data = self._decode_json_header()
-		if not data:
-			return
-
-		text = data.get("text")
-		if isinstance(text, _string):
-			self._valid = True
-			self._text = text
-
-	def validate(self):
-		self._decode()
-		return self._valid
+	_specs = {
+		"text": (is_string, True),
+	}
 
 	def stringify(self):
-		self._decode()
-		return self._text or ""
-
-	def get_property(self, name):
-		if name == "text":
-			return self.stringify()
+		return self.get_property("text") or ""

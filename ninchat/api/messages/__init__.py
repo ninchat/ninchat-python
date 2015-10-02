@@ -99,43 +99,40 @@ class _AbstractObjectMessage(Message):
 	_data = None
 
 	def _decode(self):
-		if self._valid is not None:
-			return
-
-		self._valid = False
-
 		data = self._decode_json_header()
 		if not isinstance(data, dict):
 			log.warning("%s has no data", self.type)
-			return
+			return None
 
 		for name, (checkfunc, required) in self._specs.items():
 			value = data.get(name)
 			if value is not None:
 				if not checkfunc(value):
 					log.warning("%s %s is invalid", self.type, name)
-					return
+					return None
 			elif required:
 				log.warning("%s %s is missing", self.type, name)
-				return
+				return None
 
 		if set(data.keys()) - set(self._specs.keys()):
 			log.warning("%s entry contains extraneous properties", self.type)
-			return
+			return None
 
-		self._valid = True
-		self._data = data
+		return data
 
 	def validate(self):
-		self._decode()
+		if self._valid is None:
+			self._valid = False
+			self._data = self._decode()
+			self._valid = self._data is not None
+
 		return self._valid
 
 	def stringify(self):
 		return ""
 
 	def get_property(self, name):
-		self._decode()
-		if self._valid:
+		if self.validate():
 			return self._data.get(name)
 
 def declare_messagetype(pattern):

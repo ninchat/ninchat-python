@@ -24,17 +24,17 @@
 
 from __future__ import absolute_import
 
-from . import _AbstractObjectMessage, declare_messagetype
-from .. import _floats, typechecks
+from . import _AbstractObjectMessage, declare_messagetype, log
+from .. import is_float, is_object
 
-def _check_time(x):
-	return isinstance(x, _floats) and x > 0
+def _is_time(x):
+	return is_float(x) and x > 0
 
 @declare_messagetype("ninchat.com/metadata")
 class MetadataMessage(_AbstractObjectMessage):
 	"""Handler for ninchat.com/metadata messages.
 	"""
 	_specs = {
-		"data": (typechecks["object"], True),
-		"time": (_check_time, False),
+		"data": (is_object, True),
+		"time": (_is_time,  False),
 	}

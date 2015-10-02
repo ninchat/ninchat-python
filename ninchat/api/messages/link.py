@@ -25,18 +25,18 @@
 from __future__ import absolute_import
 
 from . import _AbstractObjectMessage, declare_messagetype
-from .. import typechecks
+from .. import is_int, is_string
 
 @declare_messagetype("ninchat.com/link")
 class LinkMessage(_AbstractObjectMessage):
 	"""Handler for ninchat.com/link messages.
 	"""
 	_specs = {
-		"icon":      (typechecks["string"], True),
-		"name":      (typechecks["string"], True),
-		"size":      (typechecks["int"],    True),
-		"thumbnail": (typechecks["string"], False),
-		"url":       (typechecks["string"], True),
+		"icon":      (is_string, True),
+		"name":      (is_string, True),
+		"size":      (is_int,    True),
+		"thumbnail": (is_string, False),
+		"url":       (is_string, True),
 	}
 
 	def stringify(self):
