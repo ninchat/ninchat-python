@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2014, Somia Reality Oy
+# Copyright (c) 2013-2015, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,9 @@ def main():
 		"C58sAn+Dp2Ogb2+FdfSNg3J0ImMYfYodUUgXFF2OPo0=",
 	)
 	expire = time.time() + 60
+	puppet_attrs = [
+		("name", "Enforced"),
+	]
 	user_id = "22ouqqbp"
 	channel_id = "1bfbr0u"
 	member_attrs = [
@@ -53,6 +56,7 @@ def main():
 	)
 
 	dump(master.sign_create_session(key, expire))
+	dump(master.sign_create_session(key, expire, puppet_attrs))
 	dump(master.sign_create_session_for_user(key, expire, user_id))
 	dump(master.sign_join_channel(key, expire, channel_id))
 	dump(master.sign_join_channel(key, expire, channel_id, member_attrs))

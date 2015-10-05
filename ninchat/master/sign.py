@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2014, Somia Reality Oy
+# Copyright (c) 2013-2015, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,12 +31,15 @@ import json
 import random
 import struct
 
-def sign_create_session(key, expire):
+def sign_create_session(key, expire, puppet_attrs=None):
 	"""Use when creating a new user.  The user will become a puppet of the master.
+	   The *puppet_attrs* specified here must be repeated in the API call.
 	"""
 	msg = [
 		("action", "create_session"),
 	]
+
+	_append_attrs(msg, "puppet_attrs", puppet_attrs)
 
 	return _sign(key, expire, msg)
 
@@ -72,12 +75,16 @@ def _sign_join_channel(key, expire, channel_id, member_attrs, msg):
 	msg.append(("action", "join_channel"))
 	msg.append(("channel_id", channel_id))
 
-	if member_attrs:
-		member_attrs = sorted(member_attrs)
-		if member_attrs:
-			msg.append(("member_attrs", member_attrs))
+	_append_attrs(msg, "member_attrs", member_attrs)
 
 	return _sign(key, expire, msg)
+
+def _append_attrs(msg, name, attrs):
+	if attrs:
+		attrs = sorted(attrs)
+		# attrs may have been an iterator producing nothing
+		if attrs:
+			msg.append((name, attrs))
 
 def _sign(key, expire, msg):
 	key_id, key_secret = key
