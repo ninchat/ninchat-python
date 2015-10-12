@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, Somia Reality Oy
+# Copyright (c) 2012-2015, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,18 @@
    Dictionary; maps name strings to Attribute instances.
 
 .. data:: realmmember
+
+   Dictionary; maps name strings to Attribute instances.
+
+.. data:: queue
+
+   Dictionary; maps name strings to Attribute instances.
+
+.. data:: queuemember
+
+   Dictionary; maps name strings to Attribute instances.
+
+.. data:: puppet
 
    Dictionary; maps name strings to Attribute instances.
 

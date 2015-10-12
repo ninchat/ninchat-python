@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, Somia Reality Oy
+# Copyright (c) 2012-2015, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,14 @@ service.
 .. data:: events
 
    Dictionary; maps name strings to Interface instances.
+
+.. data:: paramtypes
+
+   Dictionary; maps name strings to Parameter instances.
+
+.. data:: objecttypes
+
+   Dictionary; maps name strings to Object instances.
 
 """
 
@@ -86,6 +94,7 @@ def is_time(x):
 	return isinstance(x, _ints) and x >= 0
 
 paramtypes = {}
+objecttypes = {}
 actions = {}
 events = {}
 
@@ -103,17 +112,51 @@ class Parameter(object):
 	"""
 	def __init__(self, key, spec):
 		self.name = key
-		self.required = spec
 
-	@property
-	def type(self):
-		return paramtypes[self.name]
+		if isinstance(spec, bool):
+			self.type = paramtypes[self.name]
+			self.required = spec
+		else:
+			self.type = spec["type"]
+			self.required = not spec.get("optional", False)
 
 	def validate(self, value):
 		"""Check if *value* conforms to the type requirements, or is None while
 		the parameter is optional.
 		"""
 		return typechecks[self.type](value) or (value is None and not self.required)
+
+class Object(object):
+	"""Description of an event parameter's structure.
+
+	.. attribute:: name
+
+	   String
+
+	.. attribute:: value
+
+	   String|None; type of a map object's values.
+
+	.. attribute:: item
+
+	   String|None; type of an array object's items.
+
+	.. attribute:: params
+
+	   Dictionary|None; maps property name strings to Parameter instances.
+
+	"""
+	def __init__(self, key, spec):
+		self.name = key
+		self.value = spec.get("value")
+		self.item = spec.get("item")
+		self.params = None
+
+		paramspecs = spec.get("params")
+		if paramspecs is not None:
+			self.params = {}
+			for name, spec in paramspecs.items():
+				self.params[name] = Parameter(name, spec)
 
 class Interface(object):
 	"""Description of an action or an event.
@@ -164,6 +207,7 @@ def __init():
 	pkg = dirname(filename)[len(root)+1:]
 
 	load(root, join(pkg, "spec/json/paramtypes.json"), (lambda key, spec: spec), paramtypes)
+	load(root, join(pkg, "spec/json/objecttypes.json"), Object, objecttypes)
 	load(root, join(pkg, "spec/json/actions.json"), Interface, actions)
 	load(root, join(pkg, "spec/json/events.json"), Interface, events)
 	attrs.init(root, join(pkg, "spec/json/attrs"))
