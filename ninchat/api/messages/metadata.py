@@ -24,7 +24,9 @@
 
 from __future__ import absolute_import
 
-from . import _AbstractObjectMessage, declare_messagetype, log
+import json
+
+from . import _AbstractObjectMessage, declare_messagetype
 from .. import is_float, is_object, is_string
 
 def _is_time(x):
@@ -39,23 +41,14 @@ class MetadataMessage(_AbstractObjectMessage):
 		"time": (_is_time,  False),
 	}
 
-	def _decode(self):
-		data = _AbstractObjectMessage._decode(self)
-		if data is None:
-			return
-
-		for v in data["data"].values():
-			if not is_string(v):
-				log.warning("%s values must be strings", self.type)
-				return None
-
-		return data
-
 	def stringify(self):
 		entries = []
 
 		if self.validate():
-			for i in self._data["data"].items():
-				entries.append("%s: %s" % i)
+			for k, v in self._data["data"].items():
+				if not is_string(v):
+					v = json.dumps(v)
+
+				entries.append("%s: %s" % (k, v))
 
 		return "\n".join(entries)
