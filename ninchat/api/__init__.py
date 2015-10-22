@@ -105,6 +105,10 @@ class Parameter(object):
 
 	   String
 
+	.. attribute:: type
+
+	   String|None
+
 	.. attribute:: required
 
 	   Boolean
@@ -117,7 +121,7 @@ class Parameter(object):
 			self.type = paramtypes[self.name]
 			self.required = spec
 		else:
-			self.type = spec["type"]
+			self.type = spec.get("type")
 			self.required = not spec.get("optional", False)
 
 	def validate(self, value):
