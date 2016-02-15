@@ -8,8 +8,8 @@
 ### Requirements
 
 - Python 2.6, 2.7 or 3.x
-- ws4py package
-- PyCrypto package (for secure metadata)
+- [cryptography](https://cryptography.io) or PyCrypto (for secure metadata)
+- ws4py (for API client)
 
 ### Installation
 

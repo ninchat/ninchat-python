@@ -1,4 +1,4 @@
-# Copyright (c) 2014, Somia Reality Oy
+# Copyright (c) 2014-2016, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,36 @@ from __future__ import absolute_import
 import base64
 import hashlib
 import json
+import os
 
-import Crypto.Cipher.AES
-import Crypto.Random
+_AES256_BLOCK_SIZE = 16
+_AES256_BLOCK_MASK = _AES256_BLOCK_SIZE - 1
+_AES256CBC_IV_SIZE = _AES256_BLOCK_SIZE
+
+try:
+	from cryptography.hazmat.backends import default_backend as _default_backend
+	from cryptography.hazmat.primitives.ciphers import Cipher as _Cipher
+	from cryptography.hazmat.primitives.ciphers.algorithms import AES as _AES
+	from cryptography.hazmat.primitives.ciphers.modes import CBC as _CBC
+except ImportError:
+	from Crypto.Cipher import AES as _AES
+
+	# PyCrypto
+	def _aes256cbc_encrypt(key, iv, plaintext):
+		cipher = _AES.new(key, _AES.MODE_CBC, iv)
+		ciphertext = cipher.encrypt(plaintext)
+		return ciphertext
+else:
+	# cryptography
+	def _aes256cbc_encrypt(key, iv, plaintext):
+		algo = _AES(key)
+		mode = _CBC(iv)
+		backend = _default_backend()
+		cipher = _Cipher(algo, mode, backend)
+		encryptor = cipher.encryptor()
+		ciphertext = encryptor.update(plaintext)
+		ciphertext += encryptor.finalize()
+		return ciphertext
 
 def secure_metadata(key, expire, metadata):
 	"""For use with any user.
@@ -58,16 +85,13 @@ def _secure_metadata(key, expire, metadata, msg):
 	digest = hasher.digest()
 	msg_hashed = digest + msg_json
 
-	block_mask = Crypto.Cipher.AES.block_size - 1
-	padded_size = (len(msg_hashed) + block_mask) & ~block_mask
+	padded_size = (len(msg_hashed) + _AES256_BLOCK_MASK) & ~_AES256_BLOCK_MASK
 	msg_padded = msg_hashed.ljust(padded_size, b"\0")
 
-	iv = Crypto.Random.new().read(Crypto.Cipher.AES.block_size)
-
-	cipher = Crypto.Cipher.AES.new(base64.b64decode(key_secret.encode()), Crypto.Cipher.AES.MODE_CBC, iv)
-	msg_encrypted = cipher.encrypt(msg_padded)
-
+	iv = os.urandom(_AES256CBC_IV_SIZE)
+	msg_encrypted = _aes256cbc_encrypt(base64.b64decode(key_secret.encode()), iv, msg_padded)
 	msg_iv = iv + msg_encrypted
+
 	msg_base64 = base64.b64encode(msg_iv)
 
 	return "%s-%s" % (key_id, msg_base64)
