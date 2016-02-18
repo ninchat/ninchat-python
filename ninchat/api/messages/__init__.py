@@ -45,13 +45,15 @@ import json
 import logging
 
 try:
-	# Python 2
-	def _decode(x):
-		return unicode(str(x), "utf-8")
+	unicode
 except NameError:
 	# Python 3
 	def _decode(x):
 		return str(x, "utf-8")
+else:
+	# Python 2
+	def _decode(x):
+		return unicode(str(x), "utf-8")
 
 log = logging.getLogger("ninchat.api.messages")
 factories = []
