@@ -61,7 +61,7 @@ audience_metadata parameter of the `request_audience
 <https://ninchat.com/api#request_audience>`_ API action.  The *metadata*
 argument should be a dict or None.
 
-(The functions are unavailable if PyCrypto can't be imported.)
+(The functions are unavailable if cryptography or PyCrypto can't be found.)
 
 .. autofunction:: secure_metadata
 .. autofunction:: secure_metadata_for_user
