@@ -387,9 +387,8 @@ class Client(object):
 				cls.handlers[name] = func
 			return decorator
 
-	def __init__(self, (conn, addr)):
-		self.conn = conn
-		self.addr = addr
+	def __init__(self, conn_and_addr):
+		self.conn, self.addr = conn_and_addr
 		self.disconnect = False
 
 		self._main_loop()
@@ -471,31 +470,31 @@ class Client(object):
 				self.conn.send(line + b"\r\n")
 
 	@Commands.handle("PASS")
-	def _(self, user, params):
+	def __pass(self, user, params):
 		user.set_auth(params)
 
 	@Commands.handle("NICK")
-	def _(self, user, params):
+	def __nick(self, user, params):
 		user.set_name(params)
 
 	@Commands.handle("USER")
-	def _(self, user, params):
+	def __user(self, user, params):
 		user_id, _, _, realname = params.split(" ", 3)
 		user.init(user_id, realname)
 
 	@Commands.handle("MODE")
-	def _(self, user, params):
+	def __mode(self, user, params):
 		pass
 
 	@Commands.handle("PING")
-	def _(self, user, params):
+	def __ping(self, user, params):
 		if " " not in params and params == SERVER:
 			user.ping()
 		else:
 			log.warning("%s %s sent unsupported PING parameters: %s", self, user, params)
 
 	@Commands.handle("PRIVMSG")
-	def _(self, user, params):
+	def __privmsg(self, user, params):
 		target, text = params.split(" ", 1)
 		text = text[1:]
 		if target[0] == "#":
@@ -504,7 +503,7 @@ class Client(object):
 			user.send_user(target, text)
 
 	@Commands.handle("JOIN")
-	def _(self, user, params):
+	def __join(self, user, params):
 		self._join(user, params)
 
 	@async
@@ -513,14 +512,14 @@ class Client(object):
 			user.join(channel[1:])
 
 	@Commands.handle("WHOIS")
-	def _(self, user, params):
+	def __whois(self, user, params):
 		if " " in params:
 			params, _ = params.split(" ", 1)
 
 		user.whois(params)
 
 	@Commands.handle("QUIT")
-	def _(self, user, params):
+	def __quit(self, user, params):
 		self.disconnect = True
 
 def main():

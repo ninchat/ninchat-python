@@ -204,7 +204,7 @@ from . import attrs
 from . import messages
 
 def __init():
-	from os.path import dirname, basename, join, realpath
+	from os.path import dirname, join, realpath
 
 	filename = realpath(__file__)
 	root = dirname(dirname(dirname(filename)))
@@ -217,3 +217,7 @@ def __init():
 	attrs.init(root, join(pkg, "spec/json/attrs"))
 
 __init()
+
+# avoid warnings
+attrs
+messages

@@ -25,7 +25,6 @@
 from __future__ import absolute_import
 
 from .. import api
-from .action import Action
 
 class SyncCreation(object):
 

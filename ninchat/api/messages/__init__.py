@@ -45,7 +45,7 @@ import json
 import logging
 
 try:
-	unicode
+	unicode = unicode
 except NameError:
 	# Python 3
 	def _decode(x):
@@ -149,3 +149,11 @@ from . import link
 from . import metadata
 from . import notice
 from . import text
+
+# avoid warnings
+file
+info
+link
+metadata
+notice
+text

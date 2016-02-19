@@ -47,3 +47,8 @@ del logging
 
 from .action import Action, ParameterError
 from .event import Event
+
+# avoid warnings
+Action
+Event
+ParameterError

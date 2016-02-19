@@ -48,7 +48,7 @@ class Event(object):
 		spec = api.events[self.name].params[name]
 		value = self._params.get(name)
 		if value is None and spec.required:
-			log.warning("event %r parameter %r is missing", event, name)
+			log.warning("event %r parameter %r is missing", self, name)
 		return value
 
 	def __str__(self):
