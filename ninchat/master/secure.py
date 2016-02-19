@@ -59,12 +59,12 @@ else:
 		return ciphertext
 
 def secure_metadata(key, expire, metadata):
-	"""For use with any user.
+	"""For use by any user.
 	"""
 	return _secure_metadata(key, expire, metadata, {})
 
 def secure_metadata_for_user(key, expire, metadata, user_id):
-	"""For use with the specified user only.
+	"""For use by the specified user only.
 	"""
 	msg = {
 		"user_id": user_id,
