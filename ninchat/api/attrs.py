@@ -60,6 +60,10 @@
 
    Dictionary; maps name strings to Attribute instances.
 
+.. data:: tag
+
+   Dictionary; maps name strings to Attribute instances.
+
 .. data:: puppet
 
    Dictionary; maps name strings to Attribute instances.
