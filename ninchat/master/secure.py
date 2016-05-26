@@ -92,6 +92,6 @@ def _secure_metadata(key, expire, metadata, msg):
 	msg_encrypted = _aes256cbc_encrypt(base64.b64decode(key_secret.encode()), iv, msg_padded)
 	msg_iv = iv + msg_encrypted
 
-	msg_base64 = base64.b64encode(msg_iv)
+	msg_base64 = base64.b64encode(msg_iv).decode()
 
 	return "%s-%s" % (key_id, msg_base64)
