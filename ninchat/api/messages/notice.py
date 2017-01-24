@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Somia Reality Oy
+# Copyright (c) 2013-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,8 @@ from __future__ import absolute_import
 from . import declare_messagetype
 from .text import TextMessage
 
+
 @declare_messagetype("ninchat.com/notice")
 class NoticeMessage(TextMessage):
-	"""Handler for ninchat.com/notice messages.  Supports the "text" property.
-	"""
+    """Handler for ninchat.com/notice messages.  Supports the "text" property.
+    """

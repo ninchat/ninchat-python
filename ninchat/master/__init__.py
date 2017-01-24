@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2014, Somia Reality Oy
+# Copyright (c) 2013-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -71,10 +71,10 @@ argument should be a dict or None.
 from __future__ import absolute_import
 
 from .sign import (
-	sign_create_session,
-	sign_create_session_for_user,
-	sign_join_channel,
-	sign_join_channel_for_user,
+    sign_create_session,
+    sign_create_session_for_user,
+    sign_join_channel,
+    sign_join_channel_for_user,
 )
 
 # avoid warnings
@@ -84,13 +84,13 @@ sign_join_channel
 sign_join_channel_for_user
 
 try:
-	from .secure import (
-		secure_metadata,
-		secure_metadata_for_user,
-	)
+    from .secure import (
+        secure_metadata,
+        secure_metadata_for_user,
+    )
 
-	# avoid warnings
-	secure_metadata
-	secure_metadata_for_user
+    # avoid warnings
+    secure_metadata
+    secure_metadata_for_user
 except ImportError:
-	pass
+    pass

@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Somia Reality Oy
+# Copyright (c) 2013-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,17 +27,18 @@ from __future__ import absolute_import
 from . import _AbstractObjectMessage, declare_messagetype
 from .. import is_int, is_string
 
+
 @declare_messagetype("ninchat.com/link")
 class LinkMessage(_AbstractObjectMessage):
-	"""Handler for ninchat.com/link messages.
-	"""
-	_specs = {
-		"icon":      (is_string, True),
-		"name":      (is_string, True),
-		"size":      (is_int,    True),
-		"thumbnail": (is_string, False),
-		"url":       (is_string, True),
-	}
+    """Handler for ninchat.com/link messages.
+    """
+    _specs = {
+        "icon":      (is_string, True),
+        "name":      (is_string, True),
+        "size":      (is_int,    True),
+        "thumbnail": (is_string, False),
+        "url":       (is_string, True),
+    }
 
-	def stringify(self):
-		return self.get_property("url") or ""
+    def stringify(self):
+        return self.get_property("url") or ""

@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2015, Somia Reality Oy
+# Copyright (c) 2013-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,45 +31,48 @@ sys.path.insert(0, "")
 
 from ninchat import master
 
+
 def main():
-	key = (
-		"22nlihvg",
-		"C58sAn+Dp2Ogb2+FdfSNg3J0ImMYfYodUUgXFF2OPo0=",
-	)
-	expire = time.time() + 60
-	puppet_attrs = [
-		("name", "Enforced"),
-	]
-	user_id = "22ouqqbp"
-	channel_id = "1bfbr0u"
-	member_attrs = [
-		("silenced", False),
-	]
-	metadata = dict(
-		foo = 3.14159,
-		bar = "asdf",
-		baz = [1, 2, 3],
-		quux = {
-			"a": 100,
-			"b": 200,
-		},
-	)
+    key = (
+        "22nlihvg",
+        "C58sAn+Dp2Ogb2+FdfSNg3J0ImMYfYodUUgXFF2OPo0=",
+    )
+    expire = time.time() + 60
+    puppet_attrs = [
+        ("name", "Enforced"),
+    ]
+    user_id = "22ouqqbp"
+    channel_id = "1bfbr0u"
+    member_attrs = [
+        ("silenced", False),
+    ]
+    metadata = dict(
+        foo=3.14159,
+        bar="asdf",
+        baz=[1, 2, 3],
+        quux={
+            "a": 100,
+            "b": 200,
+        },
+    )
 
-	dump(master.sign_create_session(key, expire))
-	dump(master.sign_create_session(key, expire, puppet_attrs))
-	dump(master.sign_create_session_for_user(key, expire, user_id))
-	dump(master.sign_join_channel(key, expire, channel_id))
-	dump(master.sign_join_channel(key, expire, channel_id, member_attrs))
-	dump(master.sign_join_channel_for_user(key, expire, channel_id, user_id))
-	dump(master.sign_join_channel_for_user(key, expire, channel_id, user_id, member_attrs))
+    dump(master.sign_create_session(key, expire))
+    dump(master.sign_create_session(key, expire, puppet_attrs))
+    dump(master.sign_create_session_for_user(key, expire, user_id))
+    dump(master.sign_join_channel(key, expire, channel_id))
+    dump(master.sign_join_channel(key, expire, channel_id, member_attrs))
+    dump(master.sign_join_channel_for_user(key, expire, channel_id, user_id))
+    dump(master.sign_join_channel_for_user(key, expire, channel_id, user_id, member_attrs))
 
-	dump(master.secure_metadata(key, expire, metadata))
-	dump(master.secure_metadata_for_user(key, expire, metadata, user_id))
+    dump(master.secure_metadata(key, expire, metadata))
+    dump(master.secure_metadata_for_user(key, expire, metadata, user_id))
+
 
 def dump(s):
-	print()
-	print("Size:", len(s))
-	print("Data:", s)
+    print()
+    print("Size:", len(s))
+    print("Data:", s)
+
 
 if __name__ == "__main__":
-	main()
+    main()

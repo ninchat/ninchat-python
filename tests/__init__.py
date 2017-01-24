@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Somia Reality Oy
+# Copyright (c) 2013-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,11 +25,11 @@
 from __future__ import absolute_import
 
 try:
-	import gevent.monkey
+    import gevent.monkey
 except ImportError:
-	pass
+    pass
 else:
-	gevent.monkey.patch_all()
+    gevent.monkey.patch_all()
 
 import logging
 

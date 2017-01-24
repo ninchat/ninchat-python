@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2015, Somia Reality Oy
+# Copyright (c) 2013-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,73 +31,80 @@ import json
 import random
 import struct
 
+
 def sign_create_session(key, expire, puppet_attrs=None):
-	"""Use when creating a new user.  The user will become a puppet of the master.
-	   The *puppet_attrs* specified here must be repeated in the API call.
-	"""
-	msg = [
-		("action", "create_session"),
-	]
+    """Use when creating a new user.  The user will become a puppet of the master.
+       The *puppet_attrs* specified here must be repeated in the API call.
+    """
+    msg = [
+        ("action", "create_session"),
+    ]
 
-	_append_attrs(msg, "puppet_attrs", puppet_attrs)
+    _append_attrs(msg, "puppet_attrs", puppet_attrs)
 
-	return _sign(key, expire, msg)
+    return _sign(key, expire, msg)
+
 
 def sign_create_session_for_user(key, expire, user_id):
-	"""Use when authenticating an existing user.  The user must be a puppet of the
-	   master.  The *user_id* specified here must be repeated in the API call.
-	"""
-	msg = [
-		("action", "create_session"),
-		("user_id", user_id),
-	]
+    """Use when authenticating an existing user.  The user must be a puppet of the
+       master.  The *user_id* specified here must be repeated in the API call.
+    """
+    msg = [
+        ("action", "create_session"),
+        ("user_id", user_id),
+    ]
 
-	return _sign(key, expire, msg)
+    return _sign(key, expire, msg)
+
 
 def sign_join_channel(key, expire, channel_id, member_attrs=None):
-	"""For use by any user.  The master must own the channel.  The *channel_id* and
-	   *member_attrs* specified here must be repeated in the API call.
-	"""
-	return _sign_join_channel(key, expire, channel_id, member_attrs, [])
+    """For use by any user.  The master must own the channel.  The *channel_id* and
+       *member_attrs* specified here must be repeated in the API call.
+    """
+    return _sign_join_channel(key, expire, channel_id, member_attrs, [])
+
 
 def sign_join_channel_for_user(key, expire, channel_id, user_id, member_attrs=None):
-	"""For use by the specified user only.  The master must own the channel.  The
-	   *channel_id* and *member_attrs* specified here must be repeated in the
-	   API call.
-	"""
-	msg = [
-		("user_id", user_id),
-	]
+    """For use by the specified user only.  The master must own the channel.  The
+       *channel_id* and *member_attrs* specified here must be repeated in the
+       API call.
+    """
+    msg = [
+        ("user_id", user_id),
+    ]
 
-	return _sign_join_channel(key, expire, channel_id, member_attrs, msg) + "-1"
+    return _sign_join_channel(key, expire, channel_id, member_attrs, msg) + "-1"
+
 
 def _sign_join_channel(key, expire, channel_id, member_attrs, msg):
-	msg.append(("action", "join_channel"))
-	msg.append(("channel_id", channel_id))
+    msg.append(("action", "join_channel"))
+    msg.append(("channel_id", channel_id))
 
-	_append_attrs(msg, "member_attrs", member_attrs)
+    _append_attrs(msg, "member_attrs", member_attrs)
 
-	return _sign(key, expire, msg)
+    return _sign(key, expire, msg)
+
 
 def _append_attrs(msg, name, attrs):
-	if attrs:
-		attrs = sorted(attrs)
-		# attrs may have been an iterator producing nothing
-		if attrs:
-			msg.append((name, attrs))
+    if attrs:
+        attrs = sorted(attrs)
+        # attrs may have been an iterator producing nothing
+        if attrs:
+            msg.append((name, attrs))
+
 
 def _sign(key, expire, msg):
-	key_id, key_secret = key
-	expire = int(expire)
-	nonce = base64.b64encode(struct.pack(b"Q", random.randint(0, (1 << 48) - 1))[:6]).decode("ascii")
+    key_id, key_secret = key
+    expire = int(expire)
+    nonce = base64.b64encode(struct.pack(b"Q", random.randint(0, (1 << 48) - 1))[:6]).decode("ascii")
 
-	msg.append(("expire", expire))
-	msg.append(("nonce", nonce))
-	msg.sort()
+    msg.append(("expire", expire))
+    msg.append(("nonce", nonce))
+    msg.sort()
 
-	msg_json = json.dumps(msg, separators=(",", ":")).encode("utf-8")
+    msg_json = json.dumps(msg, separators=(",", ":")).encode("utf-8")
 
-	digest = hmac.new(base64.b64decode(key_secret.encode()), msg_json, hashlib.sha512).digest()
-	digest_base64 = base64.b64encode(digest).decode()
+    digest = hmac.new(base64.b64decode(key_secret.encode()), msg_json, hashlib.sha512).digest()
+    digest_base64 = base64.b64encode(digest).decode()
 
-	return "%s-%s-%s-%s" % (key_id, expire, nonce, digest_base64)
+    return "%s-%s-%s-%s" % (key_id, expire, nonce, digest_base64)

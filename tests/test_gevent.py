@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2014, Somia Reality Oy
+# Copyright (c) 2013-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,50 +36,53 @@ from ninchat.client.session.gevent import QueueSession
 
 from . import log
 
+
 class State(object):
 
-	def __init__(self, session_type):
-		self.session = SyncQueueAdapter(session_type())
-		self.greenlet = gevent.spawn(self.loop)
+    def __init__(self, session_type):
+        self.session = SyncQueueAdapter(session_type())
+        self.greenlet = gevent.spawn(self.loop)
 
-		event = self.session.create(message_types=["ninchat.com/text"])
-		if event is None or event.name == "error":
-			log.error("create: %r", event)
-			return
+        event = self.session.create(message_types=["ninchat.com/text"])
+        if event is None or event.name == "error":
+            log.error("create: %r", event)
+            return
 
-		self.user_id = event.user_id
+        self.user_id = event.user_id
 
-	def loop(self):
-		for num, event in enumerate(self.session):
-			if event.name == "error":
-				log.error("%d: %r", num, event)
-				break
-			elif event.name == "message_received":
-				n = int(json.loads(event.payload[0])["text"])
-				log.debug("%d: %s %s", num, n, event.message_id)
-				gevent.spawn(self.send, n + 1)
-			else:
-				log.debug("%d: spurious: %r", num, event)
+    def loop(self):
+        for num, event in enumerate(self.session):
+            if event.name == "error":
+                log.error("%d: %r", num, event)
+                break
+            elif event.name == "message_received":
+                n = int(json.loads(event.payload[0])["text"])
+                log.debug("%d: %s %s", num, n, event.message_id)
+                gevent.spawn(self.send, n + 1)
+            else:
+                log.debug("%d: spurious: %r", num, event)
 
-	def send(self, n):
-		event = self.session.send_message(user_id=self.other.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({ "text": str(n) })])
-		if event is None or event.name == "error":
-			log.error("send_message: %r", event)
-			return
+    def send(self, n):
+        event = self.session.send_message(user_id=self.other.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({"text": str(n)})])
+        if event is None or event.name == "error":
+            log.error("send_message: %r", event)
+            return
+
 
 def main(session_type=QueueSession):
-	s1 = State(session_type)
-	s2 = State(session_type)
+    s1 = State(session_type)
+    s2 = State(session_type)
 
-	s1.other = s2
-	s2.other = s1
+    s1.other = s2
+    s2.other = s1
 
-	s1.send(0)
+    s1.send(0)
 
-	try:
-		gevent.joinall([s1.greenlet, s2.greenlet])
-	except KeyboardInterrupt:
-		pass
+    try:
+        gevent.joinall([s1.greenlet, s2.greenlet])
+    except KeyboardInterrupt:
+        pass
+
 
 if __name__ == "__main__":
-	main()
+    main()

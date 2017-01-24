@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015, Somia Reality Oy
+# Copyright (c) 2012-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,175 +46,196 @@ service.
 from __future__ import absolute_import
 
 try:
-	# Python 2
-	_ints = int, long
-	_floats = int, long, float
-	_strings = str, unicode
+    # Python 2
+    _ints = int, long
+    _floats = int, long, float
+    _strings = str, unicode
 except NameError:
-	# Python 3
-	_ints = int
-	_floats = int, float
-	_strings = str
+    # Python 3
+    _ints = int
+    _floats = int, float
+    _strings = str
 
 typechecks = {}
 
-def declare_type(name):
-	def decorator(checker):
-		typechecks[name] = checker
-		return checker
 
-	return decorator
+def declare_type(name):
+    def decorator(checker):
+        typechecks[name] = checker
+        return checker
+
+    return decorator
+
 
 @declare_type("bool")
 def is_bool(x):
-	return isinstance(x, bool)
+    return isinstance(x, bool)
+
 
 @declare_type("float")
 def is_float(x):
-	return isinstance(x, _floats)
+    return isinstance(x, _floats)
+
 
 @declare_type("int")
 def is_int(x):
-	return isinstance(x, _ints)
+    return isinstance(x, _ints)
+
 
 @declare_type("object")
 def is_object(x):
-	return isinstance(x, dict) and all(is_string(key) for key in x)
+    return isinstance(x, dict) and all(is_string(key) for key in x)
+
 
 @declare_type("string")
 def is_string(x):
-	return isinstance(x, _strings)
+    return isinstance(x, _strings)
+
 
 @declare_type("string array")
 def is_string_array(x):
-	return isinstance(x, (list, tuple)) and all(is_string(item) for item in x)
+    return isinstance(x, (list, tuple)) and all(is_string(item) for item in x)
+
 
 @declare_type("time")
 def is_time(x):
-	return isinstance(x, _ints) and x >= 0
+    return isinstance(x, _ints) and x >= 0
+
 
 paramtypes = {}
 objecttypes = {}
 actions = {}
 events = {}
 
+
 class Parameter(object):
-	"""Description of an action's or an event's parameter.
+    """Description of an action's or an event's parameter.
 
-	.. attribute:: name
+    .. attribute:: name
 
-	   String
+       String
 
-	.. attribute:: type
+    .. attribute:: type
 
-	   String|None
+       String|None
 
-	.. attribute:: required
+    .. attribute:: required
 
-	   Boolean
+       Boolean
 
-	"""
-	def __init__(self, key, spec):
-		self.name = key
+    """
 
-		if isinstance(spec, bool):
-			self.type = paramtypes[self.name]
-			self.required = spec
-		else:
-			self.type = spec.get("type")
-			self.required = not spec.get("optional", False)
+    def __init__(self, key, spec):
+        self.name = key
 
-	def validate(self, value):
-		"""Check if *value* conforms to the type requirements, or is None while
-		the parameter is optional.
-		"""
-		return typechecks[self.type](value) or (value is None and not self.required)
+        if isinstance(spec, bool):
+            self.type = paramtypes[self.name]
+            self.required = spec
+        else:
+            self.type = spec.get("type")
+            self.required = not spec.get("optional", False)
+
+    def validate(self, value):
+        """Check if *value* conforms to the type requirements, or is None while
+        the parameter is optional.
+        """
+        return typechecks[self.type](value) or (value is None and not self.required)
+
 
 class Object(object):
-	"""Description of an event parameter's structure.
+    """Description of an event parameter's structure.
 
-	.. attribute:: name
+    .. attribute:: name
 
-	   String
+       String
 
-	.. attribute:: value
+    .. attribute:: value
 
-	   String|None; type of a map object's values.
+       String|None; type of a map object's values.
 
-	.. attribute:: item
+    .. attribute:: item
 
-	   String|None; type of an array object's items.
+       String|None; type of an array object's items.
 
-	.. attribute:: params
+    .. attribute:: params
 
-	   Dictionary|None; maps property name strings to Parameter instances.
+       Dictionary|None; maps property name strings to Parameter instances.
 
-	"""
-	def __init__(self, key, spec):
-		self.name = key
-		self.value = spec.get("value")
-		self.item = spec.get("item")
-		self.params = None
+    """
 
-		paramspecs = spec.get("params")
-		if paramspecs is not None:
-			self.params = {}
-			for name, spec in paramspecs.items():
-				self.params[name] = Parameter(name, spec)
+    def __init__(self, key, spec):
+        self.name = key
+        self.value = spec.get("value")
+        self.item = spec.get("item")
+        self.params = None
+
+        paramspecs = spec.get("params")
+        if paramspecs is not None:
+            self.params = {}
+            for name, spec in paramspecs.items():
+                self.params[name] = Parameter(name, spec)
+
 
 class Interface(object):
-	"""Description of an action or an event.
+    """Description of an action or an event.
 
-	.. attribute:: name
+    .. attribute:: name
 
-	   String
+       String
 
-	.. attribute:: params
+    .. attribute:: params
 
-	   Dictionary; maps name strings to Parameter instances.
+       Dictionary; maps name strings to Parameter instances.
 
-	"""
-	def __init__(self, key, spec):
-		self.name = key
-		self.params = dict((k, Parameter(k, s)) for (k, s) in spec.items())
+    """
+
+    def __init__(self, key, spec):
+        self.name = key
+        self.params = dict((k, Parameter(k, s)) for (k, s) in spec.items())
+
 
 def load(root, name, cls, target):
-	import os, zipfile
+    import os
+    import zipfile
 
-	if os.path.isdir(root):
-		with open(os.path.join(root, name)) as file:
-			load_file(file, cls, target)
-	else:
-		with zipfile.ZipFile(root) as zip:
-			with zip.open(name) as file:
-				load_file(file, cls, target)
+    if os.path.isdir(root):
+        with open(os.path.join(root, name)) as file:
+            load_file(file, cls, target)
+    else:
+        with zipfile.ZipFile(root) as zip:
+            with zip.open(name) as file:
+                load_file(file, cls, target)
+
 
 def load_file(file, cls, target=None):
-	import json
+    import json
 
-	if target is None:
-		target = {}
+    if target is None:
+        target = {}
 
-	for key, spec in json.load(file).items():
-		target[key] = cls(key, spec)
+    for key, spec in json.load(file).items():
+        target[key] = cls(key, spec)
 
-	return target
+    return target
+
 
 from . import attrs
 from . import messages
 
+
 def __init():
-	from os.path import dirname, join, realpath
+    from os.path import dirname, join, realpath
 
-	filename = realpath(__file__)
-	root = dirname(dirname(dirname(filename)))
-	pkg = dirname(filename)[len(root)+1:]
+    filename = realpath(__file__)
+    root = dirname(dirname(dirname(filename)))
+    pkg = dirname(filename)[len(root)+1:]
 
-	load(root, join(pkg, "spec/json/paramtypes.json"), (lambda key, spec: spec), paramtypes)
-	load(root, join(pkg, "spec/json/objecttypes.json"), Object, objecttypes)
-	load(root, join(pkg, "spec/json/actions.json"), Interface, actions)
-	load(root, join(pkg, "spec/json/events.json"), Interface, events)
-	attrs.init(root, join(pkg, "spec/json/attrs"))
+    load(root, join(pkg, "spec/json/paramtypes.json"), (lambda key, spec: spec), paramtypes)
+    load(root, join(pkg, "spec/json/objecttypes.json"), Object, objecttypes)
+    load(root, join(pkg, "spec/json/actions.json"), Interface, actions)
+    load(root, join(pkg, "spec/json/events.json"), Interface, events)
+    attrs.init(root, join(pkg, "spec/json/attrs"))
+
 
 __init()
 

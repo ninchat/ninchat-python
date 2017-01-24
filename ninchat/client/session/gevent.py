@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2014, Somia Reality Oy
+# Copyright (c) 2013-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,11 +37,11 @@ from __future__ import absolute_import
 __all__ = ["CallbackSession", "QueueSession"]
 
 try:
-	# Python 2
-	xrange
+    # Python 2
+    xrange
 except NameError:
-	# Python 3
-	xrange = range
+    # Python 3
+    xrange = range
 
 import gevent.event
 import gevent.queue
@@ -52,70 +52,77 @@ from .. import log
 from ..event import Event
 
 from . import (
-	CallbackConnectionBase,
-	ConnectionBase,
-	QueueConnectionBase,
-	SessionBase,
-	CallbackSessionBase,
-	QueueSessionBase,
+    CallbackConnectionBase,
+    ConnectionBase,
+    QueueConnectionBase,
+    SessionBase,
+    CallbackSessionBase,
+    QueueSessionBase,
 )
+
 
 class Critical(object):
 
-	def __init__(self, value=None):
-		if value is not None:
-			self.value = value
+    def __init__(self, value=None):
+        if value is not None:
+            self.value = value
 
-	def __enter__(self):
-		return self
+    def __enter__(self):
+        return self
 
-	def __exit__(self, *exc):
-		pass
+    def __exit__(self, *exc):
+        pass
+
 
 class AbstractConnection(ConnectionBase, ws4py.client.geventclient.WebSocketClient):
 
-	def opened(self):
-		gevent.spawn(self._receive_loop)
+    def opened(self):
+        gevent.spawn(self._receive_loop)
 
-	def _receive_loop(self):
-		while True:
-			message = self.receive()
-			if message is None:
-				self._closed()
-				return
+    def _receive_loop(self):
+        while True:
+            message = self.receive()
+            if message is None:
+                self._closed()
+                return
 
-			if not message.data:
-				continue
+            if not message.data:
+                continue
 
-			event = Event(message.data)
+            event = Event(message.data)
 
-			for _ in xrange(event._length):
-				message = self.receive()
-				if message is None:
-					log.warning("websocket connection closed in mid-event")
-					self._closed()
-					return
+            for _ in xrange(event._length):
+                message = self.receive()
+                if message is None:
+                    log.warning("websocket connection closed in mid-event")
+                    self._closed()
+                    return
 
-				event.payload.append(message.data)
+                event.payload.append(message.data)
 
-			self._received(event)
+            self._received(event)
+
 
 class AbstractSession(SessionBase):
-	queue_type = gevent.queue.Queue
-	_critical_type = Critical
-	_executor_type = gevent.Greenlet
-	_flag_type = gevent.event.Event
+    queue_type = gevent.queue.Queue
+    _critical_type = Critical
+    _executor_type = gevent.Greenlet
+    _flag_type = gevent.event.Event
+
 
 class CallbackConnection(CallbackConnectionBase, AbstractConnection):
-	pass
+    pass
+
 
 class CallbackSession(CallbackSessionBase, AbstractSession):
-	__doc__ = CallbackSessionBase.__doc__
-	_connection_type = CallbackConnection
+    __doc__ = CallbackSessionBase.__doc__
+    _connection_type = CallbackConnection
+
 
 class QueueConnection(QueueConnectionBase, AbstractConnection):
-	pass
+    pass
+
 
 class QueueSession(QueueSessionBase, AbstractSession):
-	__doc__ = QueueSessionBase.__doc__
-	_connection_type = QueueConnection
+    __doc__ = QueueSessionBase.__doc__
+    _connection_type = QueueConnection

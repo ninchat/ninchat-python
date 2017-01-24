@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015, Somia Reality Oy
+# Copyright (c) 2012-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,14 @@ from __future__ import absolute_import
 from . import _AbstractObjectMessage, declare_messagetype
 from .. import is_string
 
+
 @declare_messagetype("ninchat.com/text")
 class TextMessage(_AbstractObjectMessage):
-	"""Handler for ninchat.com/text messages.  Supports the "text" property.
-	"""
-	_specs = {
-		"text": (is_string, True),
-	}
+    """Handler for ninchat.com/text messages.  Supports the "text" property.
+    """
+    _specs = {
+        "text": (is_string, True),
+    }
 
-	def stringify(self):
-		return self.get_property("text") or ""
+    def stringify(self):
+        return self.get_property("text") or ""

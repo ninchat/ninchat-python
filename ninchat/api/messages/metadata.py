@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Somia Reality Oy
+# Copyright (c) 2015-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,26 +29,28 @@ import json
 from . import _AbstractObjectMessage, declare_messagetype
 from .. import is_float, is_object, is_string
 
+
 def _is_time(x):
-	return is_float(x) and x > 0
+    return is_float(x) and x > 0
+
 
 @declare_messagetype("ninchat.com/metadata")
 class MetadataMessage(_AbstractObjectMessage):
-	"""Handler for ninchat.com/metadata messages.
-	"""
-	_specs = {
-		"data": (is_object, True),
-		"time": (_is_time,  False),
-	}
+    """Handler for ninchat.com/metadata messages.
+    """
+    _specs = {
+        "data": (is_object, True),
+        "time": (_is_time,  False),
+    }
 
-	def stringify(self):
-		entries = []
+    def stringify(self):
+        entries = []
 
-		if self.validate():
-			for k, v in self._data["data"].items():
-				if not is_string(v):
-					v = json.dumps(v)
+        if self.validate():
+            for k, v in self._data["data"].items():
+                if not is_string(v):
+                    v = json.dumps(v)
 
-				entries.append("%s: %s" % (k, v))
+                entries.append("%s: %s" % (k, v))
 
-		return "\n".join(entries)
+        return "\n".join(entries)

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015, Somia Reality Oy
+# Copyright (c) 2012-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,103 +45,107 @@ import json
 import logging
 
 try:
-	unicode = unicode
+    unicode = unicode
 except NameError:
-	# Python 3
-	def _decode(x):
-		return str(x, "utf-8")
+    # Python 3
+    def _decode(x):
+        return str(x, "utf-8")
 else:
-	# Python 2
-	def _decode(x):
-		return unicode(str(x), "utf-8")
+    # Python 2
+    def _decode(x):
+        return unicode(str(x), "utf-8")
 
 log = logging.getLogger("ninchat.api.messages")
 factories = []
 
+
 class Message(object):
-	"""Message handler interface.  Subclasses should override the validate(),
-	stringify() and get_property(name) methods if applicable.
+    """Message handler interface.  Subclasses should override the validate(),
+    stringify() and get_property(name) methods if applicable.
 
-	.. attribute:: type
+    .. attribute:: type
 
-	   String
+       String
 
-	.. attribute:: payload
+    .. attribute:: payload
 
-	   List of some kind of objects.
+       List of some kind of objects.
 
-	"""
-	def __init__(self, messagetype, payload):
-		self.type = messagetype
-		self.payload = payload
+    """
 
-	def validate(self):
-		"""Check if the payload conforms to the type requirements.
-		"""
-		return False
+    def __init__(self, messagetype, payload):
+        self.type = messagetype
+        self.payload = payload
 
-	def stringify(self):
-		"""Get the presentable textual content of the message, if any.
-		"""
-		return ""
+    def validate(self):
+        """Check if the payload conforms to the type requirements.
+        """
+        return False
 
-	def get_property(self, name):
-		"""Get a type-specific string property.
-		"""
-		return None
+    def stringify(self):
+        """Get the presentable textual content of the message, if any.
+        """
+        return ""
 
-	def _decode_json_header(self):
-		try:
-			return json.loads(_decode(self.payload[0]))
-		except Exception:
-			log.warning("%s decoding failed", self.type, exc_info=True)
+    def get_property(self, name):
+        """Get a type-specific string property.
+        """
+        return None
+
+    def _decode_json_header(self):
+        try:
+            return json.loads(_decode(self.payload[0]))
+        except Exception:
+            log.warning("%s decoding failed", self.type, exc_info=True)
+
 
 class _AbstractObjectMessage(Message):
-	_valid = None
-	_data = None
+    _valid = None
+    _data = None
 
-	def _decode(self):
-		data = self._decode_json_header()
-		if not isinstance(data, dict):
-			log.warning("%s has no data", self.type)
-			return None
+    def _decode(self):
+        data = self._decode_json_header()
+        if not isinstance(data, dict):
+            log.warning("%s has no data", self.type)
+            return None
 
-		for name, (checkfunc, required) in self._specs.items():
-			value = data.get(name)
-			if value is not None:
-				if not checkfunc(value):
-					log.warning("%s %s is invalid", self.type, name)
-					return None
-			elif required:
-				log.warning("%s %s is missing", self.type, name)
-				return None
+        for name, (checkfunc, required) in self._specs.items():
+            value = data.get(name)
+            if value is not None:
+                if not checkfunc(value):
+                    log.warning("%s %s is invalid", self.type, name)
+                    return None
+            elif required:
+                log.warning("%s %s is missing", self.type, name)
+                return None
 
-		if set(data.keys()) - set(self._specs.keys()):
-			log.warning("%s entry contains extraneous properties", self.type)
-			return None
+        if set(data.keys()) - set(self._specs.keys()):
+            log.warning("%s entry contains extraneous properties", self.type)
+            return None
 
-		return data
+        return data
 
-	def validate(self):
-		if self._valid is None:
-			self._valid = False
-			self._data = self._decode()
-			self._valid = self._data is not None
+    def validate(self):
+        if self._valid is None:
+            self._valid = False
+            self._data = self._decode()
+            self._valid = self._data is not None
 
-		return self._valid
+        return self._valid
 
-	def stringify(self):
-		return ""
+    def stringify(self):
+        return ""
 
-	def get_property(self, name):
-		if self.validate():
-			return self._data.get(name)
+    def get_property(self, name):
+        if self.validate():
+            return self._data.get(name)
+
 
 def declare_messagetype(pattern):
-	def decorator(factory):
-		factories.append((pattern, factory))
-		return factory
-	return decorator
+    def decorator(factory):
+        factories.append((pattern, factory))
+        return factory
+    return decorator
 
 from . import file
 from . import info

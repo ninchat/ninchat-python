@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015, Somia Reality Oy
+# Copyright (c) 2012-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -74,69 +74,74 @@ from __future__ import absolute_import
 
 from . import typechecks
 
+
 class Attribute(object):
-	"""Description of an entity attribute.
+    """Description of an entity attribute.
 
-	.. attribute:: name
+    .. attribute:: name
 
-	   String
+       String
 
-	.. attribute:: type
+    .. attribute:: type
 
-	   String
+       String
 
-	.. attribute:: initable
+    .. attribute:: initable
 
-	   Boolean
+       Boolean
 
-	.. attribute:: writable
+    .. attribute:: writable
 
-	   Boolean
+       Boolean
 
-	.. attribute:: settable
+    .. attribute:: settable
 
-	   Boolean
+       Boolean
 
-	.. attribute:: unsettable
+    .. attribute:: unsettable
 
-	   Boolean
+       Boolean
 
-	"""
-	def __init__(self, name, spec):
-		self.name = name
-		self.type = spec["type"]
-		self.initable = spec.get("initable", False)
-		self.writable = spec.get("writable", False)
-		self.settable = spec.get("settable", self.writable)
-		self.unsettable = spec.get("unsettable", self.writable)
+    """
 
-	def __str__(self):
-		return self.name
+    def __init__(self, name, spec):
+        self.name = name
+        self.type = spec["type"]
+        self.initable = spec.get("initable", False)
+        self.writable = spec.get("writable", False)
+        self.settable = spec.get("settable", self.writable)
+        self.unsettable = spec.get("unsettable", self.writable)
 
-	def validate(self, value):
-		"""Check if *value* conforms to the type requirements.
-		"""
-		return typechecks[self.type](value)
+    def __str__(self):
+        return self.name
+
+    def validate(self, value):
+        """Check if *value* conforms to the type requirements.
+        """
+        return typechecks[self.type](value)
+
 
 def init(root, dirname):
-	import os, zipfile
+    import os
+    import zipfile
 
-	if os.path.isdir(root):
-		dirpath = os.path.join(root, dirname)
-		for name in os.listdir(dirpath):
-			with open(os.path.join(dirpath, name)) as file:
-				init_file(file, name)
-	else:
-		with zipfile.ZipFile(root) as zip:
-			for name in zip.namelist():
-				if os.path.dirname(name) == dirname:
-					with zip.open(name) as file:
-						init_file(file, name)
+    if os.path.isdir(root):
+        dirpath = os.path.join(root, dirname)
+        for name in os.listdir(dirpath):
+            with open(os.path.join(dirpath, name)) as file:
+                init_file(file, name)
+    else:
+        with zipfile.ZipFile(root) as zip:
+            for name in zip.namelist():
+                if os.path.dirname(name) == dirname:
+                    with zip.open(name) as file:
+                        init_file(file, name)
+
 
 def init_file(file, name):
-	import os
-	from . import load_file
+    import os
+    from . import load_file
 
-	if name.endswith(".json"):
-		entity, _ = os.path.basename(name).rsplit(".", 1)
-		globals()[entity] = load_file(file, Attribute)
+    if name.endswith(".json"):
+        entity, _ = os.path.basename(name).rsplit(".", 1)
+        globals()[entity] = load_file(file, Attribute)

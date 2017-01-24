@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Somia Reality Oy
+# Copyright (c) 2015-2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,8 @@ from __future__ import absolute_import
 
 from . import Message, declare_messagetype
 
+
 @declare_messagetype("ninchat.com/file")
 class FileMessage(Message):
-	"""Stub for the ninchat.com/file message type.
-	"""
+    """Stub for the ninchat.com/file message type.
+    """
