@@ -46,15 +46,22 @@ service.
 from __future__ import absolute_import
 
 try:
+    from typing import Any, Dict, Tuple
+except ImportError:
+    pass
+
+# Python 3
+_ints = int           # type: type
+_floats = int, float  # type: Tuple[type, type]
+_strings = str        # type: type
+
+try:
     # Python 2
-    _ints = int, long
-    _floats = int, long, float
-    _strings = str, unicode
+    _ints = int, long           # type: ignore
+    _floats = int, long, float  # type: ignore
+    _strings = str, unicode     # type: ignore
 except NameError:
-    # Python 3
-    _ints = int
-    _floats = int, float
-    _strings = str
+    pass
 
 typechecks = {}
 
@@ -102,10 +109,10 @@ def is_time(x):
     return isinstance(x, _ints) and x >= 0
 
 
-paramtypes = {}
-objecttypes = {}
-actions = {}
-events = {}
+paramtypes = {}   # type: Dict[str, Any]
+objecttypes = {}  # type: Dict[str, Object]
+actions = {}      # type: Dict[str, Interface]
+events = {}       # type: Dict[str, Interface]
 
 
 class Parameter(object):

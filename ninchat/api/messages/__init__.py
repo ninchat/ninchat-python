@@ -45,7 +45,7 @@ import json
 import logging
 
 try:
-    unicode = unicode
+    unicode = unicode  # type: ignore
 except NameError:
     # Python 3
     def _decode(x):

@@ -72,6 +72,11 @@
 
 from __future__ import absolute_import
 
+try:
+    from typing import Dict
+except ImportError:
+    pass
+
 from . import typechecks
 
 
@@ -121,6 +126,19 @@ class Attribute(object):
         return typechecks[self.type](value)
 
 
+user: Dict[str, Attribute] = {}
+identity: Dict[str, Attribute] = {}
+dialoguemember: Dict[str, Attribute] = {}
+channel: Dict[str, Attribute] = {}
+channelmember: Dict[str, Attribute] = {}
+realm: Dict[str, Attribute] = {}
+realmmember: Dict[str, Attribute] = {}
+queue: Dict[str, Attribute] = {}
+queuemember: Dict[str, Attribute] = {}
+tag: Dict[str, Attribute] = {}
+puppet: Dict[str, Attribute] = {}
+
+
 def init(root, dirname):
     import os
     import zipfile
@@ -144,4 +162,9 @@ def init_file(file, name):
 
     if name.endswith(".json"):
         entity, _ = os.path.basename(name).rsplit(".", 1)
-        globals()[entity] = load_file(file, Attribute)
+        try:
+            d = globals()[entity]
+        except KeyError:
+            d = {}
+            globals()[entity] = d
+        d.update(load_file(file, Attribute))
