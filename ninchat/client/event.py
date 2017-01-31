@@ -59,11 +59,12 @@ class Event(object):
     def __repr__(self):
         return "<Event %r %s%s>" % (
             self._params.get("event"),
-            " ".join(
-                    "%s %r" % (k, v) for k, v in sorted(self._params.items())
-                    if k != "event"),
-            (" payload " + " ".join(
-                    "%r" % p for p in self.payload)) if self.payload else "")
+            " ".join("%s %r" % (k, v)
+                     for k, v in sorted(self._params.items())
+                     if k != "event"),
+            (" payload " + " ".join("%r" % p for p in self.payload)
+             if self.payload
+             else ""))
 
     @property
     def name(self):

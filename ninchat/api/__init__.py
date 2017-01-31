@@ -235,7 +235,7 @@ def __init():
 
     filename = realpath(__file__)
     root = dirname(dirname(dirname(filename)))
-    pkg = dirname(filename)[len(root)+1:]
+    pkg = dirname(filename)[len(root) + 1:]
 
     load(root, join(pkg, "spec/json/paramtypes.json"), (lambda key, spec: spec), paramtypes)
     load(root, join(pkg, "spec/json/objecttypes.json"), Object, objecttypes)

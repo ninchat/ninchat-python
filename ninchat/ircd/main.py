@@ -160,13 +160,13 @@ class User(object):
 
         try:
             event = session.create(
-                    message_types=["ninchat.com/*"],
-                    user_id=self.user_id,
-                    user_auth=self.user_auth,
-                    user_attrs={
-                        "name":     self.user_name,
-                        "realname": realname,
-                    })
+                message_types=["ninchat.com/*"],
+                user_id=self.user_id,
+                user_auth=self.user_auth,
+                user_attrs={
+                    "name":     self.user_name,
+                    "realname": realname,
+                })
 
             if event.name == "error":
                 self.log_call_error("create_session", event)
@@ -203,19 +203,19 @@ class User(object):
 
                     if event.channel_id is not None:
                         self.send(":{}^{}!{} PRIVMSG #{} :{}".format(
-                                event.message_user_name or "",
-                                event.message_user_id,
-                                SERVER,
-                                event.channel_id,
-                                text))
+                            event.message_user_name or "",
+                            event.message_user_id,
+                            SERVER,
+                            event.channel_id,
+                            text))
                     elif event.user_id is not None:
                         self.send(":{}^{}!{} PRIVMSG {}^{} :{}".format(
-                                event.message_user_name or "",
-                                event.message_user_id,
-                                SERVER,
-                                self.user_name,
-                                self.user_id,
-                                text))
+                            event.message_user_name or "",
+                            event.message_user_id,
+                            SERVER,
+                            self.user_name,
+                            self.user_id,
+                            text))
             elif event.name == "search_results":
                 queue = self.search_queues.get(event.action_id)
                 if queue:
@@ -238,9 +238,9 @@ class User(object):
 
     def _send_message(self, text, **params):
         return self.session.send_message(
-                message_type="ninchat.com/text",
-                payload=[json.dumps({"text": text}).encode("utf-8")],
-                **params)
+            message_type="ninchat.com/text",
+            payload=[json.dumps({"text": text}).encode("utf-8")],
+            **params)
 
     def join(self, channel_id):
         channel_attrs = self.channels_attrs.get(channel_id)
@@ -258,13 +258,13 @@ class User(object):
 
     def _joined(self, channel_id, channel_attrs):
         self.send(":{} JOIN #{}".format(
-                self.ident,
-                channel_id))
+            self.ident,
+            channel_id))
         self.send(":{} 332 * #{} :{}: {}".format(
-                SERVER,
-                channel_id,
-                channel_attrs.get("name", ""),
-                channel_attrs.get("topic", "")))
+            SERVER,
+            channel_id,
+            channel_attrs.get("name", ""),
+            channel_attrs.get("topic", "")))
 
     def _names(self, channel_id):
         event = self.session.describe_channel(channel_id=channel_id)
@@ -272,17 +272,17 @@ class User(object):
             self.log_call_error("describe_channel %s" % channel_id, event)
         else:
             self.send(":{} 353 * #{} :{}".format(
-                    SERVER,
-                    channel_id,
-                    " ".join(
-                        "{}^{}".format(info["user_attrs"].get("name", ""), id)
-                        for id, info
-                        in (event.channel_members or {}).iteritems()
-                    )))
+                SERVER,
+                channel_id,
+                " ".join(
+                    "{}^{}".format(info["user_attrs"].get("name", ""), id)
+                    for id, info
+                    in (event.channel_members or {}).iteritems()
+                )))
 
             self.send(":{} 366 * #{} :End of NAMES list".format(
-                    SERVER,
-                    channel_id))
+                SERVER,
+                channel_id))
 
     @async
     def ping(self):
@@ -318,20 +318,20 @@ class User(object):
 
     def _send_whois_reply(self, user_id, user_attrs):
         self.send(":{} 311 {}^{} {} {} * :{}".format(
-                SERVER,
-                user_attrs.get("name", ""),
-                user_id,
-                user_id,
-                SERVER,
-                user_attrs.get("realname", "")))
+            SERVER,
+            user_attrs.get("name", ""),
+            user_id,
+            user_id,
+            SERVER,
+            user_attrs.get("realname", "")))
 
         idle_since = user_attrs.get("idle")
         if idle_since:
             self.send(":{} 317 {}^{} {} :seconds idle".format(
-                    SERVER,
-                    user_attrs.get("name", ""),
-                    user_id,
-                    int(time.time() - idle_since)))
+                SERVER,
+                user_attrs.get("name", ""),
+                user_id,
+                int(time.time() - idle_since)))
 
     @async
     def _describe_user(self, user_id, result_queue):
@@ -466,7 +466,7 @@ class Client(object):
                         break
 
                     recv_queue.put(buf[:i])
-                    buf = buf[i+2:]
+                    buf = buf[i + 2:]
 
     @async
     def _send_loop(self, send_queue, close_queue):

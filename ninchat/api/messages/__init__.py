@@ -147,12 +147,14 @@ def declare_messagetype(pattern):
         return factory
     return decorator
 
+
 from . import file
 from . import info
 from . import link
 from . import metadata
 from . import notice
 from . import text
+
 
 # avoid warnings
 file

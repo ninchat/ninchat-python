@@ -72,19 +72,19 @@ class Action(object):
             if value is None:
                 if spec.required:
                     raise ParameterError(
-                            "%r is missing from %r action" % (key, name),
-                            spec)
+                        "%r is missing from %r action" % (key, name),
+                        spec)
             else:
                 if not spec.validate(value):
                     raise ParameterError(
-                            "%r value is invalid in %r action: %r" %
-                            (key, name, value),
-                            spec)
+                        "%r value is invalid in %r action: %r" %
+                        (key, name, value),
+                        spec)
 
         for key in self._params:
             if key not in specs:
                 raise ParameterError(
-                        "unknown %r in %r action" % (key, name))
+                    "unknown %r in %r action" % (key, name))
 
         self._params["action"] = name
 
@@ -97,11 +97,13 @@ class Action(object):
     def __repr__(self):
         return "<Action %r %s%s>" % (
             self.name,
-            " ".join(
-                    "%s %r" % (k, v) for k, v in sorted(self._params.items())
-                    if k not in ("action", "frames")),
-            (" payload " + " ".join(
-                    "%r" % p for p in self.payload)) if self.payload else "")
+            " ".join("%s %r" % (k, v)
+                     for k, v
+                     in sorted(self._params.items())
+                     if k not in ("action", "frames")),
+            (" payload " + " ".join("%r" % p for p in self.payload)
+             if self.payload
+             else ""))
 
     def __lt__(self, other):
         if self._resend_time < other._resend_time:
