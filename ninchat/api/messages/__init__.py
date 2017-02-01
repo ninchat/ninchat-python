@@ -45,6 +45,13 @@ import json
 import logging
 
 try:
+    from typing import Any, Optional
+    Any
+    Optional
+except ImportError:
+    pass
+
+try:
     unicode = unicode  # type: ignore
 except NameError:
     # Python 3
@@ -100,8 +107,8 @@ class Message(object):
 
 
 class _AbstractObjectMessage(Message):
-    _valid = None
-    _data = None
+    _valid = None  # type: Optional[bool]
+    _data = None   # type: Any
 
     def _decode(self):
         data = self._decode_json_header()
