@@ -47,6 +47,11 @@ from __future__ import absolute_import
 
 try:
     from typing import Any, Dict, Tuple
+
+    # avoid warnings
+    Any
+    Dict
+    Tuple
 except ImportError:
     pass
 
