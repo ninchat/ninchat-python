@@ -31,33 +31,39 @@ from . import Message, declare_messagetype
 class UserInfoMessage(Message):
     """Stub for the ninchat.com/info/user message type.
     """
+    __slots__ = Message.__slots__
 
 
 @declare_messagetype("ninchat.com/info/channel")
 class ChannelInfoMessage(Message):
     """Stub for the ninchat.com/info/channel message type.
     """
+    __slots__ = Message.__slots__
 
 
 @declare_messagetype("ninchat.com/info/join")
 class JoinInfoMessage(Message):
     """Stub for the ninchat.com/info/join message type.
     """
+    __slots__ = Message.__slots__
 
 
 @declare_messagetype("ninchat.com/info/part")
 class PartInfoMessage(Message):
     """Stub for the ninchat.com/info/part message type.
     """
+    __slots__ = Message.__slots__
 
 
 @declare_messagetype("ninchat.com/info/member")
 class MemberInfoMessage(Message):
     """Stub for the ninchat.com/info/member message type.
     """
+    __slots__ = Message.__slots__
 
 
 @declare_messagetype("ninchat.com/info/access")
 class AccessInfoMessage(Message):
     """Stub for the ninchat.com/info/access message type.
     """
+    __slots__ = Message.__slots__

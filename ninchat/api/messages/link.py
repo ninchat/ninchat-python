@@ -32,6 +32,8 @@ from .. import is_int, is_string
 class LinkMessage(_AbstractObjectMessage):
     """Handler for ninchat.com/link messages.
     """
+    __slots__ = _AbstractObjectMessage.__slots__
+
     _specs = {
         "icon":      (is_string, True),
         "name":      (is_string, True),

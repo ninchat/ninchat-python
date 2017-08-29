@@ -32,6 +32,8 @@ from .. import is_string
 class TextMessage(_AbstractObjectMessage):
     """Handler for ninchat.com/text messages.  Supports the "text" property.
     """
+    __slots__ = _AbstractObjectMessage.__slots__
+
     _specs = {
         "text": (is_string, True),
     }

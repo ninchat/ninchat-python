@@ -31,3 +31,4 @@ from . import Message, declare_messagetype
 class FileMessage(Message):
     """Stub for the ninchat.com/file message type.
     """
+    __slots__ = Message.__slots__

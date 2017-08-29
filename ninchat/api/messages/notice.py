@@ -32,3 +32,4 @@ from .text import TextMessage
 class NoticeMessage(TextMessage):
     """Handler for ninchat.com/notice messages.  Supports the "text" property.
     """
+    __slots__ = TextMessage.__slots__
