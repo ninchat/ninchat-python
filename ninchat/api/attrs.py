@@ -126,17 +126,17 @@ class Attribute(object):
         return typechecks[self.type](value)
 
 
-user: Dict[str, Attribute] = {}
-identity: Dict[str, Attribute] = {}
-dialoguemember: Dict[str, Attribute] = {}
-channel: Dict[str, Attribute] = {}
-channelmember: Dict[str, Attribute] = {}
-realm: Dict[str, Attribute] = {}
-realmmember: Dict[str, Attribute] = {}
-queue: Dict[str, Attribute] = {}
-queuemember: Dict[str, Attribute] = {}
-tag: Dict[str, Attribute] = {}
-puppet: Dict[str, Attribute] = {}
+user = {}            # type: Dict[str, Attribute]
+identity = {}        # type: Dict[str, Attribute]
+dialoguemember = {}  # type: Dict[str, Attribute]
+channel = {}         # type: Dict[str, Attribute]
+channelmember = {}   # type: Dict[str, Attribute]
+realm = {}           # type: Dict[str, Attribute]
+realmmember = {}     # type: Dict[str, Attribute]
+queue = {}           # type: Dict[str, Attribute]
+queuemember = {}     # type: Dict[str, Attribute]
+tag = {}             # type: Dict[str, Attribute]
+puppet = {}          # type: Dict[str, Attribute]
 
 
 def init(root, dirname):
