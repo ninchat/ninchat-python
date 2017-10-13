@@ -74,6 +74,9 @@ from __future__ import absolute_import
 
 try:
     from typing import Dict
+
+    # avoid warnings
+    Dict
 except ImportError:
     pass
 
