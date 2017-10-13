@@ -33,7 +33,7 @@ def _is_string_in_list(x, strings=[]):
 
 
 def _is_string_with_list(x, max_length=0):
-    return is_string(x) and len(x.split(" ", max_length)) <= max_length
+    return is_string(x) and x.count(" ") < max_length
 
 
 @declare_messagetype("ninchat.com/ui/action")
