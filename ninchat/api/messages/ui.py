@@ -37,11 +37,11 @@ def _is_string_with_list(x, max_length=0):
 
 
 @declare_messagetype("ninchat.com/ui/action")
-class ActionUiMessage(_AbstractObjectMessage):
+class ActionUIMessage(_AbstractObjectMessage):
     """Handler for ninchat.com/ui/action messages.
     """
     def __is_string_in_list(x):
-        return _is_string_in_list(x, ActionUiMessage._valid_actions)
+        return _is_string_in_list(x, ActionUIMessage._valid_actions)
 
     _specs = {
         "action": (__is_string_in_list, True),
@@ -52,14 +52,14 @@ class ActionUiMessage(_AbstractObjectMessage):
 
 
 @declare_messagetype("ninchat.com/ui/compose")
-class ComposeUiMessage(_AbstractObjectMessage):
+class ComposeUIMessage(_AbstractObjectMessage):
     """Handler for ninchat.com/ui/action messages.
     """
     def __is_string_in_list(x):
-        return _is_string_in_list(x, ComposeUiMessage._valid_elements)
+        return _is_string_in_list(x, ComposeUIMessage._valid_elements)
 
     def __is_string_with_list(x):
-        return _is_string_with_list(x, ComposeUiMessage._valid_class_list_max_length)
+        return _is_string_with_list(x, ComposeUIMessage._valid_class_list_max_length)
 
     _specs = {
         "class": (__is_string_with_list, False),
