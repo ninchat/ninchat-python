@@ -112,6 +112,9 @@ class _AbstractObjectMessage(Message):
 
     def _decode(self):
         data = self._decode_json_header()
+        return self._verify(data)
+
+    def _verify(self, data):
         if not isinstance(data, dict):
             log.warning("%s has no data", self.type)
             return None
@@ -146,6 +149,23 @@ class _AbstractObjectMessage(Message):
     def get_property(self, name):
         if self.validate():
             return self._data.get(name)
+
+
+class _AbstractObjectArrayMessage(_AbstractObjectMessage):
+    def _decode(self):
+        data = self._decode_json_header()
+        if not isinstance(data, list):
+            log.warning("%s has no list of data", self.type)
+            return None
+
+        for item in data:
+            if not self._verify(item):
+                return None
+
+        return data
+
+    def get_property(self, name):
+        return None
 
 
 def declare_messagetype(pattern):
