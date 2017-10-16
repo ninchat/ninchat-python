@@ -24,7 +24,7 @@
 
 from __future__ import absolute_import
 
-from . import _AbstractObjectMessage, declare_messagetype
+from . import _AbstractObjectMessage, _AbstractObjectArrayMessage, declare_messagetype
 from .. import is_object, is_string
 
 
@@ -52,7 +52,7 @@ class ActionUIMessage(_AbstractObjectMessage):
 
 
 @declare_messagetype("ninchat.com/ui/compose")
-class ComposeUIMessage(_AbstractObjectMessage):
+class ComposeUIMessage(_AbstractObjectArrayMessage):
     """Handler for ninchat.com/ui/action messages.
     """
     def __is_string_in_list(x):
