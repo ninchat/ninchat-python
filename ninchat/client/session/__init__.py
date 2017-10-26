@@ -316,7 +316,7 @@ class SessionBase(object):
             if conn:
                 try:
                     conn.close()
-                except:
+                except Exception:
                     log.exception("websocket close")
 
                 conn.close_connection()
@@ -377,7 +377,7 @@ class SessionBase(object):
 
                 try:
                     self._send(conn, next_action)
-                except:
+                except Exception:
                     log.exception("websocket send")
                     break
 
@@ -395,7 +395,7 @@ class SessionBase(object):
 
             try:
                 conn.connect()
-            except:
+            except Exception:
                 log.exception("websocket connect")
                 conn.close_connection()
                 # TODO: exponential backoff, eventually reset session_host
@@ -404,7 +404,7 @@ class SessionBase(object):
 
             try:
                 self._send(conn, action)
-            except:
+            except Exception:
                 log.exception("websocket send")
                 conn.close_connection()
                 continue

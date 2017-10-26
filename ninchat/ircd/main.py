@@ -429,7 +429,7 @@ class Client(object):
                                 parts = line.split(" ", 1)
                             command = parts[-2]
                             params = parts[-1]
-                        except:
+                        except Exception:
                             log.exception("%s command parse error: %r", self, line)
                             continue
 
