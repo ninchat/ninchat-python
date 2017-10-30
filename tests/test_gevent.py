@@ -37,10 +37,13 @@ from ninchat.client.session.gevent import QueueSession
 
 log = logging.getLogger("test")
 
+NUM_MESSAGES = 100
+
 
 class State(object):
 
-    def __init__(self, session_type):
+    def __init__(self, name, session_type):
+        self.name = name
         self.session = SyncQueueAdapter(session_type())
         self.greenlet = gevent.spawn(self.loop)
 
@@ -54,33 +57,35 @@ class State(object):
     def loop(self):
         for num, event in enumerate(self.session):
             if event.name == "error":
-                log.error("%d: %r", num, event)
+                log.error("%s%d: %r", self.name, num, event)
                 break
             elif event.name == "message_received":
                 n = int(json.loads(event.payload[0])["text"])
-                log.info("%d: %s %s", num, n, event.message_id)
+                log.info("%s%d: %s %s", self.name, num, n, event.message_id)
                 gevent.spawn(self.send, n + 1)
+                if n >= NUM_MESSAGES - 1:
+                    break
             else:
-                log.debug("%d: spurious: %r", num, event)
+                log.debug("%s%d: spurious: %r", self.name, num, event)
 
     def send(self, n):
         event = self.session.send_message(user_id=self.other.user_id, message_type="ninchat.com/text", message_ttl=1, payload=[json.dumps({"text": str(n)})])
         if event is None or event.name == "error":
-            log.error("send_message: %r", event)
+            log.error("%s: send_message: %r", self.name, event)
             return
 
 
 def main(session_type=QueueSession):
-    s1 = State(session_type)
-    s2 = State(session_type)
+    a = State("a", session_type)
+    b = State("b", session_type)
 
-    s1.other = s2
-    s2.other = s1
+    a.other = b
+    b.other = a
 
-    s1.send(0)
+    a.send(1)
 
     try:
-        gevent.joinall([s1.greenlet, s2.greenlet])
+        gevent.joinall([a.greenlet, b.greenlet])
     except KeyboardInterrupt:
         pass
 
