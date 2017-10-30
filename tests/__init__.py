@@ -24,22 +24,28 @@
 
 from __future__ import absolute_import
 
-try:
-    import gevent.monkey
-except ImportError:
-    pass
-else:
-    gevent.monkey.patch_all()
 
-import logging
+def __init():
+    try:
+        import gevent.monkey
+    except ImportError:
+        pass
+    else:
+        gevent.monkey.patch_all()
 
-import ninchat.client
+    import logging
+    import os
 
-log_handler = logging.StreamHandler()
-log_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-log = logging.getLogger("test")
-log.addHandler(log_handler)
-log.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s %(name)s: %(message)s"))
 
-ninchat.client.log.addHandler(log_handler)
-ninchat.client.log.setLevel(logging.DEBUG)
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+
+    if os.environ.get("DEBUG") in (None, "0"):
+        logger.setLevel(logging.INFO)
+    else:
+        logger.setLevel(logging.DEBUG)
+
+
+__init()

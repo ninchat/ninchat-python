@@ -25,6 +25,7 @@
 from __future__ import absolute_import
 
 import json
+import logging
 import sys
 import threading
 import time
@@ -34,7 +35,7 @@ sys.path.insert(0, "")
 from ninchat.client.adapter import AsyncCallbackAdapter
 from ninchat.client.session.thread import CallbackSession, QueueSession
 
-from . import log
+log = logging.getLogger("test")
 
 opened_queue = QueueSession.queue_type(2)
 closed_queue = QueueSession.queue_type(2)

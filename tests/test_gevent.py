@@ -25,6 +25,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import json
+import logging
 import sys
 
 sys.path.insert(0, "")
@@ -34,7 +35,7 @@ import gevent
 from ninchat.client.adapter import SyncQueueAdapter
 from ninchat.client.session.gevent import QueueSession
 
-from . import log
+log = logging.getLogger("test")
 
 
 class State(object):
@@ -57,7 +58,7 @@ class State(object):
                 break
             elif event.name == "message_received":
                 n = int(json.loads(event.payload[0])["text"])
-                log.debug("%d: %s %s", num, n, event.message_id)
+                log.info("%d: %s %s", num, n, event.message_id)
                 gevent.spawn(self.send, n + 1)
             else:
                 log.debug("%d: spurious: %r", num, event)
