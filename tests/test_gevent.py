@@ -24,6 +24,9 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import gevent.monkey
+gevent.monkey.patch_all()
+
 import json
 import logging
 import sys

@@ -4,5 +4,7 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-install: "pip install ."
-script: "python -m tests.test_master"
+before_install:
+  - "gimme -f 1.9"
+install: "GOBUILDMODE=c-shared GOBUILDOUT=$(pwd)/libninchat.so pip install -v ."
+script: "DEBUG=1 python -m tests.test_master && LD_LIBRARY_PATH=. DEBUG=1 python -m tests.test_cffi && LD_LIBRARY_PATH=. DEBUG=1 python -m tests.test_cffi_gevent"

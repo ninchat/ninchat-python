@@ -1,4 +1,5 @@
 *.py[co]
+.eggs/
 .nincat
 __pycache__/
 build/

@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2017, Somia Reality Oy
+# Copyright (c) 2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,23 +22,43 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import
+import asyncio
+import sys
+import logging
+from functools import partial
+from glob import glob
+
+sys.path.insert(0, "")
+sys.path = glob("build/lib.*/") + sys.path
+
+from ninchat.client.cffi.asyncio import Session
+
+log = logging.getLogger("test_cffi_asyncio")
 
 
-def __init():
-    import logging
-    import os
+async def test():
+    def on_session_event(params):
+        pass
 
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter("%(asctime)s %(name)s: %(message)s"))
+    def on_event(params, payload, last_reply):
+        pass
 
-    logger = logging.getLogger()
-    logger.addHandler(handler)
+    s = Session()
+    s.on_session_event = on_session_event
+    s.on_event = on_event
+    s.set_params({"user_attrs": {"name": "ninchat-python"}, "message_types": ["*"]})
 
-    if os.environ.get("DEBUG") in (None, "0"):
-        logger.setLevel(logging.INFO)
-    else:
-        logger.setLevel(logging.DEBUG)
+    params = await s.open()
+    log.debug("opened params = %s", params)
+
+    params, _ = await s.call({"action": "describe_conn"})
+    log.debug("called params = %s", params)
+
+    await s.close()
+    await s.closed
+
+    log.info("ok")
 
 
-__init()
+if __name__ == "__main__":
+    asyncio.get_event_loop().run_until_complete(test())

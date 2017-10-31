@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2017, Somia Reality Oy
+# Copyright (c) 2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,21 +24,21 @@
 
 from __future__ import absolute_import
 
+import gevent.monkey
+gevent.monkey.patch_all()
 
-def __init():
-    import logging
-    import os
+import sys
+from glob import glob
 
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter("%(asctime)s %(name)s: %(message)s"))
+sys.path.insert(0, "")
+sys.path = glob("build/lib.*/") + sys.path
 
-    logger = logging.getLogger()
-    logger.addHandler(handler)
+from gevent.queue import Queue
 
-    if os.environ.get("DEBUG") in (None, "0"):
-        logger.setLevel(logging.INFO)
-    else:
-        logger.setLevel(logging.DEBUG)
+from ninchat.client.cffi.gevent import Session
+
+from .test_cffi import main
 
 
-__init()
+if __name__ == "__main__":
+    main(Session, Queue)

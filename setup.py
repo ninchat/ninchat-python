@@ -1,7 +1,13 @@
-import os
+from os import environ, getcwd
+from os.path import exists, join
 
-if not os.path.exists("ninchat/api/spec/json"):
+if not exists("ninchat/api/spec/json"):
     raise Exception("ninchat-api submodule not found")
+
+if not exists("go/src/github.com/ninchat/ninchat-go/include"):
+    raise Exception("ninchat-go submodule not found")
+
+environ["GOPATH"] = join(getcwd(), "go")
 
 try:
     import setuptools
@@ -19,11 +25,13 @@ except ImportError:
 
 setup(
     name="ninchat-python",
-    version="1.0-pre",
+    version="1.0rc0",
     maintainer="Timo Savola",
     maintainer_email="timo@ninchat.com",
     url="https://github.com/ninchat/ninchat-python",
     scripts=["bin/nincat"],
+    setup_requires=["cffi>=1.0.0"],
+    cffi_modules=["build_cffi.py:ffibuilder"],
 
     packages=[
         "ninchat",
@@ -31,6 +39,7 @@ setup(
         "ninchat/api/messages",
         "ninchat/api/spec/json",
         "ninchat/client",
+        "ninchat/client/cffi",
         "ninchat/client/session",
     ],
 
@@ -50,6 +59,9 @@ setup(
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
         "Topic :: Communications",
         "Topic :: Communications :: Chat",
         "Topic :: Communications :: Conferencing",
