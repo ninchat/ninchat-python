@@ -60,7 +60,7 @@ class State(object):
                 log.error("%s%d: %r", self.name, num, event)
                 break
             elif event.name == "message_received":
-                n = int(json.loads(event.payload[0])["text"])
+                n = int(json.loads(event.payload[0].decode())["text"])
                 log.info("%s%d: %s %s", self.name, num, n, event.message_id)
                 gevent.spawn(self.send, n + 1)
                 if n >= NUM_MESSAGES - 1:
