@@ -102,7 +102,9 @@ class Session(BaseSession):
         f = _create_future(loop=self.loop)
 
         def on_reply(params, payload, last_reply):
-            if last_reply:
+            if params is None:
+                f.cancel()
+            elif last_reply:
                 f.set_result((params, payload))
 
         self.send(params, payload, on_reply)
