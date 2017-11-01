@@ -27,7 +27,21 @@
 __all__ = ["Session"]
 
 import asyncio
-from typing import Any, ByteString, Callable, Dict, Optional, Sequence
+
+try:
+    from typing import Any, ByteString, Callable, Dict, Optional, Sequence
+except ImportError:
+    pass
+
+try:
+    # Python 3.5+
+    asyncio.AbstractEventLoop.create_future
+
+    def _create_future(*, loop):
+        return loop.create_future()
+except AttributeError:
+    # Python 3.4
+    _create_future = asyncio.Future
 
 from . import Session as BaseSession
 
@@ -53,8 +67,8 @@ class Session(BaseSession):
         super().__init__()
 
         self.loop = loop or asyncio.get_event_loop()
-        self.opened = self.loop.create_future()
-        self.closed = self.loop.create_future()
+        self.opened = _create_future(loop=self.loop)
+        self.closed = _create_future(loop=self.loop)
 
     def open(self, on_reply=None):
         # type: (Optional[Callable[[Dict[str, Any]], None]]) -> asyncio.Future
@@ -85,7 +99,7 @@ class Session(BaseSession):
         """An awaitable version of ninchat.client.cffi.Session.send().
         Returns the final reply event's params and payload."""
 
-        f = self.loop.create_future()
+        f = _create_future(loop=self.loop)
 
         def on_reply(params, payload, last_reply):
             if last_reply:
