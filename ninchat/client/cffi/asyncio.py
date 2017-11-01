@@ -27,7 +27,7 @@
 __all__ = ["Session"]
 
 import asyncio
-from typing import Any, ByteString, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, ByteString, Callable, Dict, Optional, Sequence
 
 from . import Session as BaseSession
 
@@ -80,8 +80,8 @@ class Session(BaseSession):
         super().close()
         return self.closed
 
-    async def call(self, params, payload=None):
-        # type: (Dict[str,Any], Optional[Sequence[ByteString]]) -> Tuple[Dict[str,Any], List[bytes]]
+    def call(self, params, payload=None):
+        # type: (Dict[str,Any], Optional[Sequence[ByteString]]) -> asyncio.Future
         """An awaitable version of ninchat.client.cffi.Session.send().
         Returns the final reply event's params and payload."""
 
@@ -92,7 +92,7 @@ class Session(BaseSession):
                 f.set_result((params, payload))
 
         self.send(params, payload, on_reply)
-        return await f
+        return f
 
     def _handle_close(self):
         try:
