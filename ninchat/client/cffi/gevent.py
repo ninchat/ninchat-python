@@ -22,9 +22,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+""  # Enables documentation generation.
+
 from __future__ import absolute_import
 
-__all__ = ["Error", "Session"]
+__all__ = ["Session"]
 
 import fcntl
 import logging
@@ -37,7 +39,6 @@ from gevent.fileobject import FileObject
 
 from _ninchat_cffi import ffi, lib
 
-from . import Error
 from . import Session as BaseSession
 
 log = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ poll_interval = 0.1
 
 def _create_pipe():
     """Creates a readable co-operative (gevent) file-like object
-       and a writable non-blocking raw file descriptor."""
+    and a writable non-blocking raw file descriptor."""
     try:
         # Python 3, Linux
         r, w = os.pipe2(os.O_NONBLOCK | os.O_CLOEXEC)
@@ -78,6 +79,9 @@ def _heartbeat_loop():
 
 
 class Session(BaseSession):
+    """A version of ninchat.client.cffi.Session which executes callbacks
+    in the main thread's gevent event loop."""
+
     _new_session = lib.new_gevent_session
 
     def __init__(self):

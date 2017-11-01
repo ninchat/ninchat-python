@@ -22,9 +22,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+""  # Enables documentation generation.
+
 from __future__ import absolute_import
 
-__all__ = ["Error", "Session"]
+__all__ = ["Session", "Error"]
 
 try:
     # Python 2
@@ -50,10 +52,69 @@ _live = set()
 
 
 class Error(Exception):
+    """Raised by some Session methods."""
     pass
 
 
 class Session(object):
+    """Actions may be sent via the send() method.
+
+    A server session must be established by configuring callbacks,
+    calling the set_params() and open() methods, and waiting for a
+    "session_created" (or an "error") event.  If the server drops the
+    session (due to network timeout or some other exceptional reason), a
+    new server session is created automatically, and another
+    "session_created" event is delivered.
+
+    Callbacks (the attributes prefixed with "on") may either be
+    configured by setting them as properties, or by subclassing Session
+    and implementing them as methods.
+
+    Action/event params are dictionaries of string keys and arbitrary
+    values.  Action/event payloads are lists of bytes-like objects.  See
+    https://ninchat.com/api/v2 for details.
+
+    Threading:
+
+    - The API is not thread-safe.  If Session methods are invoked on
+      multiple threads (probably a bad idea), proper synchronization
+      must be taken care of.
+    - The callbacks are executed on arbitrary threads, so proper
+      synchronization must be taken care of.  (The asyncio and gevent
+      implementations avoid this problem.)
+
+    .. attribute:: on_session_event
+
+       Session creation/failure callback.  Invoked with the event's
+       params.  If an "error" event is delivered, it means that a new
+       server session cannot be created automatically; the set_params()
+       method must be used to update login credentials.  The close()
+       method must be called if the session will not be resumed after an
+       error.
+
+    .. attribute:: on_event
+
+       Event delivery callback.  Invoked with the event's params,
+       event's payload, and a boolean which indicates if it was the last
+       reply to the action indicated by the event's "action_id"
+       parameter.
+
+    .. attribute:: on_close
+
+       Indicates that the session closure initiated by calling the
+       close() method has completed.  Invoked without arguments.
+
+    .. attribute:: on_conn_state
+
+       Indicates a change in the internal connection state.  Invoked
+       with one of the strings: "connecting", "connected", "disconnected".
+
+    .. attribute:: on_active
+
+       Indicates that there has recently been activity on the connection.
+       Invoked without arguments.
+"""
+
     on_session_event = None  # type: Callback[[Dict[str,Any]], None]
     on_event = None          # type: Callback[[Dict[str,Any], List[bytes], bool], None]
     on_close = None          # type: Callback[[], None]
@@ -80,6 +141,8 @@ class Session(object):
 
     def set_params(self, params):
         # type: (Dict[str,Any]) -> None
+        """Sets or replaces the params to be used for the next
+        "create_session" action."""
         assert self._ctx
 
         params_json = json.dumps(params).encode()
@@ -90,6 +153,9 @@ class Session(object):
 
     def open(self, on_open=None):
         # type: (Callable[[Dict[str,Any]], None]) -> None
+        """Create a session on the server.  If specified, the on_open
+        callback will be called with the (initial) session
+        creation/failure event's params."""
         assert self._ctx
         assert self._ctx not in _live
         assert not self._on_open
@@ -103,6 +169,7 @@ class Session(object):
 
     def close(self):
         # type: () -> None
+        """Close the session on the server."""
         assert self._ctx in _live
 
         lib.ninchat_session_close(self._internal)
@@ -110,6 +177,10 @@ class Session(object):
 
     def send(self, params, payload=None, on_reply=None):
         # type: (Dict[str,Any], Optional[Sequence[ByteString]], Callable[[Dict[str,Any], List[bytes], bool], None]) -> None
+        """Send an action.  If specified, the on_reply callback will be
+        invoked with the reply event(s).  If the session is closed
+        before the final reply event is received, the callback will be
+        invoked with params set to None."""
         assert self._ctx in _live
 
         params_json = json.dumps(params).encode()

@@ -22,11 +22,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Tools for implementing Ninchat API clients.
-
-.. data:: log
-
-   A logging.Logger which may be configured by the application.
+"""
 
 .. autoclass:: Action
    :members:
