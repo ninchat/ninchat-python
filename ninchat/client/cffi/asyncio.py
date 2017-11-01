@@ -76,12 +76,14 @@ class Session(BaseSession):
         future.  The on_reply callback is supported for interface
         compatibility."""
 
-        if on_reply:
-            def callback(params):
+        def callback(params):
+            if params is None:
+                self.opened.cancel()
+            else:
                 self.opened.set_result(params)
+
+            if on_reply:
                 on_reply(params)
-        else:
-            callback = self.opened.set_result
 
         super().open(callback)
         return self.opened

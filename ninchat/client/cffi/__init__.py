@@ -249,6 +249,12 @@ class Session(object):
         self.state = "closed"
 
         try:
+            if self._on_open:
+                try:
+                    self._on_open(None)
+                except Exception:
+                    log.exception("raised by session create callback when session closed")
+
             for on_reply in self._on_replies.values():
                 try:
                     on_reply(None, None, True)
