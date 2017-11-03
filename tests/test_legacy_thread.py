@@ -32,8 +32,8 @@ import time
 
 sys.path.insert(0, "")
 
-from ninchat.client.adapter import AsyncCallbackAdapter
-from ninchat.client.session.thread import CallbackSession, QueueSession
+from ninchat.client.legacy.adapter import AsyncCallbackAdapter
+from ninchat.client.legacy.session.thread import CallbackSession, QueueSession
 
 log = logging.getLogger("test")
 

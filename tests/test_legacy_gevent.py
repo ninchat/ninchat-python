@@ -35,8 +35,8 @@ sys.path.insert(0, "")
 
 import gevent
 
-from ninchat.client.adapter import SyncQueueAdapter
-from ninchat.client.session.gevent import QueueSession
+from ninchat.client.legacy.adapter import SyncQueueAdapter
+from ninchat.client.legacy.session.gevent import QueueSession
 
 log = logging.getLogger("test")
 

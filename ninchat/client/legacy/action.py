@@ -27,7 +27,7 @@ from __future__ import absolute_import
 import json
 import time
 
-from .. import api
+from ... import api
 
 
 class ParameterError(Exception):

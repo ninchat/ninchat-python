@@ -5,8 +5,8 @@ The ninchat.client.cffi package contains a new client implementation, built
 with Go and CFFI.  It's using the same codebase as the ninchat-go and
 ninchat-js repositories.
 
-The ninchat.client.session and ninchat.client.adapter packages contain an older
-client implementation, based on ws4py.
+The ninchat.client.legacy package contain an older client implementation, based
+on ws4py.
 
 
 Session implementations
@@ -34,10 +34,10 @@ Asyncio support
    :members:
 
 
-Session implementations (old)
-=============================
+Session implementations (legacy)
+================================
 
-.. automodule:: ninchat.client
+.. automodule:: ninchat.client.legacy
    :members:
 
 Note: session classes with the same name have the same interface.
@@ -46,29 +46,29 @@ Note: session classes with the same name have the same interface.
 Threading
 ---------
 
-.. automodule:: ninchat.client.session.thread
+.. automodule:: ninchat.client.legacy.session.thread
    :members:
 
 
 Gevent interoperability
 -----------------------
 
-.. automodule:: ninchat.client.session.gevent
+.. automodule:: ninchat.client.legacy.session.gevent
    :members:
 
 
-Calling convention adapters for old session implementations
-===========================================================
+Calling conventions (legacy)
+============================
 
 
 Blocking
 --------
 
-.. autoclass:: ninchat.client.adapter.SyncCallbackAdapter
+.. autoclass:: ninchat.client.legacy.adapter.SyncCallbackAdapter
    :members:
    :inherited-members:
 
-.. autoclass:: ninchat.client.adapter.SyncQueueAdapter
+.. autoclass:: ninchat.client.legacy.adapter.SyncQueueAdapter
    :members:
    :inherited-members:
 
@@ -76,11 +76,11 @@ Blocking
 Callbacks
 ---------
 
-.. autoclass:: ninchat.client.adapter.AsyncCallbackAdapter
+.. autoclass:: ninchat.client.legacy.adapter.AsyncCallbackAdapter
    :members:
    :inherited-members:
 
-.. autoclass:: ninchat.client.adapter.AsyncQueueAdapter
+.. autoclass:: ninchat.client.legacy.adapter.AsyncQueueAdapter
    :members:
    :inherited-members:
 

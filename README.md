@@ -2,15 +2,14 @@
 
 ### Overview
 
-- Python library for writing [Ninchat](https://ninchat.com) API clients etc.
+- Python library for [Ninchat](https://ninchat.com) API integrations
 - `nincat` utility
 
 ### Requirements
 
-- Python 2.6, 2.7 or 3.x
-- [cryptography](https://cryptography.io) or PyCrypto (for secure metadata)
+- Python 2.7 or 3.4+
 - cffi and [Go compiler](https://golang.org) (for API client)
-- ws4py (for legacy API client)
+- [cryptography](https://cryptography.io) or PyCrypto (for secure metadata)
 
 ### Installation
 

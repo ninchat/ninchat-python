@@ -24,7 +24,7 @@
 
 from __future__ import absolute_import
 
-from .. import api
+from ... import api
 
 
 class SyncCreation(object):

@@ -26,7 +26,7 @@ from __future__ import absolute_import
 
 import json
 
-from .. import api
+from ... import api
 from . import log
 
 

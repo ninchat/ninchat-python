@@ -4,8 +4,8 @@ import os
 import sys
 from glob import glob
 
-sys.path.insert(0, "..")
 sys.path = glob("../build/lib.*/") + sys.path
+sys.path.insert(0, "..")
 
 extensions = ["sphinx.ext.autodoc"]
 templates_path = ["_templates"]
