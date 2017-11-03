@@ -41,7 +41,8 @@ async def test():
         pass
 
     def on_event(params, payload, last_reply):
-        pass
+        if params["event"] == "message_received":
+            log.debug("received %s", payload[0].decode())
 
     s = Session()
     s.on_session_event = on_session_event
@@ -50,9 +51,12 @@ async def test():
 
     async with s as params:
         log.debug("opened params = %s", params)
+        user_id = params["user_id"]
 
         params, _ = await s.call({"action": "describe_conn"})
         log.debug("called params = %s", params)
+
+        await s.call({"action": "send_message", "message_type": "ninchat.com/text", "user_id": user_id}, [b'{"text": "Hello, me!"}'])
 
     log.info("ok")
 
