@@ -48,14 +48,11 @@ async def test():
     s.on_event = on_event
     s.set_params({"user_attrs": {"name": "ninchat-python"}, "message_types": ["*"]})
 
-    params = await s.open()
-    log.debug("opened params = %s", params)
+    async with s as params:
+        log.debug("opened params = %s", params)
 
-    params, _ = await s.call({"action": "describe_conn"})
-    log.debug("called params = %s", params)
-
-    await s.close()
-    await s.closed
+        params, _ = await s.call({"action": "describe_conn"})
+        log.debug("called params = %s", params)
 
     log.info("ok")
 

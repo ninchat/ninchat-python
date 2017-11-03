@@ -69,6 +69,17 @@ class Session(BaseSession):
         self.loop = loop or asyncio.get_event_loop()
         self.opened = _create_future(loop=self.loop)
         self.closed = _create_future(loop=self.loop)
+        self._closing = False
+
+    def __aenter__(self):
+        if self.state == "uninitialized":
+            self.open()
+        return self.opened
+
+    def __aexit__(self, *exc):
+        if not self._closing:
+            self.close()
+        return self.closed
 
     def open(self, on_reply=None):
         # type: (Optional[Callable[[Dict[str, Any]], None]]) -> asyncio.Future
@@ -94,6 +105,7 @@ class Session(BaseSession):
         future."""
 
         super().close()
+        self._closing = True
         return self.closed
 
     def call(self, params, payload=None):
