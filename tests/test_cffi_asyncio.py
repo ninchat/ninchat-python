@@ -31,7 +31,7 @@ from glob import glob
 sys.path.insert(0, "")
 sys.path = glob("build/lib.*/") + sys.path
 
-from ninchat.client.cffi.asyncio import Session
+from ninchat.client.asyncio import Session
 
 log = logging.getLogger("test_cffi_asyncio")
 

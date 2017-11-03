@@ -24,21 +24,4 @@
 
 from __future__ import absolute_import
 
-import gevent.monkey
-gevent.monkey.patch_all()
-
-import sys
-from glob import glob
-
-sys.path.insert(0, "")
-sys.path = glob("build/lib.*/") + sys.path
-
-from gevent.queue import Queue
-
-from ninchat.client.gevent import Session
-
-from .test_cffi import main
-
-
-if __name__ == "__main__":
-    main(Session, Queue)
+from .cffi.asyncio import *

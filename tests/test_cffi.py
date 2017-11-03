@@ -39,7 +39,7 @@ except ImportError:
     # Python 2
     from Queue import Queue
 
-from ninchat.client.cffi import Session
+from ninchat.client import Session
 
 log = logging.getLogger("test_cffi")
 
