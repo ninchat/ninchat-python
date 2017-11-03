@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2012-2017, Somia Reality Oy
 # All rights reserved.
@@ -24,20 +24,14 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import, print_function
-
 import argparse
+import asyncio
 import json
 import logging
-import select
+import signal
 import sys
 
-from ninchat.client import log
-from ninchat.client.adapter import SyncCallbackAdapter, SyncQueueAdapter
-from ninchat.client.session.thread import CallbackSession, QueueSession
-
-log.addHandler(logging.StreamHandler())
-log.setLevel(logging.INFO)
+from ninchat.client.cffi.asyncio import Session
 
 errors = False
 
@@ -46,19 +40,18 @@ def error(message, error_event):
     global errors
     errors = True
 
-    if error_event.error_reason:
-        details = ["(%s)" % error_event.error_reason]
+    s = error_event.get("error_reason")
+    if s:
+        reason = " ({})".format(s)
     else:
-        details = []
+        reason = ""
 
-    print("error:", message, error_event.error_type, *details, file=sys.stderr)
-
-
-def debug(*args):
-    print(*args, file=sys.stderr)
+    print("{}: {}{}".format(message, error_event.get("error_type"), reason), file=sys.stderr)
 
 
-def main():
+async def main():
+    logging.basicConfig(level=logging.INFO)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--user", metavar="FILE", default=".nincat",
                         help='file for storing credentials (defaults to ".nincat")')
@@ -99,56 +92,56 @@ def main():
             "name": args.create_user,
         }
     else:
-        with open(args.user) as file:
-            session_params["user_id"] = file.readline().strip()
-            session_params["user_auth"] = file.readline().strip()
+        with open(args.user) as f:
+            session_params["user_id"] = f.readline().strip()
+            session_params["user_auth"] = f.readline().strip()
 
-    def on_received(session, event):
-        if event.name != "message_received":
+    def on_event(event, payload, final):
+        if event["event"] != "message_received":
             return
 
         if not args.listen:
             return
 
-        if args.channels and event.channel_id not in args.channels:
+        if args.channels and event["channel_id"] not in args.channels:
             return
 
-        content = json.loads(event.payload[0].decode("utf-8"))
-        print("<%s> %s" % (event.message_user_name, content["text"]))
+        content = json.loads(payload[0].decode())
+        print("<%s> %s" % (event["message_user_name"], content["text"]))
 
-    def on_closed(session):
-        pass
+    session = Session()
+    session.on_session_event = lambda event: None
+    session.on_event = on_event
+    session.set_params(session_params)
 
-    with SyncCallbackAdapter(CallbackSession(on_received, on_closed)) as session:
-        event = session.create(**session_params)
-        if event.name != "session_created":
-            error("create_session:", event)
+    try:
+        event = await session.open()
+        if event["event"] != "session_created":
+            error("create_session", event)
             sys.exit(2)
 
         if args.create_user:
-            with open(args.user, "w") as file:
-                print(event.user_id, file=file)
-                print(event.user_auth, file=file)
-
-            debug(event)
+            with open(args.user, "w") as f:
+                print(event["user_id"], file=f)
+                print(event["user_auth"], file=f)
 
         if args.set_email:
-            event = session.create_identity(
-                    identity_type="email",
-                    identity_name=args.set_email)
-            if event.name == "error":
-                error("create_identity:", event)
-            else:
-                debug(event)
+            event, _ = await session.call(dict(
+                action="create_identity",
+                identity_type="email",
+                identity_name=args.set_email,
+            ))
+            if event["event"] == "error":
+                error("create_identity", event)
 
         if args.join:
             for channel_id in args.channels:
-                event = session.join_channel(
-                        channel_id=channel_id)
-                if event.name == "error":
-                    error("join_channel %s:" % channel_id, event)
-                else:
-                    debug(event)
+                event, _ = await session.call(dict(
+                    action="join_channel",
+                    channel_id=channel_id,
+                ))
+                if event["event"] == "error":
+                    error("join_channel {}".format(channel_id), event)
 
         if echo:
             while True:
@@ -157,43 +150,45 @@ def main():
                     break
 
                 for channel_id in args.channels:
-                    event = session.send_message(
-                            channel_id=channel_id,
-                            message_type="ninchat.com/text",
-                            payload=[json.dumps({"text": line})])
-                    if event.name == "error":
-                        error("send_message %s:" % channel_id, event)
+                    print("sending", line)
+
+                    event, _ = await session.call(dict(
+                        action="send_message",
+                        channel_id=channel_id,
+                        message_type="ninchat.com/text",
+                    ), [
+                        json.dumps({"text": line}).encode(),
+                    ])
+                    if event["event"] == "error":
+                        error("send_message {}".format(channel_id), event)
 
         if args.listen:
-            try:
-                select.select([], [], [])
-            except KeyboardInterrupt:
-                pass
+            wakeup = asyncio.get_event_loop().create_future()
+            asyncio.get_event_loop().add_signal_handler(signal.SIGINT, lambda: wakeup.set_result(None))
+            await wakeup
 
         if args.part:
             for channel_id in args.channels:
-                event = session.part_channel(
-                        channel_id=channel_id)
-                if event.name == "error":
-                    error("part_channel %s:" % channel_id, event)
-                else:
-                    debug(event)
+                event, _ = await session.call(dict(
+                    action="part_channel",
+                    channel_id=channel_id,
+                ))
+                if event["event"] == "error":
+                    error("part_channel {}".format(channel_id), event)
 
         if args.delete_user:
             with open(args.user) as file:
-                event = session.delete_user(
-                        user_auth=file.readlines()[1].strip())
-                if event.name == "error":
-                    error("delete_user:", event)
-                else:
-                    debug(event)
-
-    if errors:
-        sys.exit(3)
+                event, _ = await session.call(dict(
+                    action="delete_user",
+                    user_auth=file.readlines()[1].strip(),
+                ))
+                if event["event"] == "error":
+                    error("delete_user", event)
+    finally:
+        await session.close()
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        pass
+    asyncio.get_event_loop().run_until_complete(main())
+    if errors:
+        sys.exit(3)

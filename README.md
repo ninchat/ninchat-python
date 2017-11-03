@@ -35,6 +35,6 @@ Source checkout:
 
 Running from source tree:
 
-	ninchat-python$ export PYTHONPATH=
+	ninchat-python$ export PYTHONPATH=:build/lib.linux-x86_64-3.6  # or something
 	ninchat-python$ bin/nincat
 
