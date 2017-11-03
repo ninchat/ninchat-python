@@ -227,7 +227,7 @@ class Session(object):
         if last_reply:
             lookup = self._on_replies.pop
         else:
-            lookup = self._on_replies.__get_item__
+            lookup = self._on_replies.__getitem__
 
         try:
             try:
