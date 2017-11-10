@@ -31,7 +31,7 @@ import logging
 import signal
 import sys
 
-from ninchat.client.cffi.asyncio import Session
+from ninchat.client.asyncio import Session
 
 errors = False
 

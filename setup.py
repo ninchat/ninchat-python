@@ -63,9 +63,6 @@ setup(
         "ninchat/api/messages",
         "ninchat/api/spec/json",
         "ninchat/client",
-        "ninchat/client/cffi",
-        "ninchat/client/legacy",
-        "ninchat/client/legacy/session",
         "ninchat/master",
     ],
 

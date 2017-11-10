@@ -22,23 +22,44 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import
-
-import gevent.monkey
-gevent.monkey.patch_all()
-
+import asyncio
 import sys
+import logging
+from functools import partial
 from glob import glob
 
 sys.path.insert(0, "")
 sys.path = glob("build/lib.*/") + sys.path
 
-from gevent.queue import Queue
+from ninchat.client.asyncio import Session
 
-from ninchat.client.gevent import Session
+log = logging.getLogger("test_client_asyncio")
 
-from .test_cffi import main
+
+async def test():
+    def on_session_event(params):
+        pass
+
+    def on_event(params, payload, last_reply):
+        if params["event"] == "message_received":
+            log.debug("received %s", payload[0].decode())
+
+    s = Session()
+    s.on_session_event = on_session_event
+    s.on_event = on_event
+    s.set_params({"user_attrs": {"name": "ninchat-python"}, "message_types": ["*"]})
+
+    async with s as params:
+        log.debug("opened params = %s", params)
+        user_id = params["user_id"]
+
+        params, _ = await s.call({"action": "describe_conn"})
+        log.debug("called params = %s", params)
+
+        await s.call({"action": "send_message", "message_type": "ninchat.com/text", "user_id": user_id}, [b'{"text": "Hello, me!"}'])
+
+    log.info("ok")
 
 
 if __name__ == "__main__":
-    main(Session, Queue)
+    asyncio.get_event_loop().run_until_complete(test())

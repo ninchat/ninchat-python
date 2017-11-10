@@ -1,4 +1,4 @@
-# Copyright (c) 2012, Somia Reality Oy
+# Copyright (c) 2017, Somia Reality Oy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,29 +22,23 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""
-
-.. autoclass:: Action
-   :members:
-
-.. autoclass:: Event()
-   :members:
-
-.. autoclass:: ParameterError
-   :members:
-
-"""
-
 from __future__ import absolute_import
 
-import logging
-log = logging.getLogger(__name__)
-del logging
+import gevent.monkey
+gevent.monkey.patch_all()
 
-from .action import Action, ParameterError
-from .event import Event
+import sys
+from glob import glob
 
-# avoid warnings
-Action
-Event
-ParameterError
+sys.path.insert(0, "")
+sys.path = glob("build/lib.*/") + sys.path
+
+from gevent.queue import Queue
+
+from ninchat.client.gevent import Session
+
+from .test_client import main
+
+
+if __name__ == "__main__":
+    main(Session, Queue)

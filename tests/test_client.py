@@ -22,44 +22,68 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import asyncio
-import sys
+from __future__ import absolute_import
+
+import json
 import logging
-from functools import partial
+import sys
 from glob import glob
 
 sys.path.insert(0, "")
 sys.path = glob("build/lib.*/") + sys.path
 
-from ninchat.client.asyncio import Session
+try:
+    # Python 3
+    from queue import Queue
+except ImportError:
+    # Python 2
+    from Queue import Queue
 
-log = logging.getLogger("test_cffi_asyncio")
+from ninchat.client import Session
+
+log = logging.getLogger("test_client")
 
 
-async def test():
+def main(session_type=Session, queue_type=Queue):
+    user_ids = queue_type()
+    messages = queue_type()
+    closed = queue_type()
+
     def on_session_event(params):
-        pass
+        log.debug("session event: %s", params)
+        user_ids.put(params["user_id"])
 
     def on_event(params, payload, last_reply):
+        log.debug("event: %s, payload: %s", params, payload)
         if params["event"] == "message_received":
-            log.debug("received %s", payload[0].decode())
+            messages.put(json.loads(payload[0].decode()))
 
-    s = Session()
+    s = session_type()
+    log.info("%s", s)
+
     s.on_session_event = on_session_event
     s.on_event = on_event
+    s.on_close = lambda: closed.put(True)
+    s.on_conn_state = lambda state: log.debug("conn state: %s", state)
+    s.on_conn_active = lambda: log.debug("conn active")
     s.set_params({"user_attrs": {"name": "ninchat-python"}, "message_types": ["*"]})
+    s.open(lambda params: log.debug("open"))
+    log.info("%s", s)
 
-    async with s as params:
-        log.debug("opened params = %s", params)
-        user_id = params["user_id"]
+    action_id = s.send({"action": "describe_conn"})
+    log.debug("action id: %d", action_id)
 
-        params, _ = await s.call({"action": "describe_conn"})
-        log.debug("called params = %s", params)
+    user_id = user_ids.get()
 
-        await s.call({"action": "send_message", "message_type": "ninchat.com/text", "user_id": user_id}, [b'{"text": "Hello, me!"}'])
+    action_id = s.send({"action": "send_message", "message_type": "ninchat.com/text", "user_id": user_id}, [b'{ "text": "ok" }', b"more crap"])
+    log.debug("action id: %d", action_id)
 
-    log.info("ok")
+    msg = messages.get()
+    s.close()
+    closed.get()
+    log.info("%s", s)
+    log.info(msg["text"])
 
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(test())
+    main()

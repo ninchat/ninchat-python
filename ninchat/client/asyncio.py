@@ -22,6 +22,113 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import absolute_import
+""  # Enables documentation generation.
 
-from .cffi.asyncio import *
+__all__ = ["Session"]
+
+import asyncio
+
+try:
+    from typing import Any, ByteString, Callable, Dict, Optional, Sequence
+except ImportError:
+    pass
+
+try:
+    # Python 3.5+
+    asyncio.AbstractEventLoop.create_future
+
+    def _create_future(*, loop):
+        return loop.create_future()
+except AttributeError:
+    # Python 3.4
+    _create_future = asyncio.Future
+
+from . import Session as BaseSession
+
+
+class Session(BaseSession):
+    """A version of ninchat.client.Session which executes callbacks
+    in the asyncio event loop.
+
+    .. attribute:: opened
+
+       A future which provides the session_created event's parameters once the
+       session has been created (for the first time).
+
+    .. attribute:: closed
+
+       A future which will be marked as done once the session closing is
+       complete.
+"""
+
+    def __init__(self, *, loop=None):
+        # type: (Optional[asyncio.AbstractEventLoop]) -> None
+
+        super().__init__()
+
+        self.loop = loop or asyncio.get_event_loop()
+        self.opened = _create_future(loop=self.loop)
+        self.closed = _create_future(loop=self.loop)
+        self._closing = False
+
+    def __aenter__(self):
+        if self.state == "uninitialized":
+            self.open()
+        return self.opened
+
+    def __aexit__(self, *exc):
+        if not self._closing:
+            self.close()
+        return self.closed
+
+    def open(self, on_reply=None):
+        # type: (Optional[Callable[[Dict[str, Any]], None]]) -> asyncio.Future
+        """Like ninchat.client.Session.open(), but returns a
+        future.  The on_reply callback is supported for interface
+        compatibility."""
+
+        def callback(params):
+            if params is None:
+                self.opened.cancel()
+            else:
+                self.opened.set_result(params)
+
+            if on_reply:
+                on_reply(params)
+
+        super().open(callback)
+        return self.opened
+
+    def close(self):
+        # type: () -> asyncio.Future
+        """Like ninchat.client.Session.close(), but returns a
+        future."""
+
+        super().close()
+        self._closing = True
+        return self.closed
+
+    def call(self, params, payload=None):
+        # type: (Dict[str,Any], Optional[Sequence[ByteString]]) -> asyncio.Future
+        """An awaitable version of ninchat.client.Session.send().
+        Returns the final reply event's params and payload."""
+
+        f = _create_future(loop=self.loop)
+
+        def on_reply(params, payload, last_reply):
+            if params is None:
+                f.cancel()
+            elif last_reply:
+                f.set_result((params, payload))
+
+        self.send(params, payload, on_reply)
+        return f
+
+    def _handle_close(self):
+        try:
+            super()._handle_close()
+        finally:
+            self.closed.set_result(None)
+
+    def _call(self, call, *args):
+        self.loop.call_soon_threadsafe(call, *args)
