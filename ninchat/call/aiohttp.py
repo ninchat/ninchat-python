@@ -22,25 +22,48 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-__all__ = ["APIError"]
+""  # Enables documentation generation.
+
+__all__ = ["call", "check_call"]
+
+import asyncio
+from http import HTTPStatus
+from typing import Any, Dict, Optional, Tuple
+
+import aiohttp
+
+from .. import call as lib
 
 
-class APIError(Exception):
-    """Raised by operations which check if an "error" or some other
-       unexpected API event happened.
+async def call(session: aiohttp.ClientSession,
+               params: Dict[str, Any],
+               *,
+               identity: Optional[Tuple[str, str, str]]=None,
+               check: bool=False,
+               ) -> Dict[str, Any]:
+    """An asyncio coroutine which makes a HTTP request to the
+       Ninchat Call API using the third-party aiohttp package.
 
-    .. attribute:: event
-
-       Dict[str, Any]
-
+       If check is set, raises a ninchat.call.APIError on "error" reply
+       event.
     """
+    data = lib.request_content(params, identity=identity)
+    async with session.post(lib.url, data=data, headers=lib.request_headers) as r:
+        if r.status != HTTPStatus.OK:
+            r.raise_for_status()
+        e = await r.json()
 
-    def __init__(self, event):
-        reason = event.get("error_reason")
-        if reason:
-            suffix = " ({})".format(reason)
-        else:
-            suffix = ""
+    if check:
+        lib.check_event(e)
 
-        Exception.__init__(self, "{}{}".format(event["error_type"], suffix))
-        self.event = event
+    return e
+
+
+@asyncio.coroutine
+def check_call(session: aiohttp.ClientSession,
+               params: Dict[str, Any],
+               *,
+               identity: Optional[Tuple[str, str, str]]=None,
+               ) -> Dict[str, Any]:
+    """Like call with check set."""
+    return call(session, params, identity=identity, check=True)

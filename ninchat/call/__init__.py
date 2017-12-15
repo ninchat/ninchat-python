@@ -22,25 +22,43 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import absolute_import
+
 __all__ = ["APIError"]
 
+import json
 
-class APIError(Exception):
-    """Raised by operations which check if an "error" or some other
-       unexpected API event happened.
+import ninchat
+
+url = "https://api.ninchat.com/v2/call"
+
+request_headers = {
+    "Accept":       "application/json",
+    "Content-Type": "application/json",
+}
+
+
+class APIError(ninchat.APIError):
+    """Raised by check_call and checked call function calls.
 
     .. attribute:: event
 
        Dict[str, Any]
-
     """
 
-    def __init__(self, event):
-        reason = event.get("error_reason")
-        if reason:
-            suffix = " ({})".format(reason)
-        else:
-            suffix = ""
 
-        Exception.__init__(self, "{}{}".format(event["error_type"], suffix))
-        self.event = event
+def request_content(params, **kwargs):
+    # type: (params: Dict[str, Any], *, identity: Optional[Sequence[str, str, str]]=None) -> bytes
+    params = params.copy()
+
+    identity = kwargs.get("identity")
+    if identity:
+        params["caller_type"], params["caller_name"], params["caller_auth"] = identity
+
+    return json.dumps(params, separators=(",", ":")).encode()
+
+
+def check_event(e):
+    # type: (e: Dict[str, Any]) -> None
+    if e["event"] == "error":
+        raise APIError(e)

@@ -22,25 +22,46 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-__all__ = ["APIError"]
+""  # Enables documentation generation.
+
+from __future__ import absolute_import
+
+__all__ = ["call", "check_call"]
+
+import requests
+
+from .. import call as lib
 
 
-class APIError(Exception):
-    """Raised by operations which check if an "error" or some other
-       unexpected API event happened.
+def call(params, **kwargs):
+    # type: (params: Dict[str, Any], *, session: Optional[requests.Session]=None, identity: Optional[Tuple[str, str, str]]=None, check: bool=False) -> Dict[str, Any]
+    """Make a HTTP request to the Ninchat Call API using the third-party
+       requests package.
 
-    .. attribute:: event
-
-       Dict[str, Any]
-
+       If check is set, raises a ninchat.call.APIError on "error" reply
+       event.
     """
+    try:
+        s = kwargs.pop("session")
+    except KeyError:
+        s = None
 
-    def __init__(self, event):
-        reason = event.get("error_reason")
-        if reason:
-            suffix = " ({})".format(reason)
-        else:
-            suffix = ""
+    if s is None:
+        s = requests
 
-        Exception.__init__(self, "{}{}".format(event["error_type"], suffix))
-        self.event = event
+    data = lib.request_content(params, **kwargs)
+    r = s.post(lib.url, data=data, headers=lib.request_headers)
+    if r.status_code != requests.codes.ok:
+        r.raise_for_status()
+    e = r.json()
+
+    if kwargs.get("check"):
+        lib.check_event(e)
+
+    return e
+
+
+def check_call(params, **kwargs):
+    # type: (params: Dict[str, Any], *, session: Optional[requests.Session]=None, identity: Optional[Tuple[str, str, str]]=None) -> Dict[str, Any]
+    """Like call with check set."""
+    return call(params, check=True, **kwargs)

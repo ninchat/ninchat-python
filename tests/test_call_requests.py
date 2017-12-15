@@ -22,25 +22,28 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-__all__ = ["APIError"]
+import logging
+
+import ninchat.call
+from ninchat.call.requests import check_call
+
+log = logging.getLogger("test_call_requests")
 
 
-class APIError(Exception):
-    """Raised by operations which check if an "error" or some other
-       unexpected API event happened.
+def test():
+    try:
+        event = check_call({"action": "nonexistent_action"})
+    except ninchat.call.APIError as e:
+        log.debug("error: %s", e)
+        assert e.event["error_type"] == "action_not_supported"
+    else:
+        assert False, event
 
-    .. attribute:: event
+    event = check_call({"action": "describe_conn"})
+    assert event["event"] == "conn_found"
+    log.debug("event: %s", event)
+    log.info("ok")
 
-       Dict[str, Any]
 
-    """
-
-    def __init__(self, event):
-        reason = event.get("error_reason")
-        if reason:
-            suffix = " ({})".format(reason)
-        else:
-            suffix = ""
-
-        Exception.__init__(self, "{}{}".format(event["error_type"], suffix))
-        self.event = event
+if __name__ == "__main__":
+    test()

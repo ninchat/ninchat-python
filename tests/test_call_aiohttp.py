@@ -22,25 +22,33 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-__all__ = ["APIError"]
+import asyncio
+import logging
+
+import aiohttp
+
+import ninchat.call
+from ninchat.call.aiohttp import check_call
+
+log = logging.getLogger("test_call_aiohttp")
 
 
-class APIError(Exception):
-    """Raised by operations which check if an "error" or some other
-       unexpected API event happened.
-
-    .. attribute:: event
-
-       Dict[str, Any]
-
-    """
-
-    def __init__(self, event):
-        reason = event.get("error_reason")
-        if reason:
-            suffix = " ({})".format(reason)
+async def test():
+    async with aiohttp.ClientSession() as s:
+        try:
+            event = await check_call(s, {"action": "nonexistent_action"})
+        except ninchat.call.APIError as e:
+            log.debug("error: %s", e)
+            assert e.event["error_type"] == "action_not_supported"
         else:
-            suffix = ""
+            assert False, event
 
-        Exception.__init__(self, "{}{}".format(event["error_type"], suffix))
-        self.event = event
+        event = await check_call(s, {"action": "describe_conn"})
+
+    assert event["event"] == "conn_found"
+    log.debug("event: %s", event)
+    log.info("ok")
+
+
+if __name__ == "__main__":
+    asyncio.get_event_loop().run_until_complete(test())

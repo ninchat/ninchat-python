@@ -1,5 +1,5 @@
-Client support
-##############
+Session client support
+######################
 
 The ninchat.client package contains a client implementation built using Go and
 CFFI (the _ninchat_cffi module).  It's using the same codebase as the

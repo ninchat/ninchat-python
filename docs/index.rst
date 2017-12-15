@@ -7,6 +7,7 @@ Ninchat Python library
    api
    master
    client
+   call
 
 
 Indices and tables
