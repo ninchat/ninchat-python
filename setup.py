@@ -62,6 +62,8 @@ setup(
         "ninchat/api",
         "ninchat/api/messages",
         "ninchat/api/spec/json",
+        "ninchat/bot",
+        "ninchat/bot/asyncio",
         "ninchat/call",
         "ninchat/client",
         "ninchat/master",

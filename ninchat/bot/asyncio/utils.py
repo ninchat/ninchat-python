@@ -22,37 +22,34 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-__all__ = ["APIError"]
+import json
+
+import aiohttp
+
+from ninchat import APIException
+from ninchat.call.aiohttp import call
 
 
-class APIException(Exception):
-    """Raised by operations which expected a different kind of API event.
+class Error(APIException):
 
-    .. attribute:: event
-
-       Dict[str, Any]
-
-    """
-
-    def __init__(self, msg, event):
-        Exception.__init__(self, msg)
-        self.event = event
+    def __init__(self, desc, event):
+        msg = "{} ({})".format(desc, json.dumps(event, sort_keys=True))
+        APIException.__init__(self, msg, event)
 
 
-class APIError(APIException):
-    """Raised by operations which check if an "error" API event happened.
+async def accept_invite(access_key, **kwargs):
+    async with aiohttp.ClientSession() as s:
+        e = await call(s, {
+            "action":     "describe_access",
+            "access_key": access_key,
+        }, check=True, **kwargs)
 
-    .. attribute:: event
+        channel_id = e.get("channel_id")
+        if not channel_id:
+            raise Error("Not a channel invitation", e)
 
-       Dict[str, Any]
-
-    """
-
-    def __init__(self, event):
-        reason = event.get("error_reason")
-        if reason:
-            suffix = " ({})".format(reason)
-        else:
-            suffix = ""
-
-        APIException.__init__(self, "{}{}".format(event["error_type"], suffix), event)
+        call(s, {
+            "action":     "join_channel",
+            "channel_id": channel_id,
+            "access_key": access_key,
+        }, check=True, **kwargs)

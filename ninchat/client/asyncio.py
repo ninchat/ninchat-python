@@ -108,20 +108,25 @@ class Session(BaseSession):
         self._closing = True
         return self.closed
 
-    def call(self, params, payload=None):
-        # type: (Dict[str,Any], Optional[Sequence[ByteString]]) -> asyncio.Future
+    def call(self, params, payload=None, on_reply=None):
+        # type: (Dict[str,Any], Optional[Sequence[ByteString]], Optional[Callable[[Dict[str,Any], List[bytes], bool], None]]) -> asyncio.Future
         """An awaitable version of ninchat.client.Session.send().
         Returns the final reply event's params and payload."""
 
         f = _create_future(loop=self.loop)
 
-        def on_reply(params, payload, last_reply):
+        def callback(params, payload, last_reply):
             if params is None:
                 f.cancel()
-            elif last_reply:
-                f.set_result((params, payload))
+            else:
+                try:
+                    if on_reply is not None:
+                        on_reply(params, payload, last_reply)
+                finally:
+                    if last_reply:
+                        f.set_result((params, payload))
 
-        self.send(params, payload, on_reply)
+        self.send(params, payload, callback)
         return f
 
     def _handle_close(self):

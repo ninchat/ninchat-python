@@ -176,7 +176,7 @@ class Session(object):
         self.state = "closing"
 
     def send(self, params, payload=None, on_reply=None):
-        # type: (Dict[str,Any], Optional[Sequence[ByteString]], Callable[[Dict[str,Any], List[bytes], bool], None]) -> None
+        # type: (Dict[str,Any], Optional[Sequence[ByteString]], Optional[Callable[[Dict[str,Any], List[bytes], bool], None]]) -> None
         """Send an action.  If specified, the on_reply callback will be
         invoked with the reply event(s).  If the session is closed
         before the final reply event is received, the callback will be
