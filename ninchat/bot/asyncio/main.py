@@ -6,10 +6,13 @@ from os import environ
 from . import run
 from . import utils
 
+loop = asyncio.get_event_loop()
+
 
 class Handler:
 
-    def __init__(self):
+    def __init__(self, queue):
+        self.queue = queue
         self.nums = defaultdict(int)
 
     def on_begin(self, user_id):
@@ -33,7 +36,7 @@ def main(handler_factory=Handler, *, identity_file=None):
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--identity-file", metavar="PATH", default=identity_file)
-    parser.set_defaults(func=lambda: run(handler_factory(), **params))
+    parser.set_defaults(func=lambda: run(handler_factory, **params))
 
     subparsers = parser.add_subparsers()
 
@@ -53,4 +56,4 @@ def main(handler_factory=Handler, *, identity_file=None):
             environ["BOT_IDENTITY_AUTH"],
         )
 
-    asyncio.get_event_loop().run_until_complete(args.func())
+    loop.run_until_complete(args.func())

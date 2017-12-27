@@ -215,7 +215,7 @@ def accept_audience(ctx, queue_id, queue_attrs):
 
 @register_event
 def error(ctx, params):
-    log.error("%s", params)
+    log.error("error: %s", params)
 
 
 @register_event
@@ -310,7 +310,7 @@ def text(ctx, params, payload):
                 del ctx.dialogues[user_id]
 
 
-async def run(handler, *, identity):
+async def run(handler_factory, *, identity):
     events = asyncio.Queue()
 
     def on_session_event(params):
@@ -334,21 +334,37 @@ async def run(handler, *, identity):
     session.on_session_event = on_session_event
     session.on_event = on_event
 
-    async with session as params:
-        ctx = Context(handler, session, params["user_id"])
+    outgoing_messages = asyncio.Queue()
+    handler = handler_factory(outgoing_messages)
 
+    async def process_outgoing_messages(ctx):
         while True:
-            params, payload = await events.get()
-            if params is None:
+            msg = await outgoing_messages.get()
+            if msg is None:
                 break
 
-            name = params["event"]
+            user_id, text = msg
+            send_message(ctx, user_id, text)
 
-            if log.isEnabledFor(logging.DEBUG):
-                log.debug("event: %s\n%s", name, pformat(params))
-            else:
-                log.info("event: %s", name)
+    try:
+        async with session as params:
+            ctx = Context(handler, session, params["user_id"])
+            loop.create_task(process_outgoing_messages(ctx))
 
-            handler = event_handlers.get(name)
-            if handler:
-                handler(ctx, params, payload)
+            while True:
+                params, payload = await events.get()
+                if params is None:
+                    break
+
+                name = params["event"]
+
+                if log.isEnabledFor(logging.DEBUG):
+                    log.debug("event: %s\n%s", name, pformat(params))
+                else:
+                    log.info("event: %s", name)
+
+                f = event_handlers.get(name)
+                if f:
+                    f(ctx, params, payload)
+    finally:
+        outgoing_messages.put(None)
