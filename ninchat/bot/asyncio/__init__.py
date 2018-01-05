@@ -239,7 +239,7 @@ def session_created(ctx, params):
 
             dialogues[user_id] = d
 
-    for user_id, d in ctx.dialogues:
+    for user_id, d in ctx.dialogues.items():
         alive = d.hidden(ctx)
         if alive:
             dialogues[user_id] = d
