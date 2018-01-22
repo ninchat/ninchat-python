@@ -156,7 +156,7 @@ class Dialogue:
             text = ctx.handler.on_messages(self.user_id, inputs)
             if text:
                 t1 = now + 1 + random()
-                t2 = now + 2 * random() + len(text) / 10
+                t2 = now + 2 * random() + len(text) * 0.12
 
                 if t2 < self.latest_send_time:
                     t2 = self.latest_send_time + random()
