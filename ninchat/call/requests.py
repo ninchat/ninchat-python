@@ -34,7 +34,7 @@ from .. import call as lib
 
 
 def call(params, **kwargs):
-    # type: (params: Dict[str, Any], *, session: Optional[requests.Session]=None, identity: Optional[Tuple[str, str, str]]=None, check: bool=False) -> Dict[str, Any]
+    # type: (params: Dict[str, Any], *, session: Optional[requests.Session]=None, identity: Optional[Dict[str, str]]=None, check: bool=False) -> Dict[str, Any]
     """Make a HTTP request to the Ninchat Call API using the third-party
        requests package.
 
@@ -62,6 +62,6 @@ def call(params, **kwargs):
 
 
 def check_call(params, **kwargs):
-    # type: (params: Dict[str, Any], *, session: Optional[requests.Session]=None, identity: Optional[Tuple[str, str, str]]=None) -> Dict[str, Any]
+    # type: (params: Dict[str, Any], *, session: Optional[requests.Session]=None, identity: Optional[Dict[str, str]]=None) -> Dict[str, Any]
     """Like call with check set."""
     return call(params, check=True, **kwargs)

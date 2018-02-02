@@ -48,12 +48,14 @@ class APIError(ninchat.APIError):
 
 
 def request_content(params, **kwargs):
-    # type: (params: Dict[str, Any], *, identity: Optional[Sequence[str, str, str]]=None) -> bytes
+    # type: (params: Dict[str, Any], *, identity: Optional[Dict[str, str]]=None) -> bytes
     params = params.copy()
 
     identity = kwargs.get("identity")
     if identity:
-        params["caller_type"], params["caller_name"], params["caller_auth"] = identity
+        params["caller_type"] = identity["type"]
+        params["caller_name"] = identity["name"]
+        params["caller_auth"] = identity["auth"]
 
     return json.dumps(params, separators=(",", ":")).encode()
 

@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import json
 from collections import defaultdict
 from os import environ
 
@@ -35,7 +36,7 @@ def main(handler_factory=Handler, *, identity_file=None):
     params = {}
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--identity-file", metavar="PATH", default=identity_file)
+    parser.add_argument("--identity-file", metavar="PATH", default=identity_file, help='JSON document containing "type", "name" and "auth" properties')
     parser.set_defaults(func=lambda: run(handler_factory, **params))
 
     subparsers = parser.add_subparsers()
@@ -48,12 +49,14 @@ def main(handler_factory=Handler, *, identity_file=None):
 
     if args.identity_file:
         with open(args.identity_file) as f:
-            params["identity"] = [line.strip() for line in f if line]
+            params["identity"] = json.load(f)
+    elif "BOT_IDENTITY_JSON" in environ:
+        params["identity"] = json.loads(environ["BOT_IDENTITY_JSON"])
     else:
-        params["identity"] = (
-            environ["BOT_IDENTITY_TYPE"],
-            environ["BOT_IDENTITY_NAME"],
-            environ["BOT_IDENTITY_AUTH"],
-        )
+        params["identity"] = {
+            "type": environ["BOT_IDENTITY_TYPE"],
+            "name": environ["BOT_IDENTITY_NAME"],
+            "auth": environ["BOT_IDENTITY_AUTH"],
+        }
 
     loop.run_until_complete(args.func())

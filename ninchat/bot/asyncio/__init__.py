@@ -327,7 +327,9 @@ async def run(handler_factory, *, identity):
     }
 
     if identity:
-        params["identity_type"], params["identity_name"], params["identity_auth"] = identity
+        params["identity_type"] = identity["type"]
+        params["identity_name"] = identity["name"]
+        params["identity_auth"] = identity["auth"]
 
     session = Session()
     session.set_params(params)

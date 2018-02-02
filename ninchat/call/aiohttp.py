@@ -28,7 +28,7 @@ __all__ = ["call", "check_call"]
 
 import asyncio
 from http import HTTPStatus
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import aiohttp
 
@@ -38,7 +38,7 @@ from .. import call as lib
 async def call(session: aiohttp.ClientSession,
                params: Dict[str, Any],
                *,
-               identity: Optional[Tuple[str, str, str]]=None,
+               identity: Optional[Dict[str, str]]=None,
                check: bool=False
                ) -> Dict[str, Any]:
     """An asyncio coroutine which makes a HTTP request to the
@@ -63,7 +63,7 @@ async def call(session: aiohttp.ClientSession,
 def check_call(session: aiohttp.ClientSession,
                params: Dict[str, Any],
                *,
-               identity: Optional[Tuple[str, str, str]]=None
+               identity: Optional[Dict[str, str]]=None
                ) -> Dict[str, Any]:
     """Like call with check set."""
     return call(session, params, identity=identity, check=True)
