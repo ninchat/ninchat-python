@@ -54,10 +54,11 @@ def register_message_received_event(f):
 
 class Context:
 
-    def __init__(self, handler, session, user_id):
+    def __init__(self, handler, session, user_id, debug):
         self.handler = handler
         self.session = session
         self.user_id = user_id
+        self.debug = debug
         self.dialogues = {}
 
 
@@ -72,9 +73,9 @@ class Dialogue:
         self.latest_send_time = loop.time()
 
     def begin(self, ctx):
-        text = ctx.handler.on_begin(self.user_id)
-        if text is not None:
-            send_message(ctx, self.user_id, text)
+        msg = ctx.handler.on_begin(self.user_id)
+        if msg is not None:
+            send_message(ctx, self.user_id, msg)
 
     def load(self, ctx):
         log.info("user %s: loading messages", self.user_id)
@@ -153,30 +154,30 @@ class Dialogue:
             inputs = [t for k, t in self.backlog]
             self.backlog = []
 
-            text = ctx.handler.on_messages(self.user_id, inputs)
-            if text:
+            msg = ctx.handler.on_messages(self.user_id, inputs)
+            if msg:
                 t1 = now + 1 + random()
-                t2 = now + 2 * random() + len(text) * 0.12
+                t2 = now + 2 * random() + len(msg["text"]) * 0.12
 
                 if t2 < self.latest_send_time:
                     t2 = self.latest_send_time + random()
 
-                loop.call_at(t1, self._start_replying, ctx, t2, text)
+                loop.call_at(t1, self._start_replying, ctx, t2, msg)
                 self.latest_send_time = t2
 
-    def _start_replying(self, ctx, t, text):
+    def _start_replying(self, ctx, t, msg):
         if not self.writing:
             update_dialogue(ctx, self.user_id, member_attrs=dict(writing=True))
         self.writing += 1
 
-        loop.call_at(t, self._finish_reply, ctx, text)
+        loop.call_at(t, self._finish_reply, ctx, msg)
 
-    def _finish_reply(self, ctx, text):
+    def _finish_reply(self, ctx, msg):
         self.writing -= 1
         if not self.writing:
             update_dialogue(ctx, self.user_id, member_attrs=dict(writing=False))
 
-        send_message(ctx, self.user_id, text)
+        send_message(ctx, self.user_id, msg)
 
 
 def update_dialogue(ctx, user_id, **params):
@@ -187,12 +188,30 @@ def update_dialogue(ctx, user_id, **params):
     ctx.session.send(params)
 
 
-def send_message(ctx, user_id, text):
+def send_message(ctx, user_id, msg):
+    try:
+        debug_info = msg.pop("debug")
+    except KeyError:
+        debug_info = None
+
+    def send_debug(params, payload, last_reply):
+        if ctx.debug and debug_info and "message_id" in params:
+            debug_msg = {
+                "debug":      debug_info,
+                "message_id": params["message_id"],
+            }
+
+            ctx.session.send({
+                "action":       "send_message",
+                "user_id":      user_id,
+                "message_type": "ninch.at/bot/debug",
+            }, [json.dumps(debug_msg).encode()])
+
     ctx.session.send({
         "action":       "send_message",
         "user_id":      user_id,
         "message_type": "ninchat.com/text",
-    }, [json.dumps({"text": text}).encode()])
+    }, [json.dumps(msg).encode()], send_debug if debug_info else None)
 
 
 def load_history(ctx, user_id, on_reply):
@@ -310,7 +329,7 @@ def text(ctx, params, payload):
                 del ctx.dialogues[user_id]
 
 
-async def run(handler_factory, *, identity):
+async def run(handler_factory, *, identity, debug_messages=False):
     events = asyncio.Queue()
 
     def on_session_event(params):
@@ -322,8 +341,12 @@ async def run(handler_factory, *, identity):
     def on_event(params, payload, last_reply):
         loop.create_task(events.put((params, payload)))
 
+    message_types = list(message_handlers.keys())
+    if debug_messages:
+        message_types.append("ninch.at/bot/debug")
+
     params = {
-        "message_types": list(message_handlers.keys()),
+        "message_types": message_types,
     }
 
     if identity:
@@ -337,20 +360,20 @@ async def run(handler_factory, *, identity):
     session.on_event = on_event
 
     outgoing_messages = asyncio.Queue()
-    handler = handler_factory(outgoing_messages)
+    handler = handler_factory(outgoing_messages, debug_messages)
 
     async def process_outgoing_messages(ctx):
         while True:
-            msg = await outgoing_messages.get()
-            if msg is None:
+            item = await outgoing_messages.get()
+            if item is None:
                 break
 
-            user_id, text = msg
-            send_message(ctx, user_id, text)
+            user_id, msg = item
+            send_message(ctx, user_id, msg)
 
     try:
         async with session as params:
-            ctx = Context(handler, session, params["user_id"])
+            ctx = Context(handler, session, params["user_id"], debug_messages)
             loop.create_task(process_outgoing_messages(ctx))
 
             while True:

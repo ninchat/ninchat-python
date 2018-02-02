@@ -12,23 +12,38 @@ loop = asyncio.get_event_loop()
 
 class Handler:
 
-    def __init__(self, queue):
+    def __init__(self, queue, debug=False):
         self.queue = queue
+        self.debug = debug
         self.nums = defaultdict(int)
 
     def on_begin(self, user_id):
         self.nums[user_id] = 0
-        return "Hello! " + str(self.nums[user_id])
+        msg = {
+            "text": "Hello! " + str(self.nums[user_id]),
+        }
+        self.include_debug(msg)
+        return msg
 
     def on_messages(self, user_id, messages):
         self.nums[user_id] += 1
-        return 'Really, "' + "\n".join(messages) + '"? ' + str(self.nums[user_id])
+        msg = {
+            "text": 'Really, "' + "\n".join(messages) + '"? ' + str(self.nums[user_id]),
+        }
+        self.include_debug(msg)
+        return msg
 
     def on_close(self, user_id):
         try:
             del self.nums[user_id]
         except KeyError:
             pass
+
+    def include_debug(self, msg):
+        if self.debug:
+            msg["debug"] = {
+                "enabled": True,
+            }
 
 
 def main(handler_factory=Handler, *, identity_file=None):
@@ -37,6 +52,7 @@ def main(handler_factory=Handler, *, identity_file=None):
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--identity-file", metavar="PATH", default=identity_file, help='JSON document containing "type", "name" and "auth" properties')
+    parser.add_argument("--debug-messages", action="store_true", help='send additional "ninch.at/bot/debug" messages')
     parser.set_defaults(func=lambda: run(handler_factory, **params))
 
     subparsers = parser.add_subparsers()
@@ -58,5 +74,8 @@ def main(handler_factory=Handler, *, identity_file=None):
             "name": environ["BOT_IDENTITY_NAME"],
             "auth": environ["BOT_IDENTITY_AUTH"],
         }
+
+    if args.debug_messages:
+        params["debug_messages"] = True
 
     loop.run_until_complete(args.func())
