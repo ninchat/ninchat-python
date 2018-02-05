@@ -25,7 +25,6 @@
 import asyncio
 import json
 import logging
-from functools import partial
 from pprint import pformat
 from random import random
 
@@ -74,8 +73,8 @@ class Dialogue:
 
     def begin(self, ctx):
         msg = ctx.handler.on_begin(self.user_id)
-        if msg is not None:
-            send_message(ctx, self.user_id, msg)
+        if msg:
+            self.send_message(ctx, msg)
 
     def load(self, ctx):
         log.info("user %s: loading messages", self.user_id)
@@ -148,22 +147,27 @@ class Dialogue:
 
     def _process_backlog(self, ctx):
         if self.backlog:
-            now = loop.time()
-
             self.backlog.sort()
             inputs = [t for k, t in self.backlog]
             self.backlog = []
 
             msg = ctx.handler.on_messages(self.user_id, inputs)
             if msg:
-                t1 = now + 1 + random()
-                t2 = now + 2 * random() + len(msg["text"]) * 0.12
+                self.send_message(ctx, msg, 1 + random())
 
-                if t2 < self.latest_send_time:
-                    t2 = self.latest_send_time + random()
+    def send_message(self, ctx, msg, delay=0):
+        t1 = loop.time()
+        t2 = t1 + random() + len(msg["text"]) * 0.12
 
-                loop.call_at(t1, self._start_replying, ctx, t2, msg)
-                self.latest_send_time = t2
+        if delay:
+            t1 += delay
+            t2 += delay
+
+        if t2 < self.latest_send_time:
+            t2 = self.latest_send_time + random()
+
+        loop.call_at(t1, self._start_replying, ctx, t2, msg)
+        self.latest_send_time = t2
 
     def _start_replying(self, ctx, t, msg):
         if not self.writing:
@@ -369,7 +373,9 @@ async def run(handler_factory, *, identity, debug_messages=False):
                 break
 
             user_id, msg = item
-            send_message(ctx, user_id, msg)
+            d = ctx.dialogues.get(user_id)
+            if d:
+                d.send_message(ctx, msg)
 
     try:
         async with session as params:
