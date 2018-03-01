@@ -109,11 +109,6 @@ class Dialogue:
 
         update_dialogue(ctx, self.user_id, dialogue_status="hidden", member_attrs=dict(writing=False))
 
-        return self._close(ctx)
-
-    def deleted(self, ctx):
-        log.debug("user %s: deleted", self.user_id)
-
     def hidden(self, ctx):
         log.debug("user %s: dialogue hidden", self.user_id)
 
@@ -335,9 +330,7 @@ def info_user(ctx, params, payload):
     if json.loads(payload[0].decode()).get("user_deleted"):
         d = ctx.dialogues.get(user_id)
         if d:
-            alive = d.user_deleted(ctx)
-            if not alive:
-                del ctx.dialogues[user_id]
+            d.user_deleted(ctx)
 
 
 @register_message_received_event
