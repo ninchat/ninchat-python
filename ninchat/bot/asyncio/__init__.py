@@ -74,9 +74,9 @@ class Dialogue:
         self.latest_send_time = loop.time()
 
     def begin(self, ctx):
-        msg = ctx.handler.on_begin(self.user_id)
-        if msg:
-            self.send_message(ctx, msg)
+        msgs = ctx.handler.on_begin(self.user_id)
+        if msgs:
+            self.send_messages(ctx, msgs)
 
     def set_peer_writing(self, ctx, writing):
         if self.peer_writing != writing:
@@ -160,13 +160,13 @@ class Dialogue:
             inputs = [t for k, t in self.backlog]
             self.backlog = []
 
-            msg = ctx.handler.on_messages(self.user_id, inputs)
-            if msg:
-                self.send_message(ctx, msg, 1 + random())
+            msgs = ctx.handler.on_messages(self.user_id, inputs)
+            if msgs:
+                self.send_messages(ctx, msgs, 1 + random())
 
-    def send_message(self, ctx, msg, delay=0):
+    def send_messages(self, ctx, msgs, delay=0):
         t1 = loop.time()
-        t2 = t1 + random() + len(msg["text"]) * 0.12
+        t2 = t1 + random() + len(msgs[0]["text"]) * 0.12
 
         if delay:
             t1 += delay
@@ -175,22 +175,23 @@ class Dialogue:
         if t2 < self.latest_send_time:
             t2 = self.latest_send_time + random()
 
-        loop.call_at(t1, self._start_replying, ctx, t2, msg)
+        loop.call_at(t1, self._start_replying, ctx, t2, msgs)
         self.latest_send_time = t2
 
-    def _start_replying(self, ctx, t, msg):
+    def _start_replying(self, ctx, t, msgs):
         if not self.self_writing:
             update_dialogue(ctx, self.user_id, member_attrs=dict(writing=True))
         self.self_writing += 1
 
-        loop.call_at(t, self._finish_reply, ctx, msg)
+        loop.call_at(t, self._finish_reply, ctx, msgs)
 
-    def _finish_reply(self, ctx, msg):
+    def _finish_reply(self, ctx, msgs):
         self.self_writing -= 1
         if not self.self_writing:
             update_dialogue(ctx, self.user_id, member_attrs=dict(writing=False))
 
-        send_message(ctx, self.user_id, msg)
+        for msg in msgs:
+            send_message(ctx, self.user_id, msg)
 
 
 def update_dialogue(ctx, user_id, **params):
@@ -389,7 +390,7 @@ async def run(handler_factory, *, identity, debug_messages=False):
             user_id, msg = item
             d = ctx.dialogues.get(user_id)
             if d:
-                d.send_message(ctx, msg)
+                d.send_messages(ctx, [msg])
 
     try:
         async with session as params:

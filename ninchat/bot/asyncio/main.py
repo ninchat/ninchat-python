@@ -23,7 +23,9 @@ class Handler:
             "text": "Hello! " + str(self.nums[user_id]),
         }
         self.include_debug(msg)
-        return msg
+        return [
+            msg,
+        ]
 
     def on_writing(self, user_id, writing):
         pass
@@ -34,7 +36,9 @@ class Handler:
             "text": 'Really, "' + "\n".join(messages) + '"? ' + str(self.nums[user_id]),
         }
         self.include_debug(msg)
-        return msg
+        return [
+            msg,
+        ]
 
     def on_close(self, user_id):
         try:
