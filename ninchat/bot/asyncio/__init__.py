@@ -31,6 +31,7 @@ from random import random
 from ninchat.client.asyncio import Session
 
 log = logging.getLogger("ninchat.bot")
+verbose_logging = False
 loop = asyncio.get_event_loop()
 event_handlers = {}
 message_handlers = {}
@@ -83,7 +84,7 @@ class Dialogue:
             ctx.handler.on_writing(self.user_id, writing)
 
     def load(self, ctx):
-        log.info("user %s: loading messages", self.user_id)
+        log.debug("user %s: loading messages", self.user_id)
         self.loading = True
         loop.create_task(self._load_messages(ctx))
 
@@ -96,25 +97,25 @@ class Dialogue:
             if "action_id" not in params:  # Unsolicited message from peer
                 self._buffer_message(params, payload)
                 if self.loading:
-                    log.info("user %s: buffering message", self.user_id)
+                    log.debug("user %s: buffering message", self.user_id)
                 else:
-                    log.info("user %s: processing message", self.user_id)
+                    log.debug("user %s: processing message", self.user_id)
                     self._process_backlog(ctx)
 
         return not self.closed or self.loading
 
     def user_deleted(self, ctx):
-        log.info("user %s: user deleted; hiding dialogue", self.user_id)
+        log.debug("user %s: user deleted; hiding dialogue", self.user_id)
 
         update_dialogue(ctx, self.user_id, dialogue_status="hidden", member_attrs=dict(writing=False))
 
         return self._close(ctx)
 
     def deleted(self, ctx):
-        log.info("user %s: deleted", self.user_id)
+        log.debug("user %s: deleted", self.user_id)
 
     def hidden(self, ctx):
-        log.info("user %s: dialogue hidden", self.user_id)
+        log.debug("user %s: dialogue hidden", self.user_id)
 
         if self.peer_writing:
             self.peer_writing = False
@@ -155,7 +156,7 @@ class Dialogue:
             if self.closed:
                 del ctx.dialogues[self.user_id]
 
-        log.info("user %s: processing buffered messages", self.user_id)
+        log.debug("user %s: processing buffered messages", self.user_id)
         self._process_backlog(ctx)
 
     def _process_backlog(self, ctx):
@@ -320,7 +321,7 @@ def dialogue_updated(ctx, params):
 
 @register_payload_event
 def message_received(ctx, params, payload):
-    if log.isEnabledFor(logging.DEBUG):
+    if verbose_logging:
         log.debug("payload[0]:\n%s", pformat(json.loads(payload[0].decode())))
 
     f = message_handlers.get(params["message_type"])
@@ -406,10 +407,10 @@ async def run(handler_factory, *, identity, debug_messages=False):
 
                 name = params["event"]
 
-                if log.isEnabledFor(logging.DEBUG):
+                if verbose_logging:
                     log.debug("event: %s\n%s", name, pformat(params))
                 else:
-                    log.info("event: %s", name)
+                    log.debug("event: %s", name)
 
                 f = event_handlers.get(name)
                 if f:
