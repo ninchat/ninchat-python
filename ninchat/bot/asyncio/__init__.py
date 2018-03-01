@@ -67,7 +67,8 @@ class Dialogue:
         self.user_id = user_id
         self.backlog = []
         self.loading = False
-        self.writing = 0
+        self.peer_writing = False
+        self.self_writing = 0
         self.closed = False
         self.latest_send_time = loop.time()
 
@@ -75,6 +76,11 @@ class Dialogue:
         msg = ctx.handler.on_begin(self.user_id)
         if msg:
             self.send_message(ctx, msg)
+
+    def set_peer_writing(self, ctx, writing):
+        if self.peer_writing != writing:
+            self.peer_writing = writing
+            ctx.handler.on_writing(self.user_id, writing)
 
     def load(self, ctx):
         log.info("user %s: loading messages", self.user_id)
@@ -104,8 +110,15 @@ class Dialogue:
 
         return self._close(ctx)
 
+    def deleted(self, ctx):
+        log.info("user %s: deleted", self.user_id)
+
     def hidden(self, ctx):
         log.info("user %s: dialogue hidden", self.user_id)
+
+        if self.peer_writing:
+            self.peer_writing = False
+            ctx.handler.on_writing(self.user_id, False)
 
         return self._close(ctx)
 
@@ -170,15 +183,15 @@ class Dialogue:
         self.latest_send_time = t2
 
     def _start_replying(self, ctx, t, msg):
-        if not self.writing:
+        if not self.self_writing:
             update_dialogue(ctx, self.user_id, member_attrs=dict(writing=True))
-        self.writing += 1
+        self.self_writing += 1
 
         loop.call_at(t, self._finish_reply, ctx, msg)
 
     def _finish_reply(self, ctx, msg):
-        self.writing -= 1
-        if not self.writing:
+        self.self_writing -= 1
+        if not self.self_writing:
             update_dialogue(ctx, self.user_id, member_attrs=dict(writing=False))
 
         send_message(ctx, self.user_id, msg)
@@ -287,6 +300,7 @@ def queue_updated(ctx, params):
 def dialogue_updated(ctx, params):
     user_id = params["user_id"]
     status = params["dialogue_status"]
+    writing = params["dialogue_members"][user_id].get("writing", False)
 
     try:
         d = ctx.dialogues[user_id]
@@ -294,11 +308,14 @@ def dialogue_updated(ctx, params):
         if status != "hidden":
             d = ctx.dialogues[user_id] = Dialogue(user_id)
             d.begin(ctx)
+            d.set_peer_writing(ctx, writing)
     else:
         if status == "hidden":
             alive = d.hidden(ctx)
             if not alive:
                 del ctx.dialogues[user_id]
+        else:
+            d.set_peer_writing(ctx, writing)
 
 
 @register_payload_event

@@ -25,6 +25,9 @@ class Handler:
         self.include_debug(msg)
         return msg
 
+    def on_writing(self, user_id, writing):
+        pass
+
     def on_messages(self, user_id, messages):
         self.nums[user_id] += 1
         msg = {
