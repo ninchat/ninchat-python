@@ -261,14 +261,17 @@ def session_created(ctx, params):
             d = None
 
         members = info.get("dialogue_members", {})
+        self_attrs = members.get(ctx.user_id, {})
+        peer_attrs = members.get(user_id, {})
 
-        if "queue_id" in members.get(user_id, {}) and not members.get(ctx.user_id, {}).get("audience_ended"):
+        if "queue_id" in peer_attrs and not self_attrs.get("audience_ended"):
             if d:
                 d.reload(ctx)
             else:
                 d = Dialogue(user_id)
                 d.load(ctx)
 
+            d.set_peer_writing(ctx, peer_attrs.get("writing", False))
             dialogues[user_id] = d
 
     for user_id, d in ctx.dialogues.items():
