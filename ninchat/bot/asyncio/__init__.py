@@ -166,7 +166,7 @@ class Dialogue:
 
     def send_messages(self, ctx, msgs, delay=0):
         t1 = loop.time()
-        t2 = t1 + random() + len(msgs[0]["text"]) * 0.12
+        t2 = t1 + random() + len(msgs[0]["text"]) * 0.1
 
         if delay:
             t1 += delay
