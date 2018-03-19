@@ -72,7 +72,7 @@ class Session(object):
 
     Action/event params are dictionaries of string keys and arbitrary
     values.  Action/event payloads are lists of bytes-like objects.  See
-    https://ninchat.com/api/v2 for details.
+    https://ninchat.com/api for details.
 
     Threading:
 
