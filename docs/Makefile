@@ -31,6 +31,6 @@ html:
 	$(SPHINXBUILD) -b html -d $(BUILDDIR)/doctrees $(SPHINXOPTS) . $(BUILDDIR)/html
 
 clean:
-	- rm -rf $(BUILDDIR)
+	rm -rf $(BUILDDIR)
 
 .PHONY: html clean

@@ -22,13 +22,18 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+PYTHON		?= python3
+
 GIT		:= git
 REPO_URL	:= $(shell $(GIT) config remote.origin.url)
 COMMIT		:= $(shell $(GIT) rev-parse HEAD)
 
 nothing:
 
-gh-pages:
+build:
+	$(PYTHON) setup.py build
+
+gh-pages: build
 	$(MAKE) -C docs clean html
 	sed s/_static/static/g -i docs/_build/html/*.html
 	mv docs/_build/html/_static docs/_build/html/static
@@ -38,4 +43,8 @@ gh-pages:
 	cd docs/_build/html && $(GIT) push -f $(REPO_URL) master:gh-pages
 	rm -rf docs/_build/html/.git
 
-.PHONY: nothing gh-pages
+clean:
+	rm -rf build
+	$(MAKE) -C docs clean
+
+.PHONY: nothing build gh-pages clean
