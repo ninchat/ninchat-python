@@ -38,6 +38,8 @@ def _is_time(x):
 class MetadataMessage(_AbstractObjectMessage):
     """Handler for ninchat.com/metadata messages.
     """
+    __slots__ = _AbstractObjectMessage.__slots__
+
     _specs = {
         "data": (is_object, True),
         "time": (_is_time,  False),

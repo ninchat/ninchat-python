@@ -80,6 +80,11 @@ class Message(object):
 
     """
 
+    __slots__ = (
+        "type",
+        "payload",
+    )
+
     def __init__(self, messagetype, payload):
         self.type = messagetype
         self.payload = payload
@@ -107,8 +112,15 @@ class Message(object):
 
 
 class _AbstractObjectMessage(Message):
-    _valid = None  # type: Optional[bool]
-    _data = None   # type: Any
+    __slots__ = tuple(list(Message.__slots__) + [
+        "_valid",
+        "_data",
+    ])
+
+    def __init__(self, messagetype, payload):
+        Message.__init__(self, messagetype, payload)
+        self._valid = None  # type: Optional[bool]
+        self._data = None   # type: Any
 
     def _decode(self):
         data = self._decode_json_header()
