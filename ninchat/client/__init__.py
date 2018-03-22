@@ -33,7 +33,7 @@ try:
     xrange
 
     def _decode_str(x):
-        return unicode(str(x), "utf-8")
+        return unicode(str(x), "utf-8")  # noqa
 except NameError:
     # Python 3
     xrange = range

@@ -34,7 +34,6 @@ import os
 from time import time
 
 import gevent
-from gevent.event import Event
 from gevent.fileobject import FileObject
 
 from _ninchat_cffi import ffi, lib

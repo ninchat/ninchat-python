@@ -30,6 +30,7 @@ import asyncio
 
 try:
     from typing import Any, ByteString, Callable, Dict, Optional, Sequence
+    (Any, ByteString, Callable, Dict, Optional, Sequence)  # silence typing warnings
 except ImportError:
     pass
 
