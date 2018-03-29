@@ -73,7 +73,7 @@ def sign_join_channel_for_user(key, expire, channel_id, user_id, member_attrs=No
         ("user_id", user_id),
     ]
 
-    return _sign_join_channel(key, expire, channel_id, member_attrs, msg) + "-1"
+    return _sign_join_channel(key, expire, channel_id, member_attrs, msg) + "1"
 
 
 def _sign_join_channel(key, expire, channel_id, member_attrs, msg):
@@ -96,7 +96,7 @@ def _append_attrs(msg, name, attrs):
 def _sign(key, expire, msg):
     key_id, key_secret = key
     expire = int(expire)
-    nonce = base64.b64encode(struct.pack(b"Q", random.randint(0, (1 << 48) - 1))[:6]).decode("ascii")
+    nonce = base64.urlsafe_b64encode(struct.pack(b"Q", random.randint(0, (1 << 48) - 1))[:6]).decode()
 
     msg.append(("expire", expire))
     msg.append(("nonce", nonce))
@@ -105,6 +105,6 @@ def _sign(key, expire, msg):
     msg_json = json.dumps(msg, separators=(",", ":")).encode("utf-8")
 
     digest = hmac.new(base64.b64decode(key_secret.encode()), msg_json, hashlib.sha512).digest()
-    digest_base64 = base64.b64encode(digest).decode()
+    digest_base64 = base64.urlsafe_b64encode(digest).decode().rstrip("=")
 
-    return "%s-%s-%s-%s" % (key_id, expire, nonce, digest_base64)
+    return "%s.%s.%s.%s." % (key_id, expire, nonce, digest_base64)
