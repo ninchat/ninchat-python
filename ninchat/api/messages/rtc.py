@@ -37,8 +37,7 @@ class AnswerRTCMessage(_AbstractObjectMessage):
 
 @declare_messagetype("ninchat.com/rtc/call")
 class CallRTCMessage(_AbstractObjectMessage):
-    _specs = {
-    }
+    _specs = {}  # type: dict
 
 
 @declare_messagetype("ninchat.com/rtc/ice-candidate")
@@ -50,8 +49,7 @@ class IceCandidateRTCMessage(_AbstractObjectMessage):
 
 @declare_messagetype("ninchat.com/rtc/hang-up")
 class HangUpRTCMessage(_AbstractObjectMessage):
-    _specs = {
-    }
+    _specs = {}  # type: dict
 
 
 @declare_messagetype("ninchat.com/rtc/offer")
