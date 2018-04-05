@@ -192,6 +192,7 @@ from . import info
 from . import link
 from . import metadata
 from . import notice
+from . import rtc
 from . import text
 from . import ui
 
@@ -202,5 +203,6 @@ info
 link
 metadata
 notice
+rtc
 text
 ui
