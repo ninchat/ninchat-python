@@ -43,8 +43,12 @@ class ActionUIMessage(_AbstractObjectMessage):
     def __is_string_in_list(x):
         return _is_string_in_list(x, ActionUIMessage._valid_actions)
 
+    __action_specs = {
+        "click": None,
+    }
+
     _specs = {
-        "action": (__is_string_in_list, True),
+        "action": (__action_specs, True),
         "target": (is_object, True),
     }
 
