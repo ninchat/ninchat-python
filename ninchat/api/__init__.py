@@ -45,6 +45,8 @@ service.
 
 from __future__ import absolute_import
 
+import re
+
 try:
     from typing import Any, Dict, Tuple
 
@@ -112,6 +114,17 @@ def is_string_array(x):
 @declare_type("time")
 def is_time(x):
     return isinstance(x, _ints) and x >= 0
+
+
+@declare_type("url")
+def is_url(x):
+    if re.match(r"^https://(localhost(\.[a-z0-9-.]*|)|)(([a-z0-9-.]*)\.local|)(/.*|)$", x, flags=re.IGNORECASE):
+        return False
+
+    if re.match(r"^https://[a-z0-9][a-z0-9-.]{0,125}[a-z][a-z0-9-.]{0,125}[a-z0-9](/.*|)$", x, flags=re.IGNORECASE):
+        return True
+
+    return False
 
 
 paramtypes = {}   # type: Dict[str, Any]
