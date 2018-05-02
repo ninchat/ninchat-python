@@ -131,18 +131,24 @@ class _AbstractObjectMessage(Message):
             log.warning("%s has no data", self.type)
             return None
 
-        for name, (checkfunc, required) in self._specs.items():
-            value = data.get(name)
-            if value is not None:
-                if not checkfunc(value):
-                    log.warning("%s %s is invalid", self.type, name)
+        def __verify(specs):
+            for name, (checkfunc, required) in specs.items():
+                value = data.get(name)
+                if value is not None:
+                    if not checkfunc(value):
+                        log.warning("%s %s is invalid", self.type, name)
+                        return None
+                elif required:
+                    log.warning("%s %s is missing", self.type, name)
                     return None
-            elif required:
-                log.warning("%s %s is missing", self.type, name)
+
+            if set(data.keys()) - set(specs.keys()):
+                log.warning("%s entry contains extraneous properties", self.type)
                 return None
 
-        if set(data.keys()) - set(self._specs.keys()):
-            log.warning("%s entry contains extraneous properties", self.type)
+            return True
+
+        if not __verify(self._specs):
             return None
 
         return data
