@@ -55,9 +55,6 @@ class ActionUIMessage(_AbstractObjectMessage):
 class ComposeUIMessage(_AbstractObjectArrayMessage):
     """Handler for ninchat.com/ui/action messages.
     """
-    def __is_string_in_list(x):
-        return _is_string_in_list(x, ComposeUIMessage._valid_elements)
-
     def __is_string_with_list(x):
         return _is_string_with_list(x, ComposeUIMessage._valid_class_list_max_length)
 
@@ -78,4 +75,3 @@ class ComposeUIMessage(_AbstractObjectArrayMessage):
     }
 
     _valid_class_list_max_length = 5
-    _valid_elements = ["button"]
