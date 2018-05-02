@@ -40,9 +40,6 @@ def _is_string_with_list(x, max_length=0):
 class ActionUIMessage(_AbstractObjectMessage):
     """Handler for ninchat.com/ui/action messages.
     """
-    def __is_string_in_list(x):
-        return _is_string_in_list(x, ActionUIMessage._valid_actions)
-
     __action_specs = {
         "click": None,
     }
@@ -51,8 +48,6 @@ class ActionUIMessage(_AbstractObjectMessage):
         "action": (__action_specs, True),
         "target": (is_object, True),
     }
-
-    _valid_actions = ["click"]
 
 
 @declare_messagetype("ninchat.com/ui/compose")
