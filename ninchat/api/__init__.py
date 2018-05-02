@@ -47,6 +47,8 @@ from __future__ import absolute_import
 
 import re
 
+from urllib.parse import urlparse
+
 try:
     from typing import Any, Dict, Tuple
 
@@ -116,14 +118,38 @@ def is_time(x):
     return isinstance(x, _ints) and x >= 0
 
 
-@declare_type("url")
 def is_url(x):
-    if re.match(r"^https://(localhost(\.[a-z0-9-.]*|)|)(([a-z0-9-.]*)\.local|)(/.*|)$", x, flags=re.IGNORECASE):
+    try:
+        o = urlparse(x)
+    except ValueError:
         return False
 
-    if re.match(r"^https://[a-z0-9][a-z0-9-.]{0,125}[a-z][a-z0-9-.]{0,125}[a-z0-9](/.*|)$", x, flags=re.IGNORECASE):
+    # DENY if not https
+    if o.scheme != "https":
+        return False
+
+    # DENY if ports assigned or ipv6 address
+    if re.match(r"^.*[:].*$", o.netloc):
+        print("HERE")
+        return False
+
+    # DENY if no alphabet (ipv4 address)
+    if re.match(r"^[^a-z]*$", o.hostname, re.IGNORECASE):
+        return False
+
+    # DENY if localhost or starts with localhost.
+    if re.match(r"^localhost(\..*|)$", o.hostname, re.IGNORECASE):
+        return False
+
+    # DENY if ends with .local
+    if re.match(r"^.*\.local$", o.hostname, re.IGNORECASE):
+        return False
+
+    # ALLOW if based on RFC 956 or RFC 1123
+    if re.match(r"^[a-z0-9][a-z0-9-.]{0,251}[a-z0-9]$", o.hostname, re.IGNORECASE):
         return True
 
+    # DENY otherwise
     return False
 
 
