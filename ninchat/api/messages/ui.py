@@ -25,7 +25,7 @@
 from __future__ import absolute_import
 
 from . import _AbstractObjectMessage, _AbstractObjectArrayMessage, declare_messagetype
-from .. import is_object, is_string
+from .. import is_object, is_string, is_url
 
 
 def _is_string_in_list(x, strings=[]):
@@ -61,9 +61,17 @@ class ComposeUIMessage(_AbstractObjectArrayMessage):
     def __is_string_with_list(x):
         return _is_string_with_list(x, ComposeUIMessage._valid_class_list_max_length)
 
+    __element_specs = {
+        "a": {
+            "href": (is_url, False),
+            "target": (is_string, False),
+        },
+        "button": None,
+    }
+
     _specs = {
         "class": (__is_string_with_list, False),
-        "element": (__is_string_in_list, True),
+        "element": (__element_specs, True),
         "id": (is_string, False),
         "label": (is_string, False),
         "name": (is_string, False),
