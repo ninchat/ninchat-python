@@ -132,17 +132,17 @@ class _AbstractObjectMessage(Message):
             return None
 
         def __verify(specs):
-            for name, (checkfunc, required) in specs.items():
+            for name, (x, required) in specs.items():
                 value = data.get(name)
                 if value is not None:
-                    if not callable(checkfunc):
-                        if not value in checkfunc.keys():
+                    if not callable(x):
+                        if not value in x.keys():
                             log.warning("%s %s is invalid", self.type, name)
                             return None
-                        specs = checkfunc.get(value) or {}
+                        specs = x.get(value) or {}
                         if not __verify(specs):
                             return None
-                    elif not checkfunc(value):
+                    elif not x(value):
                         log.warning("%s %s is invalid", self.type, name)
                         return None
                 elif required:
