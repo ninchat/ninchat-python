@@ -28,10 +28,6 @@ from . import _AbstractObjectMessage, _AbstractObjectArrayMessage, declare_messa
 from .. import is_object, is_string, is_url
 
 
-def _is_string_in_list(x, strings=[]):
-    return is_string(x) and x in strings
-
-
 def _is_string_with_list(x, max_length=0):
     return is_string(x) and x.count(" ") < max_length
 
