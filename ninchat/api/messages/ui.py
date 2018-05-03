@@ -25,11 +25,7 @@
 from __future__ import absolute_import
 
 from . import _AbstractObjectMessage, _AbstractObjectArrayMessage, declare_messagetype
-from .. import is_object, is_string
-
-
-def _is_string_in_list(x, strings=[]):
-    return is_string(x) and x in strings
+from .. import is_object, is_string, is_url
 
 
 def _is_string_with_list(x, max_length=0):
@@ -40,34 +36,37 @@ def _is_string_with_list(x, max_length=0):
 class ActionUIMessage(_AbstractObjectMessage):
     """Handler for ninchat.com/ui/action messages.
     """
-    def __is_string_in_list(x):
-        return _is_string_in_list(x, ActionUIMessage._valid_actions)
-
-    _specs = {
-        "action": (__is_string_in_list, True),
-        "target": (is_object, True),
+    __action_specs = {
+        "click": None,
     }
 
-    _valid_actions = ["click"]
+    _specs = {
+        "action": (__action_specs, True),
+        "target": (is_object, True),
+    }
 
 
 @declare_messagetype("ninchat.com/ui/compose")
 class ComposeUIMessage(_AbstractObjectArrayMessage):
     """Handler for ninchat.com/ui/action messages.
     """
-    def __is_string_in_list(x):
-        return _is_string_in_list(x, ComposeUIMessage._valid_elements)
-
     def __is_string_with_list(x):
         return _is_string_with_list(x, ComposeUIMessage._valid_class_list_max_length)
 
+    __element_specs = {
+        "a": {
+            "href": (is_url, False),
+            "target": (is_string, False),
+        },
+        "button": None,
+    }
+
     _specs = {
         "class": (__is_string_with_list, False),
-        "element": (__is_string_in_list, True),
+        "element": (__element_specs, True),
         "id": (is_string, False),
         "label": (is_string, False),
         "name": (is_string, False),
     }
 
     _valid_class_list_max_length = 5
-    _valid_elements = ["button"]

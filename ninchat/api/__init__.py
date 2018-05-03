@@ -45,6 +45,15 @@ service.
 
 from __future__ import absolute_import
 
+import re
+
+try:
+    # Python 3
+    from urllib.parse import urlparse
+except ImportError:
+    # Python 2
+    from urlparse import urlparse
+
 try:
     from typing import Any, Dict, Tuple
 
@@ -112,6 +121,38 @@ def is_string_array(x):
 @declare_type("time")
 def is_time(x):
     return isinstance(x, _ints) and x >= 0
+
+
+def is_url(x):
+    try:
+        o = urlparse(x)
+    except ValueError:
+        return False
+
+    # DENY if not https
+    if o.scheme != "https":
+        return False
+
+    # DENY if ports assigned or ipv6 address
+    if ":" in o.netloc:
+        return False
+
+    host = o.hostname.lower()
+
+    # DENY if no alphabet (ipv4 address)
+    if re.match(r"^[^a-z]*$", host):
+        return False
+
+    # DENY if localhost or on local zeroconf network
+    if host == "localhost" or host.startswith("localhost.") or host.endswith(".local"):
+        return False
+
+    # ALLOW if based on RFC 956 or RFC 1123
+    if re.match(r"^[a-z0-9][a-z0-9-.]{0,251}[a-z0-9]$", host):
+        return True
+
+    # DENY otherwise
+    return False
 
 
 paramtypes = {}   # type: Dict[str, Any]
