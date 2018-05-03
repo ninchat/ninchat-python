@@ -136,7 +136,7 @@ class _AbstractObjectMessage(Message):
                 value = data.get(name)
                 if value is not None:
                     if not callable(x):
-                        if not value in x.keys():
+                        if value not in x.keys():
                             log.warning("%s %s is invalid", self.type, name)
                             return None
                         specs = x.get(value) or {}
