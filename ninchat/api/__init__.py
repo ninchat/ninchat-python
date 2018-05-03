@@ -47,7 +47,12 @@ from __future__ import absolute_import
 
 import re
 
-from urllib.parse import urlparse
+try:
+    # Python 3
+    from urllib.parse import urlparse
+except ImportError:
+    # Python 2
+    from urlparse import urlparse
 
 try:
     from typing import Any, Dict, Tuple
