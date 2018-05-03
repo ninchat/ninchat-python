@@ -52,7 +52,7 @@ try:
     from urllib.parse import urlparse
 except ImportError:
     # Python 2
-    from urlparse import urlparse
+    from urlparse import urlparse  # type: ignore
 
 try:
     from typing import Any, Dict, Tuple
