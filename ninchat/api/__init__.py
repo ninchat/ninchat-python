@@ -134,24 +134,21 @@ def is_url(x):
         return False
 
     # DENY if ports assigned or ipv6 address
-    if re.match(r"^.*[:].*$", o.netloc):
-        print("HERE")
+    if ":" in o.netloc:
         return False
+
+    host = o.hostname.lower()
 
     # DENY if no alphabet (ipv4 address)
-    if re.match(r"^[^a-z]*$", o.hostname, re.IGNORECASE):
+    if re.match(r"^[^a-z]*$", host):
         return False
 
-    # DENY if localhost or starts with localhost.
-    if re.match(r"^localhost(\..*|)$", o.hostname, re.IGNORECASE):
-        return False
-
-    # DENY if ends with .local
-    if re.match(r"^.*\.local$", o.hostname, re.IGNORECASE):
+    # DENY if localhost or on local zeroconf network
+    if host == "localhost" or host.startswith("localhost.") or host.endswith(".local"):
         return False
 
     # ALLOW if based on RFC 956 or RFC 1123
-    if re.match(r"^[a-z0-9][a-z0-9-.]{0,251}[a-z0-9]$", o.hostname, re.IGNORECASE):
+    if re.match(r"^[a-z0-9][a-z0-9-.]{0,251}[a-z0-9]$", host):
         return True
 
     # DENY otherwise
