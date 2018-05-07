@@ -49,7 +49,7 @@ except ImportError:
 
 setup(
     name="ninchat-python",
-    version="1.1.0",
+    version="1.2.0",
     maintainer="Timo Savola",
     maintainer_email="timo@ninchat.com",
     url="https://github.com/ninchat/ninchat-python",
