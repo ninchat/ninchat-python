@@ -1,0 +1,376 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>API specifications &#8212; ninchat-python 1.2.0 documentation</title>
+    <link rel="stylesheet" href="static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Master key support" href="master.html" />
+    <link rel="prev" title="Ninchat Python library" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="master.html" title="Master key support"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Ninchat Python library"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ninchat-python 1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="api-specifications">
+<h1>API specifications<a class="headerlink" href="#api-specifications" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-ninchat.api.attrs">
+<span id="attributes"></span><h2>Attributes<a class="headerlink" href="#module-ninchat.api.attrs" title="Permalink to this headline">¶</a></h2>
+<p>Attributes for each entity type.</p>
+<dl class="data">
+<dt id="ninchat.api.attrs.user">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">user</code><a class="headerlink" href="#ninchat.api.attrs.user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.identity">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">identity</code><a class="headerlink" href="#ninchat.api.attrs.identity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.dialoguemember">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">dialoguemember</code><a class="headerlink" href="#ninchat.api.attrs.dialoguemember" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.channel">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">channel</code><a class="headerlink" href="#ninchat.api.attrs.channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.channelmember">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">channelmember</code><a class="headerlink" href="#ninchat.api.attrs.channelmember" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.realm">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">realm</code><a class="headerlink" href="#ninchat.api.attrs.realm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.realmmember">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">realmmember</code><a class="headerlink" href="#ninchat.api.attrs.realmmember" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.queue">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">queue</code><a class="headerlink" href="#ninchat.api.attrs.queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.queuemember">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">queuemember</code><a class="headerlink" href="#ninchat.api.attrs.queuemember" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.tag">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">tag</code><a class="headerlink" href="#ninchat.api.attrs.tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.attrs.puppet">
+<code class="descclassname">ninchat.api.attrs.</code><code class="descname">puppet</code><a class="headerlink" href="#ninchat.api.attrs.puppet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary; maps name strings to Attribute instances.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ninchat.api.attrs.Attribute">
+<em class="property">class </em><code class="descclassname">ninchat.api.attrs.</code><code class="descname">Attribute</code><span class="sig-paren">(</span><em>name</em>, <em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.attrs.Attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Description of an entity attribute.</p>
+<dl class="attribute">
+<dt id="ninchat.api.attrs.Attribute.name">
+<code class="descname">name</code><a class="headerlink" href="#ninchat.api.attrs.Attribute.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>String</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.api.attrs.Attribute.type">
+<code class="descname">type</code><a class="headerlink" href="#ninchat.api.attrs.Attribute.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>String</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.api.attrs.Attribute.initable">
+<code class="descname">initable</code><a class="headerlink" href="#ninchat.api.attrs.Attribute.initable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Boolean</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.api.attrs.Attribute.writable">
+<code class="descname">writable</code><a class="headerlink" href="#ninchat.api.attrs.Attribute.writable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Boolean</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.api.attrs.Attribute.settable">
+<code class="descname">settable</code><a class="headerlink" href="#ninchat.api.attrs.Attribute.settable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Boolean</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.api.attrs.Attribute.unsettable">
+<code class="descname">unsettable</code><a class="headerlink" href="#ninchat.api.attrs.Attribute.unsettable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Boolean</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.api.attrs.Attribute.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.attrs.Attribute.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if <em>value</em> conforms to the type requirements.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-ninchat.api.messages">
+<span id="message-types"></span><h2>Message types<a class="headerlink" href="#module-ninchat.api.messages" title="Permalink to this headline">¶</a></h2>
+<p>Standard message type definitions.</p>
+<dl class="data">
+<dt id="ninchat.api.messages.log">
+<code class="descclassname">ninchat.api.messages.</code><code class="descname">log</code><a class="headerlink" href="#ninchat.api.messages.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>A logging.Logger instance which may be configured by the application.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="ninchat.api.messages.factories">
+<code class="descclassname">ninchat.api.messages.</code><code class="descname">factories</code><a class="headerlink" href="#ninchat.api.messages.factories" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of pairs; maps message-type-pattern strings to handler-factory
+callables.</p>
+<p>A handler-factory callable takes a message-type string and a payload list as
+positional parameters, and returns an instance of a Message implementation
+or None.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ninchat.api.messages.Message">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.</code><code class="descname">Message</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.Message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Message handler interface.  Subclasses should override the validate(),
+stringify() and get_property(name) methods if applicable.</p>
+<dl class="attribute">
+<dt id="ninchat.api.messages.Message.type">
+<code class="descname">type</code><a class="headerlink" href="#ninchat.api.messages.Message.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>String</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.api.messages.Message.payload">
+<code class="descname">payload</code><a class="headerlink" href="#ninchat.api.messages.Message.payload" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of some kind of objects.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.api.messages.Message.get_property">
+<code class="descname">get_property</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.Message.get_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a type-specific string property.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.api.messages.Message.stringify">
+<code class="descname">stringify</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.Message.stringify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the presentable textual content of the message, if any.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.api.messages.Message.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.Message.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the payload conforms to the type requirements.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-ninchat.api.messages.file"></span><dl class="class">
+<dt id="ninchat.api.messages.file.FileMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.file.</code><code class="descname">FileMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.file.FileMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stub for the ninchat.com/file message type.</p>
+</dd></dl>
+
+<span class="target" id="module-ninchat.api.messages.info"></span><dl class="class">
+<dt id="ninchat.api.messages.info.AccessInfoMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.info.</code><code class="descname">AccessInfoMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.info.AccessInfoMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stub for the ninchat.com/info/access message type.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ninchat.api.messages.info.ChannelInfoMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.info.</code><code class="descname">ChannelInfoMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.info.ChannelInfoMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stub for the ninchat.com/info/channel message type.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ninchat.api.messages.info.JoinInfoMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.info.</code><code class="descname">JoinInfoMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.info.JoinInfoMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stub for the ninchat.com/info/join message type.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ninchat.api.messages.info.MemberInfoMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.info.</code><code class="descname">MemberInfoMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.info.MemberInfoMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stub for the ninchat.com/info/member message type.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ninchat.api.messages.info.PartInfoMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.info.</code><code class="descname">PartInfoMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.info.PartInfoMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stub for the ninchat.com/info/part message type.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ninchat.api.messages.info.UserInfoMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.info.</code><code class="descname">UserInfoMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.info.UserInfoMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stub for the ninchat.com/info/user message type.</p>
+</dd></dl>
+
+<span class="target" id="module-ninchat.api.messages.link"></span><dl class="class">
+<dt id="ninchat.api.messages.link.LinkMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.link.</code><code class="descname">LinkMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.link.LinkMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler for ninchat.com/link messages.</p>
+</dd></dl>
+
+<span class="target" id="module-ninchat.api.messages.metadata"></span><dl class="class">
+<dt id="ninchat.api.messages.metadata.MetadataMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.metadata.</code><code class="descname">MetadataMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.metadata.MetadataMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler for ninchat.com/metadata messages.</p>
+</dd></dl>
+
+<span class="target" id="module-ninchat.api.messages.notice"></span><dl class="class">
+<dt id="ninchat.api.messages.notice.NoticeMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.notice.</code><code class="descname">NoticeMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.notice.NoticeMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler for ninchat.com/notice messages.  Supports the “text” property.</p>
+</dd></dl>
+
+<span class="target" id="module-ninchat.api.messages.rtc"></span><span class="target" id="module-ninchat.api.messages.text"></span><dl class="class">
+<dt id="ninchat.api.messages.text.TextMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.text.</code><code class="descname">TextMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.text.TextMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler for ninchat.com/text messages.  Supports the “text” property.</p>
+</dd></dl>
+
+<span class="target" id="module-ninchat.api.messages.ui"></span><dl class="class">
+<dt id="ninchat.api.messages.ui.ActionUIMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.ui.</code><code class="descname">ActionUIMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.ui.ActionUIMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler for ninchat.com/ui/action messages.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ninchat.api.messages.ui.ComposeUIMessage">
+<em class="property">class </em><code class="descclassname">ninchat.api.messages.ui.</code><code class="descname">ComposeUIMessage</code><span class="sig-paren">(</span><em>messagetype</em>, <em>payload</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.api.messages.ui.ComposeUIMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler for ninchat.com/ui/action messages.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">API specifications</a><ul>
+<li><a class="reference internal" href="#module-ninchat.api.attrs">Attributes</a></li>
+<li><a class="reference internal" href="#module-ninchat.api.messages">Message types</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Ninchat Python library</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="master.html"
+                        title="next chapter">Master key support</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="master.html" title="Master key support"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Ninchat Python library"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ninchat-python 1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012, Somia Reality Oy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>
