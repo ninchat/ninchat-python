@@ -165,18 +165,22 @@ class Dialogue:
                 self.send_messages(ctx, msgs, 1 + random())
 
     def send_messages(self, ctx, msgs, delay=0):
-        t1 = loop.time()
-        t2 = t1 + random() + len(msgs[0]["text"]) * 0.1
+        text = msgs[0].get("text")
+        if text:
+            t1 = loop.time()
+            t2 = t1 + random() + len(text) * 0.1
 
-        if delay:
-            t1 += delay
-            t2 += delay
+            if delay:
+                t1 += delay
+                t2 += delay
 
-        if t2 < self.latest_send_time:
-            t2 = self.latest_send_time + random()
+            if t2 < self.latest_send_time:
+                t2 = self.latest_send_time + random()
 
-        loop.call_at(t1, self._start_replying, ctx, t2, msgs)
-        self.latest_send_time = t2
+            loop.call_at(t1, self._start_replying, ctx, t2, msgs)
+            self.latest_send_time = t2
+        else:
+            self._send_messages(ctx, msgs)
 
     def _start_replying(self, ctx, t, msgs):
         if not self.self_writing:
@@ -190,8 +194,21 @@ class Dialogue:
         if not self.self_writing:
             update_dialogue(ctx, self.user_id, member_attrs=dict(writing=False))
 
+        self._send_messages(ctx, msgs)
+
+    def _send_messages(self, ctx, msgs):
         for msg in msgs:
-            send_message(ctx, self.user_id, msg)
+            try:
+                queue_id = msg.pop("queue_id")
+            except KeyError:
+                queue_id = None
+
+            if msg:
+                send_message(ctx, self.user_id, msg)
+
+            if queue_id:
+                transfer_audience(ctx, self.user_id, queue_id)
+                break
 
 
 def update_dialogue(ctx, user_id, **params):
@@ -226,6 +243,14 @@ def send_message(ctx, user_id, msg):
         "user_id":      user_id,
         "message_type": "ninchat.com/text",
     }, [json.dumps(msg).encode()], send_debug if debug_info else None)
+
+
+def transfer_audience(ctx, user_id, queue_id):
+    ctx.session.send({
+        "action":   "transfer_audience",
+        "user_id":  user_id,
+        "queue_id": queue_id,
+    })
 
 
 def load_history(ctx, user_id, on_reply):
