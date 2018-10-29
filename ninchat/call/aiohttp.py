@@ -38,8 +38,8 @@ from .. import call as lib
 async def call(session: aiohttp.ClientSession,
                params: Dict[str, Any],
                *,
-               identity: Optional[Dict[str, str]]=None,
-               check: bool=False
+               identity: Optional[Dict[str, str]] = None,
+               check: bool = False
                ) -> Dict[str, Any]:
     """An asyncio coroutine which makes a HTTP request to the
        Ninchat Call API using the third-party aiohttp package.
@@ -63,7 +63,7 @@ async def call(session: aiohttp.ClientSession,
 def check_call(session: aiohttp.ClientSession,
                params: Dict[str, Any],
                *,
-               identity: Optional[Dict[str, str]]=None
+               identity: Optional[Dict[str, str]] = None
                ) -> Dict[str, Any]:
     """Like call with check set."""
     return call(session, params, identity=identity, check=True)
