@@ -63,5 +63,6 @@ class OfferRTCMessage(_AbstractObjectMessage):
 class PickUpRTCMessage(_AbstractObjectMessage):
     _specs = {
         "answer": (is_bool, True),
+        "busy": (is_bool, False),
         "unsupported": (is_bool, False),
     }
