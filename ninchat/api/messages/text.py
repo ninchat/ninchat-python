@@ -24,8 +24,9 @@
 
 from __future__ import absolute_import
 
+from ninchat.api import is_string
+
 from . import _AbstractObjectMessage, declare_messagetype
-from .. import is_string
 
 
 @declare_messagetype("ninchat.com/text")

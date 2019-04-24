@@ -26,8 +26,9 @@ from __future__ import absolute_import
 
 import json
 
+from ninchat.api import is_float, is_object, is_string
+
 from . import _AbstractObjectMessage, declare_messagetype
-from .. import is_float, is_object, is_string
 
 
 def _is_time(x):

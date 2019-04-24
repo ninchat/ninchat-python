@@ -26,11 +26,11 @@
 
 from __future__ import absolute_import
 
-__all__ = ["call", "check_call"]
-
 import requests
 
-from .. import call as lib
+from ninchat import call as lib
+
+__all__ = ["call", "check_call"]
 
 
 def call(params, **kwargs):

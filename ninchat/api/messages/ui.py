@@ -24,8 +24,9 @@
 
 from __future__ import absolute_import
 
-from . import _AbstractObjectMessage, _AbstractObjectArrayMessage, declare_messagetype
-from .. import is_object, is_string, is_url
+from ninchat.api import is_object, is_string, is_url
+
+from . import _AbstractObjectArrayMessage, _AbstractObjectMessage, declare_messagetype
 
 
 def _is_string_with_list(x, max_length=0):

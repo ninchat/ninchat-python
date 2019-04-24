@@ -32,7 +32,7 @@ from typing import Any, Dict, Optional
 
 import aiohttp
 
-from .. import call as lib
+from ninchat import call as lib
 
 
 async def call(session: aiohttp.ClientSession,
