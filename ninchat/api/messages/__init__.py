@@ -44,6 +44,8 @@ from __future__ import absolute_import
 import json
 import logging
 
+from ninchat.api import is_object
+
 try:
     from typing import Any, Optional
     Any
@@ -111,6 +113,26 @@ class Message(object):
             log.warning("%s decoding failed", self.type, exc_info=True)
 
 
+def _check_object(specs, data):
+    if not is_object(data):
+        return False
+
+    for name, (func, required) in specs.items():
+        try:
+            value = data[name]
+        except KeyError:
+            if required:
+                return False
+        else:
+            if not func(value):
+                return False
+
+    if set(data.keys()) - set(specs.keys()):
+        return False
+
+    return True
+
+
 class _AbstractObjectMessage(Message):
     __slots__ = tuple(list(Message.__slots__) + [
         "_valid",
@@ -127,38 +149,10 @@ class _AbstractObjectMessage(Message):
         return self._verify(data)
 
     def _verify(self, data):
-        if not isinstance(data, dict):
-            log.warning("%s has no data", self.type)
+        if _check_object(self._specs, data):
+            return data
+        else:
             return None
-
-        def __verify(specs):
-            for name, (x, required) in specs.items():
-                value = data.get(name)
-                if value is not None:
-                    if not callable(x):
-                        if value not in x.keys():
-                            log.warning("%s %s is invalid", self.type, name)
-                            return None
-                        specs = x.get(value) or {}
-                        if not __verify(specs):
-                            return None
-                    elif not x(value):
-                        log.warning("%s %s is invalid", self.type, name)
-                        return None
-                elif required:
-                    log.warning("%s %s is missing", self.type, name)
-                    return None
-
-            if set(data.keys()) - set(self._specs.keys()) - set(specs.keys()):
-                log.warning("%s entry contains extraneous properties", self.type)
-                return None
-
-            return True
-
-        if not __verify(self._specs):
-            return None
-
-        return data
 
     def validate(self):
         if self._valid is None:
@@ -200,14 +194,16 @@ def declare_messagetype(pattern):
     return decorator
 
 
-from . import file
-from . import info
-from . import link
-from . import metadata
-from . import notice
-from . import rtc
-from . import text
-from . import ui
+from . import (  # isort:skip
+    file,
+    info,
+    link,
+    metadata,
+    notice,
+    rtc,
+    text,
+    ui,
+)
 
 
 # avoid warnings
