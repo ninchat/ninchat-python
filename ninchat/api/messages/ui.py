@@ -55,13 +55,26 @@ _compose_element_specs = {
     "button": None,
 }
 
+_compose_option_specs = {
+    "label": (is_string, True),
+    "value": (is_string, True),
+}
+
 
 def _is_compose_class(x):
     return is_string(x) and x.count(" ") < 5
 
 
 def _is_compose_element(x):
-    return _check_object(_compose_element_specs, x)
+    return x == "select" or _check_object(_compose_element_specs, x)
+
+
+def _is_compose_options(x):
+    return isinstance(x, list) and len(x) in range(1, 20 + 1) and all(_is_compose_option(y) for y in x)
+
+
+def _is_compose_option(y):
+    return _check_object(_compose_option_specs, y)
 
 
 @declare_messagetype("ninchat.com/ui/compose")
@@ -75,3 +88,9 @@ class ComposeUIMessage(_AbstractObjectArrayMessage):
         "label": (is_string, False),
         "name": (is_string, False),
     }
+
+    def _verify(self, data):
+        if _check_object(self._specs, data) and (data.get("element") == "select") == ("options" in data):
+            return data
+        else:
+            return None
