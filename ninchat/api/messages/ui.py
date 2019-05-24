@@ -26,48 +26,71 @@ from __future__ import absolute_import
 
 from ninchat.api import is_object, is_string, is_url
 
-from . import _AbstractObjectArrayMessage, _AbstractObjectMessage, declare_messagetype
+from . import _AbstractObjectArrayMessage, _AbstractObjectMessage, _check_object, declare_messagetype
+
+_action_action_specs = {
+    "click": None,
+}
 
 
-def _is_string_with_list(x, max_length=0):
-    return is_string(x) and x.count(" ") < max_length
+def _is_action_action(x):
+    return _check_object(_action_action_specs, x)
 
 
 @declare_messagetype("ninchat.com/ui/action")
 class ActionUIMessage(_AbstractObjectMessage):
     """Handler for ninchat.com/ui/action messages.
     """
-    __action_specs = {
-        "click": None,
-    }
-
     _specs = {
-        "action": (__action_specs, True),
+        "action": (_is_action_action, True),
         "target": (is_object, True),
     }
+
+
+_compose_element_specs = {
+    "a": {
+        "href": (is_url, False),
+        "target": (is_string, False),
+    },
+    "button": None,
+}
+
+_compose_option_specs = {
+    "label": (is_string, True),
+    "value": (is_string, True),
+}
+
+
+def _is_compose_class(x):
+    return is_string(x) and x.count(" ") < 5
+
+
+def _is_compose_element(x):
+    return x == "select" or _check_object(_compose_element_specs, x)
+
+
+def _is_compose_options(x):
+    return isinstance(x, list) and len(x) in range(1, 20 + 1) and all(_is_compose_option(y) for y in x)
+
+
+def _is_compose_option(y):
+    return _check_object(_compose_option_specs, y)
 
 
 @declare_messagetype("ninchat.com/ui/compose")
 class ComposeUIMessage(_AbstractObjectArrayMessage):
     """Handler for ninchat.com/ui/action messages.
     """
-    def __is_string_with_list(x):
-        return _is_string_with_list(x, ComposeUIMessage._valid_class_list_max_length)
-
-    __element_specs = {
-        "a": {
-            "href": (is_url, False),
-            "target": (is_string, False),
-        },
-        "button": None,
-    }
-
     _specs = {
-        "class": (__is_string_with_list, False),
-        "element": (__element_specs, True),
+        "class": (_is_compose_class, False),
+        "element": (_is_compose_element, True),
         "id": (is_string, False),
         "label": (is_string, False),
         "name": (is_string, False),
     }
 
-    _valid_class_list_max_length = 5
+    def _verify(self, data):
+        if _check_object(self._specs, data) and (data.get("element") == "select") == ("options" in data):
+            return data
+        else:
+            return None
