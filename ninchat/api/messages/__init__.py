@@ -114,18 +114,28 @@ class Message(object):
 
 
 def _check_object(specs, data):
+    if specs is None:
+        return True
+
     if not is_object(data):
         return False
 
-    for name, (func, required) in specs.items():
+    for name, spec in specs.items():
         try:
             value = data[name]
         except KeyError:
-            if required:
-                return False
+            if isinstance(spec, tuple):
+                _, required = spec
+                if required:
+                    return False
         else:
-            if not func(value):
-                return False
+            if isinstance(spec, tuple):
+                func, _ = spec
+                if not func(value):
+                    return False
+            else:
+                if not _check_object(spec, value):
+                    return False
 
     if set(data.keys()) - set(specs.keys()):
         return False
