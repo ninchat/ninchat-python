@@ -87,6 +87,7 @@ class ComposeUIMessage(_AbstractObjectArrayMessage):
         "id": (is_string, False),
         "label": (is_string, False),
         "name": (is_string, False),
+        "options": (_is_compose_options, False),
     }
 
     def _verify(self, data):
