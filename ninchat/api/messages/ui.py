@@ -28,13 +28,13 @@ from ninchat.api import is_object, is_string, is_url
 
 from . import _AbstractObjectArrayMessage, _AbstractObjectMessage, _check_object, declare_messagetype
 
-_action_action_specs = {
-    "click": None,
-}
+
+def _is_nullable_string(x):
+    return x is None or is_string(x)
 
 
 def _is_action_action(x):
-    return _check_object(_action_action_specs, x)
+    return x == "click"
 
 
 @declare_messagetype("ninchat.com/ui/action")
@@ -47,14 +47,6 @@ class ActionUIMessage(_AbstractObjectMessage):
     }
 
 
-_compose_element_specs = {
-    "a": {
-        "href": (is_url, False),
-        "target": (is_string, False),
-    },
-    "button": None,
-}
-
 _compose_option_specs = {
     "label": (is_string, True),
     "value": (is_string, True),
@@ -66,7 +58,7 @@ def _is_compose_class(x):
 
 
 def _is_compose_element(x):
-    return x == "select" or _check_object(_compose_element_specs, x)
+    return x in ("a", "button", "select")
 
 
 def _is_compose_options(x):
@@ -84,14 +76,17 @@ class ComposeUIMessage(_AbstractObjectArrayMessage):
     _specs = {
         "class": (_is_compose_class, False),
         "element": (_is_compose_element, True),
-        "id": (is_string, False),
+        "href": (is_url, False),
+        "id": (_is_nullable_string, False),
         "label": (is_string, False),
-        "name": (is_string, False),
+        "name": (_is_nullable_string, False),
         "options": (_is_compose_options, False),
     }
 
     def _verify(self, data):
-        if _check_object(self._specs, data) and (data.get("element") == "select") == ("options" in data):
-            return data
-        else:
-            return None
+        ok = all((
+            _check_object(self._specs, data),
+            (data.get("element") == "a") or ("href" not in data),
+            (data.get("element") == "select") == ("options" in data),
+        ))
+        return data if ok else None
