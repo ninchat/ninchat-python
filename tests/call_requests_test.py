@@ -22,44 +22,24 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import asyncio
-import sys
 import logging
-from functools import partial
-from glob import glob
 
-sys.path.insert(0, "")
-sys.path = glob("build/lib.*/") + sys.path
+import ninchat.call
+from ninchat.call.requests import check_call
 
-from ninchat.client.asyncio import Session
-
-log = logging.getLogger("test_client_asyncio")
+log = logging.getLogger(__name__)
 
 
-async def test():
-    def on_session_event(params):
-        pass
+def test_call_requests():
+    try:
+        event = check_call({"action": "nonexistent_action"})
+    except ninchat.call.APIError as e:
+        log.debug("error: %s", e)
+        assert e.event["error_type"] == "action_not_supported"
+    else:
+        assert False, event
 
-    def on_event(params, payload, last_reply):
-        if params["event"] == "message_received":
-            log.debug("received %s", payload[0].decode())
-
-    s = Session()
-    s.on_session_event = on_session_event
-    s.on_event = on_event
-    s.set_params({"user_attrs": {"name": "ninchat-python"}, "message_types": ["*"]})
-
-    async with s as params:
-        log.debug("opened params = %s", params)
-        user_id = params["user_id"]
-
-        params, _ = await s.call({"action": "describe_conn"})
-        log.debug("called params = %s", params)
-
-        await s.call({"action": "send_message", "message_type": "ninchat.com/text", "user_id": user_id}, [b'{"text": "Hello, me!"}'])
-
+    event = check_call({"action": "describe_conn"})
+    assert event["event"] == "conn_found"
+    log.debug("event: %s", event)
     log.info("ok")
-
-
-if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(test())

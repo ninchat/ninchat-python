@@ -24,15 +24,12 @@
 
 from __future__ import absolute_import, print_function
 
-import sys
 import time
-
-sys.path.insert(0, "")
 
 from ninchat import master
 
 
-def main():
+def test_master():
     key = (
         "22nlihvg",
         "C58sAn+Dp2Ogb2+FdfSNg3J0ImMYfYodUUgXFF2OPo0=",
@@ -72,7 +69,3 @@ def dump(s):
     print()
     print("Size:", len(s))
     print("Data:", s)
-
-
-if __name__ == "__main__":
-    main()

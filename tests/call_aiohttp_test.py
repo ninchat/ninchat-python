@@ -22,28 +22,33 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import asyncio
 import logging
 
+import aiohttp
+
 import ninchat.call
-from ninchat.call.requests import check_call
+from ninchat.call.aiohttp import check_call
 
-log = logging.getLogger("test_call_requests")
+log = logging.getLogger(__name__)
 
 
-def test():
-    try:
-        event = check_call({"action": "nonexistent_action"})
-    except ninchat.call.APIError as e:
-        log.debug("error: %s", e)
-        assert e.event["error_type"] == "action_not_supported"
-    else:
-        assert False, event
+async def async_test():
+    async with aiohttp.ClientSession() as s:
+        try:
+            event = await check_call(s, {"action": "nonexistent_action"})
+        except ninchat.call.APIError as e:
+            log.debug("error: %s", e)
+            assert e.event["error_type"] == "action_not_supported"
+        else:
+            assert False, event
 
-    event = check_call({"action": "describe_conn"})
+        event = await check_call(s, {"action": "describe_conn"})
+
     assert event["event"] == "conn_found"
     log.debug("event: %s", event)
     log.info("ok")
 
 
-if __name__ == "__main__":
-    test()
+def test_call_aiohttp():
+    asyncio.get_event_loop().run_until_complete(async_test())

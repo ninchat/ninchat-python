@@ -28,7 +28,10 @@ GIT		:= git
 REPO_URL	:= $(shell $(GIT) config remote.origin.url)
 COMMIT		:= $(shell $(GIT) rev-parse HEAD)
 
-nothing:
+check: build
+	$(PYTHON) -m pytest
+	$(PYTHON) -m tests.client_gevent
+	[ -z "$(BOT_IDENTITY_TYPE)" ] || $(PYTHON) -m tests.bot
 
 build:
 	$(PYTHON) setup.py build
@@ -47,4 +50,4 @@ clean:
 	rm -rf build
 	$(MAKE) -C docs clean
 
-.PHONY: nothing build gh-pages clean
+.PHONY: check build gh-pages clean

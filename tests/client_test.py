@@ -26,11 +26,8 @@ from __future__ import absolute_import
 
 import json
 import logging
-import sys
-from glob import glob
 
-sys.path.insert(0, "")
-sys.path = glob("build/lib.*/") + sys.path
+from ninchat.client import Session
 
 try:
     # Python 3
@@ -39,12 +36,10 @@ except ImportError:
     # Python 2
     from Queue import Queue
 
-from ninchat.client import Session
-
-log = logging.getLogger("test_client")
+log = logging.getLogger(__name__)
 
 
-def main(session_type=Session, queue_type=Queue):
+def test_client(session_type=Session, queue_type=Queue):
     user_ids = queue_type()
     messages = queue_type()
     closed = queue_type()
@@ -86,4 +81,4 @@ def main(session_type=Session, queue_type=Queue):
 
 
 if __name__ == "__main__":
-    main()
+    test_client()
