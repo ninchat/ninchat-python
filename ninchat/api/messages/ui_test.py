@@ -93,5 +93,7 @@ def test_message_ui_compose():
         [{"element": "button", "id": "x", "label": "x"}],
         [{"element": "button", "label": "x", "name": "x"}],
         [{"element": "button", "label": "x"}, {"element": "button", "label": "x"}],
+        [{"element": "select", "options": [{"label": "x", "value": "x"}]}],
+        [{"element": "select", "options": [{"label": "x", "value": "x"}, {"label": "y", "value": "y"}]}],
     ]):
         message_test("ninchat.com/ui/compose", i, data)
