@@ -55,6 +55,7 @@ def test_message_ui_action():
         {"action": "click", "target": {"element": "button", "id": "x"}},
         {"action": "click", "target": {"element": "button", "label": "x", "name": "x"}},
         {"action": "click", "target": {"element": "button", "label": "x"}},
+        {"action": "click", "target": {"element": "select", "options": [{"label": "x", "value": "x"}]}},
     ]):
         message_test("ninchat.com/ui/action", i, data)
 
