@@ -24,72 +24,74 @@
 
 from __future__ import absolute_import
 
+import json
+
 from . import factories
 
 factory_dict = dict(factories)
 
 
-def message_test(mtype, index, frame):
+def message_test(mtype, index, data):
     factory = factory_dict[mtype]
-    payload = [frame]
+    payload = [json.dumps(data).encode()]
     message = factory(mtype, payload)
     assert message.validate()
 
 
 def test_message_ui_action():
-    for i, frame in enumerate([
-        b'{"action": "click", "target": {"class": "x y z", "element": "a", "href": "https://example.net", "label": "x"}}',
-        b'{"action": "click", "target": {"class": "x y z", "element": "button", "id": "x", "label": "x", "name": "x"}}',
-        b'{"action": "click", "target": {"class": "x y z", "element": "button", "label": "x", "name": "x"}}',
-        b'{"action": "click", "target": {"class": "x", "element": "button", "id": "x", "label": "x", "name": "x"}}',
-        b'{"action": "click", "target": {"class": "x", "element": "button", "id": "x", "label": "x"}}',
-        b'{"action": "click", "target": {"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}}',
-        b'{"action": "click", "target": {"element": "a", "href": "https://example.net", "id": "x", "label": "x"}}',
-        b'{"action": "click", "target": {"element": "a", "href": "https://example.net", "label": "x"}}',
-        b'{"action": "click", "target": {"element": "a", "href": "https://example.net"}}',
-        b'{"action": "click", "target": {"element": "button", "id": "x y z", "label": "x y z"}}',
-        b'{"action": "click", "target": {"element": "button", "id": "x", "label": "x y z"}}',
-        b'{"action": "click", "target": {"element": "button", "id": "x", "label": "x"}}',
-        b'{"action": "click", "target": {"element": "button", "id": "x"}}',
-        b'{"action": "click", "target": {"element": "button", "label": "x", "name": "x"}}',
-        b'{"action": "click", "target": {"element": "button", "label": "x"}}',
+    for i, data in enumerate([
+        {"action": "click", "target": {"class": "x y z", "element": "a", "href": "https://example.net", "label": "x"}},
+        {"action": "click", "target": {"class": "x y z", "element": "button", "id": "x", "label": "x", "name": "x"}},
+        {"action": "click", "target": {"class": "x y z", "element": "button", "label": "x", "name": "x"}},
+        {"action": "click", "target": {"class": "x", "element": "button", "id": "x", "label": "x", "name": "x"}},
+        {"action": "click", "target": {"class": "x", "element": "button", "id": "x", "label": "x"}},
+        {"action": "click", "target": {"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}},
+        {"action": "click", "target": {"element": "a", "href": "https://example.net", "id": "x", "label": "x"}},
+        {"action": "click", "target": {"element": "a", "href": "https://example.net", "label": "x"}},
+        {"action": "click", "target": {"element": "a", "href": "https://example.net"}},
+        {"action": "click", "target": {"element": "button", "id": "x y z", "label": "x y z"}},
+        {"action": "click", "target": {"element": "button", "id": "x", "label": "x y z"}},
+        {"action": "click", "target": {"element": "button", "id": "x", "label": "x"}},
+        {"action": "click", "target": {"element": "button", "id": "x"}},
+        {"action": "click", "target": {"element": "button", "label": "x", "name": "x"}},
+        {"action": "click", "target": {"element": "button", "label": "x"}},
     ]):
-        message_test("ninchat.com/ui/action", i, frame)
+        message_test("ninchat.com/ui/action", i, data)
 
 
 def test_message_ui_compose():
-    for i, frame in enumerate([
-        b'[]',
-        b'[{"class": "x y z", "element": "a", "href": "https://example.net", "id": null, "label": "x", "name": null}, {"class": "x y z", "element": "a", "href": "https://example.net", "id": null, "label": "x", "name": null}]',
-        b'[{"class": "x y z", "element": "button", "id": "x", "label": "x", "name": "x"}, {"class": "x y z", "element": "button", "label": "x", "name": "x"}]',
-        b'[{"class": "x", "element": "button", "id": "x", "label": "x y z", "name": "x"}, {"class": "x", "element": "button", "id": "x", "label": "x y z", "name": "x"}]',
-        b'[{"class": "x", "element": "button", "id": "x", "label": "x", "name": "x"}, {"class": "x", "element": "button", "id": "x", "label": "x", "name": "x"}]',
-        b'[{"class": "x", "element": "button", "id": "x", "label": "x", "name": "x"}]',
-        b'[{"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}, {"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}]',
-        b'[{"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}, {"element": "button", "id": "x y z", "label": "x y z"}]',
-        b'[{"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}]',
-        b'[{"element": "a", "href": "https://example.net", "id": "x", "label": "x"}, {"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}]',
-        b'[{"element": "a", "href": "https://example.net", "id": "x", "label": "x"}, {"element": "button", "id": "x y z", "label": "x y z"}]',
-        b'[{"element": "a", "href": "https://example.net", "id": "x", "label": "x"}]',
-        b'[{"element": "a", "href": "https://example.net", "label": "x"}, {"element": "a", "href": "https://example.net", "label": "x"}]',
-        b'[{"element": "a", "href": "https://example.net", "label": "x"}]',
-        b'[{"element": "a", "href": "https://example.net"}]',
-        b'[{"element": "button", "id": "x y z", "label": "x y z"}, {"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}]',
-        b'[{"element": "button", "id": "x y z", "label": "x y z"}, {"element": "button", "id": "x y z", "label": "x y z"}]',
-        b'[{"element": "button", "id": "x y z", "label": "x y z"}, {"element": "button", "id": "x", "label": "x"}]',
-        b'[{"element": "button", "id": "x y z", "label": "x y z"}]',
-        b'[{"element": "button", "id": "x", "label": ""}, {"element": "button", "id": "x", "label": ""}]',
-        b'[{"element": "button", "id": "x", "label": ""}, {"element": "button", "id": "x", "label": "x"}]',
-        b'[{"element": "button", "id": "x", "label": "x y z"}, {"element": "button", "id": "x", "label": "x y z"}]',
-        b'[{"element": "button", "id": "x", "label": "x y z"}, {"element": "button", "id": "x", "label": "x"}]',
-        b'[{"element": "button", "id": "x", "label": "x y z"}]',
-        b'[{"element": "button", "id": "x", "label": "x"}, {"class": "x", "element": "button", "id": "x", "label": "x"}]',
-        b'[{"element": "button", "id": "x", "label": "x"}, {"element": "button", "id": "x y z", "label": "x y z"}]',
-        b'[{"element": "button", "id": "x", "label": "x"}, {"element": "button", "id": "x", "label": ""}]',
-        b'[{"element": "button", "id": "x", "label": "x"}, {"element": "button", "id": "x", "label": "x y z"}]',
-        b'[{"element": "button", "id": "x", "label": "x"}, {"element": "button", "id": "x", "label": "x"}]',
-        b'[{"element": "button", "id": "x", "label": "x"}]',
-        b'[{"element": "button", "label": "x", "name": "x"}]',
-        b'[{"element": "button", "label": "x"}, {"element": "button", "label": "x"}]',
+    for i, data in enumerate([
+        [],
+        [{"class": "x y z", "element": "a", "href": "https://example.net", "id": None, "label": "x", "name": None}, {"class": "x y z", "element": "a", "href": "https://example.net", "id": None, "label": "x", "name": None}],
+        [{"class": "x y z", "element": "button", "id": "x", "label": "x", "name": "x"}, {"class": "x y z", "element": "button", "label": "x", "name": "x"}],
+        [{"class": "x", "element": "button", "id": "x", "label": "x y z", "name": "x"}, {"class": "x", "element": "button", "id": "x", "label": "x y z", "name": "x"}],
+        [{"class": "x", "element": "button", "id": "x", "label": "x", "name": "x"}, {"class": "x", "element": "button", "id": "x", "label": "x", "name": "x"}],
+        [{"class": "x", "element": "button", "id": "x", "label": "x", "name": "x"}],
+        [{"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}, {"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}],
+        [{"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}, {"element": "button", "id": "x y z", "label": "x y z"}],
+        [{"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}],
+        [{"element": "a", "href": "https://example.net", "id": "x", "label": "x"}, {"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}],
+        [{"element": "a", "href": "https://example.net", "id": "x", "label": "x"}, {"element": "button", "id": "x y z", "label": "x y z"}],
+        [{"element": "a", "href": "https://example.net", "id": "x", "label": "x"}],
+        [{"element": "a", "href": "https://example.net", "label": "x"}, {"element": "a", "href": "https://example.net", "label": "x"}],
+        [{"element": "a", "href": "https://example.net", "label": "x"}],
+        [{"element": "a", "href": "https://example.net"}],
+        [{"element": "button", "id": "x y z", "label": "x y z"}, {"element": "a", "href": "https://example.net", "id": "x y z", "label": "x y z"}],
+        [{"element": "button", "id": "x y z", "label": "x y z"}, {"element": "button", "id": "x y z", "label": "x y z"}],
+        [{"element": "button", "id": "x y z", "label": "x y z"}, {"element": "button", "id": "x", "label": "x"}],
+        [{"element": "button", "id": "x y z", "label": "x y z"}],
+        [{"element": "button", "id": "x", "label": ""}, {"element": "button", "id": "x", "label": ""}],
+        [{"element": "button", "id": "x", "label": ""}, {"element": "button", "id": "x", "label": "x"}],
+        [{"element": "button", "id": "x", "label": "x y z"}, {"element": "button", "id": "x", "label": "x y z"}],
+        [{"element": "button", "id": "x", "label": "x y z"}, {"element": "button", "id": "x", "label": "x"}],
+        [{"element": "button", "id": "x", "label": "x y z"}],
+        [{"element": "button", "id": "x", "label": "x"}, {"class": "x", "element": "button", "id": "x", "label": "x"}],
+        [{"element": "button", "id": "x", "label": "x"}, {"element": "button", "id": "x y z", "label": "x y z"}],
+        [{"element": "button", "id": "x", "label": "x"}, {"element": "button", "id": "x", "label": ""}],
+        [{"element": "button", "id": "x", "label": "x"}, {"element": "button", "id": "x", "label": "x y z"}],
+        [{"element": "button", "id": "x", "label": "x"}, {"element": "button", "id": "x", "label": "x"}],
+        [{"element": "button", "id": "x", "label": "x"}],
+        [{"element": "button", "label": "x", "name": "x"}],
+        [{"element": "button", "label": "x"}, {"element": "button", "label": "x"}],
     ]):
-        message_test("ninchat.com/ui/compose", i, frame)
+        message_test("ninchat.com/ui/compose", i, data)
