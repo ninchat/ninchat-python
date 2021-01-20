@@ -62,6 +62,20 @@ class MemberInfoMessage(Message):
     __slots__ = Message.__slots__
 
 
+@declare_messagetype("ninchat.com/info/transfer/target")
+class TransferTargetInfoMessage(Message):
+    """Stub for the ninchat.com/info/transfer/target message type.
+    """
+    __slots__ = Message.__slots__
+
+
+@declare_messagetype("ninchat.com/info/transfer/source")
+class TransferSourceInfoMessage(Message):
+    """Stub for the ninchat.com/info/transfer/source message type.
+    """
+    __slots__ = Message.__slots__
+
+
 @declare_messagetype("ninchat.com/info/access")
 class AccessInfoMessage(Message):
     """Stub for the ninchat.com/info/access message type.
