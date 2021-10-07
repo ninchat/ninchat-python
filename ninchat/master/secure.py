@@ -36,20 +36,20 @@ _AES256CBC_IV_SIZE = _AES256_BLOCK_SIZE
 try:
     from cryptography.hazmat.backends import default_backend as _default_backend
     from cryptography.hazmat.primitives.ciphers import Cipher as _Cipher
-    from cryptography.hazmat.primitives.ciphers.algorithms import AES as _AES
+    from cryptography.hazmat.primitives.ciphers.algorithms import AES as _AES_cryptography
     from cryptography.hazmat.primitives.ciphers.modes import CBC as _CBC
 except ImportError:
-    from Crypto.Cipher import AES as _AES
+    from Crypto.Cipher import AES as _AES_Crypto
 
     # PyCrypto
     def _aes256cbc_encrypt(key, iv, plaintext):
-        cipher = _AES.new(key, _AES.MODE_CBC, iv)
+        cipher = _AES_Crypto.new(key, _AES_Crypto.MODE_CBC, iv)
         ciphertext = cipher.encrypt(plaintext)
         return ciphertext
 else:
     # cryptography
     def _aes256cbc_encrypt(key, iv, plaintext):
-        algo = _AES(key)
+        algo = _AES_cryptography(key)
         mode = _CBC(iv)
         backend = _default_backend()
         cipher = _Cipher(algo, mode, backend)
