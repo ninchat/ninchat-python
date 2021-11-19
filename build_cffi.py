@@ -25,7 +25,7 @@
 from __future__ import absolute_import, print_function
 
 from os import environ
-from os.path import dirname, exists
+from os.path import dirname, exists, join
 from subprocess import check_call
 
 from cffi import FFI
@@ -36,7 +36,7 @@ gobuildout = environ.get("GOBUILDOUT", "build/libninchat.a")
 
 if not exists(gobuildout):
     print("building", gobuildout, "with", gocommand)
-    check_call([gocommand, "build", "-buildmode={}".format(gobuildmode), "-o", gobuildout, "go/src/github.com/ninchat/ninchat-go/c/library.go"])
+    check_call([gocommand, "build", "-buildmode={}".format(gobuildmode), "-o", join("../../../../..", gobuildout), "c/library.go"], cwd="go/src/github.com/ninchat/ninchat-go")
 
 ffibuilder = FFI()
 

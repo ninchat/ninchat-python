@@ -4,6 +4,3 @@
 [submodule "go/src/github.com/ninchat/ninchat-go"]
 	path = go/src/github.com/ninchat/ninchat-go
 	url = https://github.com/ninchat/ninchat-go.git
-[submodule "go/src/github.com/gorilla/websocket"]
-	path = go/src/github.com/gorilla/websocket
-	url = https://github.com/gorilla/websocket.git

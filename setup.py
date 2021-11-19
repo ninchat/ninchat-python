@@ -31,8 +31,6 @@ if not exists("ninchat/api/spec/json"):
 if not exists("go/src/github.com/ninchat/ninchat-go/include"):
     raise Exception("ninchat-go submodule not found")
 
-environ["GOPATH"] = join(getcwd(), "go")
-
 try:
     import setuptools
     import sys

@@ -1,5 +1,6 @@
 *.py[co]
 .eggs/
 .nincat
+.pytest_cache/
 __pycache__/
 build/
