@@ -41,7 +41,7 @@
 
 from __future__ import absolute_import
 
-import json
+import json as _json
 import logging
 
 from ninchat.api import is_object
@@ -108,7 +108,7 @@ class Message(object):
 
     def _decode_json_header(self):
         try:
-            return json.loads(_decode(self.payload[0]))
+            return _json.loads(_decode(self.payload[0]))
         except Exception:
             log.warning("%s decoding failed", self.type, exc_info=True)
 
@@ -207,6 +207,7 @@ def declare_messagetype(pattern):
 from . import (  # isort:skip
     file,
     info,
+    json,
     link,
     metadata,
     notice,
@@ -219,6 +220,7 @@ from . import (  # isort:skip
 # avoid warnings
 file
 info
+json
 link
 metadata
 notice

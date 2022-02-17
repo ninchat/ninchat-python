@@ -24,6 +24,9 @@ Message types
 .. automodule:: ninchat.api.messages.info
    :members:
 
+.. automodule:: ninchat.api.messages.json
+   :members:
+
 .. automodule:: ninchat.api.messages.link
    :members:
 
