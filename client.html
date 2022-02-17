@@ -1,0 +1,292 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Session client support &#8212; ninchat-python 1.2.0 documentation</title>
+    <link rel="stylesheet" href="static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="static/documentation_options.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Call API support" href="call.html" />
+    <link rel="prev" title="Master key support" href="master.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="call.html" title="Call API support"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="master.html" title="Master key support"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ninchat-python 1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="session-client-support">
+<h1>Session client support<a class="headerlink" href="#session-client-support" title="Permalink to this headline">¶</a></h1>
+<p>The ninchat.client package contains a client implementation built using Go and
+CFFI (the _ninchat_cffi module).  It’s using the same codebase as the
+ninchat-go and ninchat-js repositories.</p>
+<div class="section" id="session-implementations">
+<h2>Session implementations<a class="headerlink" href="#session-implementations" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-ninchat.client">
+<span id="default"></span><h3>Default<a class="headerlink" href="#module-ninchat.client" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="ninchat.client.Session">
+<em class="property">class </em><code class="descclassname">ninchat.client.</code><code class="descname">Session</code><a class="headerlink" href="#ninchat.client.Session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actions may be sent via the send() method.</p>
+<p>A server session must be established by configuring callbacks,
+calling the set_params() and open() methods, and waiting for a
+“session_created” (or an “error”) event.  If the server drops the
+session (due to network timeout or some other exceptional reason), a
+new server session is created automatically, and another
+“session_created” event is delivered.</p>
+<p>Callbacks (the attributes prefixed with “on”) may either be
+configured by setting them as properties, or by subclassing Session
+and implementing them as methods.</p>
+<p>Action/event params are dictionaries of string keys and arbitrary
+values.  Action/event payloads are lists of bytes-like objects.  See
+<a class="reference external" href="https://ninchat.com/api">https://ninchat.com/api</a> for details.</p>
+<p>Threading:</p>
+<ul class="simple">
+<li>The API is not thread-safe.  If Session methods are invoked on
+multiple threads (probably a bad idea), proper synchronization
+must be taken care of.</li>
+<li>The callbacks are executed on arbitrary threads, so proper
+synchronization must be taken care of.  (The asyncio and gevent
+implementations avoid this problem.)</li>
+</ul>
+<dl class="attribute">
+<dt id="ninchat.client.Session.on_session_event">
+<code class="descname">on_session_event</code><a class="headerlink" href="#ninchat.client.Session.on_session_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Session creation/failure callback.  Invoked with the event’s
+params.  If an “error” event is delivered, it means that a new
+server session cannot be created automatically; the set_params()
+method must be used to update login credentials.  The close()
+method must be called if the session will not be resumed after an
+error.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.client.Session.on_event">
+<code class="descname">on_event</code><a class="headerlink" href="#ninchat.client.Session.on_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Event delivery callback.  Invoked with the event’s params,
+event’s payload, and a boolean which indicates if it was the last
+reply to the action indicated by the event’s “action_id”
+parameter.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.client.Session.on_close">
+<code class="descname">on_close</code><a class="headerlink" href="#ninchat.client.Session.on_close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates that the session closure initiated by calling the
+close() method has completed.  Invoked without arguments.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.client.Session.on_conn_state">
+<code class="descname">on_conn_state</code><a class="headerlink" href="#ninchat.client.Session.on_conn_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates a change in the internal connection state.  Invoked
+with one of the strings: “connecting”, “connected”, “disconnected”.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.client.Session.on_active">
+<code class="descname">on_active</code><a class="headerlink" href="#ninchat.client.Session.on_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates that there has recently been activity on the connection.
+Invoked without arguments.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.client.Session.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.client.Session.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the session on the server.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.client.Session.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>on_open=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.client.Session.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a session on the server.  If specified, the on_open
+callback will be called with the (initial) session
+creation/failure event’s params.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.client.Session.send">
+<code class="descname">send</code><span class="sig-paren">(</span><em>params</em>, <em>payload=None</em>, <em>on_reply=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.client.Session.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send an action.  If specified, the on_reply callback will be
+invoked with the reply event(s).  If the session is closed
+before the final reply event is received, the callback will be
+invoked with params set to None.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.client.Session.set_params">
+<code class="descname">set_params</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.client.Session.set_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets or replaces the params to be used for the next
+“create_session” action.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="ninchat.client.Error">
+<em class="property">exception </em><code class="descclassname">ninchat.client.</code><code class="descname">Error</code><a class="headerlink" href="#ninchat.client.Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raised by some Session methods.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-ninchat.client.gevent">
+<span id="gevent-interoperability"></span><h3>Gevent interoperability<a class="headerlink" href="#module-ninchat.client.gevent" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="ninchat.client.gevent.Session">
+<em class="property">class </em><code class="descclassname">ninchat.client.gevent.</code><code class="descname">Session</code><a class="headerlink" href="#ninchat.client.gevent.Session" title="Permalink to this definition">¶</a></dt>
+<dd><p>A version of ninchat.client.Session which executes callbacks
+in the main thread’s gevent event loop.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-ninchat.client.asyncio">
+<span id="asyncio-support"></span><h3>Asyncio support<a class="headerlink" href="#module-ninchat.client.asyncio" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="ninchat.client.asyncio.Session">
+<em class="property">class </em><code class="descclassname">ninchat.client.asyncio.</code><code class="descname">Session</code><span class="sig-paren">(</span><em>*</em>, <em>loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.client.asyncio.Session" title="Permalink to this definition">¶</a></dt>
+<dd><p>A version of ninchat.client.Session which executes callbacks
+in the asyncio event loop.</p>
+<dl class="attribute">
+<dt id="ninchat.client.asyncio.Session.opened">
+<code class="descname">opened</code><a class="headerlink" href="#ninchat.client.asyncio.Session.opened" title="Permalink to this definition">¶</a></dt>
+<dd><p>A future which provides the session_created event’s parameters once the
+session has been created (for the first time).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ninchat.client.asyncio.Session.closed">
+<code class="descname">closed</code><a class="headerlink" href="#ninchat.client.asyncio.Session.closed" title="Permalink to this definition">¶</a></dt>
+<dd><p>A future which will be marked as done once the session closing is
+complete.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.client.asyncio.Session.call">
+<code class="descname">call</code><span class="sig-paren">(</span><em>params</em>, <em>payload=None</em>, <em>on_reply=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.client.asyncio.Session.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>An awaitable version of ninchat.client.Session.send().
+Returns the final reply event’s params and payload.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.client.asyncio.Session.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.client.asyncio.Session.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like ninchat.client.Session.close(), but returns a
+future.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ninchat.client.asyncio.Session.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>on_reply=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.client.asyncio.Session.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like ninchat.client.Session.open(), but returns a
+future.  The on_reply callback is supported for interface
+compatibility.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Session client support</a><ul>
+<li><a class="reference internal" href="#session-implementations">Session implementations</a><ul>
+<li><a class="reference internal" href="#module-ninchat.client">Default</a></li>
+<li><a class="reference internal" href="#module-ninchat.client.gevent">Gevent interoperability</a></li>
+<li><a class="reference internal" href="#module-ninchat.client.asyncio">Asyncio support</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="master.html"
+                        title="previous chapter">Master key support</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="call.html"
+                        title="next chapter">Call API support</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/client.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="call.html" title="Call API support"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="master.html" title="Master key support"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ninchat-python 1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012, Somia Reality Oy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

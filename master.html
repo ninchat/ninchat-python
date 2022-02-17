@@ -1,0 +1,183 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Master key support &#8212; ninchat-python 1.2.0 documentation</title>
+    <link rel="stylesheet" href="static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="static/documentation_options.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Session client support" href="client.html" />
+    <link rel="prev" title="API specifications" href="api.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="client.html" title="Session client support"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API specifications"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ninchat-python 1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-ninchat.master">
+<span id="master-key-support"></span><h1>Master key support<a class="headerlink" href="#module-ninchat.master" title="Permalink to this headline">¶</a></h1>
+<p>Utilities for using master keys.</p>
+<p>The master key id and secret may be obtained with the <a class="reference external" href="https://ninchat.com/api#create_master_key">create_master_key</a> API action.  The <em>key</em> argument
+taken by all functions is a pair (e.g. a tuple) consisting of the id and the
+secret.</p>
+<p>The signatures and secured metadata may be used once before the expiration
+time.  Expiration time is specified in Unix time (seconds since 1970-01-01
+UTC), and may not be more than one week in the future.</p>
+<div class="section" id="signature-generation">
+<h2>Signature generation<a class="headerlink" href="#signature-generation" title="Permalink to this headline">¶</a></h2>
+<p>The following functions create values for the master_sign parameter of some API
+actions.  The <em>member_attrs</em> argument is expected to be an iterable with pair
+(e.g. tuple) elements, as opposed to the API actions which expect it as a dict.</p>
+<p>For use with the <a class="reference external" href="https://ninchat.com/api#create_session">create_session</a>
+action:</p>
+<dl class="function">
+<dt id="ninchat.master.sign_create_session">
+<code class="descclassname">ninchat.master.</code><code class="descname">sign_create_session</code><span class="sig-paren">(</span><em>key</em>, <em>expire</em>, <em>puppet_attrs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.master.sign_create_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use when creating a new user.  The user will become a puppet of the master.
+The <em>puppet_attrs</em> specified here must be repeated in the API call.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ninchat.master.sign_create_session_for_user">
+<code class="descclassname">ninchat.master.</code><code class="descname">sign_create_session_for_user</code><span class="sig-paren">(</span><em>key</em>, <em>expire</em>, <em>user_id</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.master.sign_create_session_for_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use when authenticating an existing user.  The user must be a puppet of the
+master.  The <em>user_id</em> specified here must be repeated in the API call.</p>
+</dd></dl>
+
+<p>For use with the <a class="reference external" href="https://ninchat.com/api#join_channel">join_channel</a> action:</p>
+<dl class="function">
+<dt id="ninchat.master.sign_join_channel">
+<code class="descclassname">ninchat.master.</code><code class="descname">sign_join_channel</code><span class="sig-paren">(</span><em>key</em>, <em>expire</em>, <em>channel_id</em>, <em>member_attrs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.master.sign_join_channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>For use by any user.  The master must own the channel.  The <em>channel_id</em> and
+<em>member_attrs</em> specified here must be repeated in the API call.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ninchat.master.sign_join_channel_for_user">
+<code class="descclassname">ninchat.master.</code><code class="descname">sign_join_channel_for_user</code><span class="sig-paren">(</span><em>key</em>, <em>expire</em>, <em>channel_id</em>, <em>user_id</em>, <em>member_attrs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.master.sign_join_channel_for_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>For use by the specified user only.  The master must own the channel.  The
+<em>channel_id</em> and <em>member_attrs</em> specified here must be repeated in the
+API call.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="metadata-encryption">
+<h2>Metadata encryption<a class="headerlink" href="#metadata-encryption" title="Permalink to this headline">¶</a></h2>
+<p>The following functions create values for the “secure” property of the
+audience_metadata parameter of the <a class="reference external" href="https://ninchat.com/api#request_audience">request_audience</a> API action.  The <em>metadata</em>
+argument should be a dict or None.</p>
+<p>(The functions are unavailable if cryptography or PyCrypto can’t be found.)</p>
+<dl class="function">
+<dt id="ninchat.master.secure_metadata">
+<code class="descclassname">ninchat.master.</code><code class="descname">secure_metadata</code><span class="sig-paren">(</span><em>key</em>, <em>expire</em>, <em>metadata</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.master.secure_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>For use by any user.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ninchat.master.secure_metadata_for_user">
+<code class="descclassname">ninchat.master.</code><code class="descname">secure_metadata_for_user</code><span class="sig-paren">(</span><em>key</em>, <em>expire</em>, <em>metadata</em>, <em>user_id</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.master.secure_metadata_for_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>For use by the specified user only.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Master key support</a><ul>
+<li><a class="reference internal" href="#signature-generation">Signature generation</a></li>
+<li><a class="reference internal" href="#metadata-encryption">Metadata encryption</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="previous chapter">API specifications</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="client.html"
+                        title="next chapter">Session client support</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/master.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="client.html" title="Session client support"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API specifications"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ninchat-python 1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012, Somia Reality Oy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

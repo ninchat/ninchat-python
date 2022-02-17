@@ -1,0 +1,153 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Call API support &#8212; ninchat-python 1.2.0 documentation</title>
+    <link rel="stylesheet" href="static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="static/documentation_options.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Session client support" href="client.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="client.html" title="Session client support"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ninchat-python 1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="call-api-support">
+<h1>Call API support<a class="headerlink" href="#call-api-support" title="Permalink to this headline">¶</a></h1>
+<p>The ninchat.call package contains helpers for making sessionless HTTP calls to
+the Ninchat API.</p>
+<div class="section" id="http-client-implementations">
+<h2>HTTP client implementations<a class="headerlink" href="#http-client-implementations" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-ninchat.call.requests">
+<span id="using-requests"></span><h3>Using requests<a class="headerlink" href="#module-ninchat.call.requests" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="ninchat.call.requests.call">
+<code class="descclassname">ninchat.call.requests.</code><code class="descname">call</code><span class="sig-paren">(</span><em>params</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.call.requests.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a HTTP request to the Ninchat Call API using the third-party
+requests package.</p>
+<p>If check is set, raises a ninchat.call.APIError on “error” reply
+event.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ninchat.call.requests.check_call">
+<code class="descclassname">ninchat.call.requests.</code><code class="descname">check_call</code><span class="sig-paren">(</span><em>params</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#ninchat.call.requests.check_call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like call with check set.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-ninchat.call.aiohttp">
+<span id="asyncio-support-using-aiohttp"></span><h3>Asyncio support using aiohttp<a class="headerlink" href="#module-ninchat.call.aiohttp" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="ninchat.call.aiohttp.call">
+<code class="descclassname">ninchat.call.aiohttp.</code><code class="descname">call</code><span class="sig-paren">(</span><em>session: aiohttp.client.ClientSession, params: Dict[str, Any], *, identity: Optional[Dict[str, str]] = None, check: bool = False</em><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="headerlink" href="#ninchat.call.aiohttp.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>An asyncio coroutine which makes a HTTP request to the
+Ninchat Call API using the third-party aiohttp package.</p>
+<p>If check is set, raises a ninchat.call.APIError on “error” reply
+event.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ninchat.call.aiohttp.check_call">
+<code class="descclassname">ninchat.call.aiohttp.</code><code class="descname">check_call</code><span class="sig-paren">(</span><em>session: aiohttp.client.ClientSession, params: Dict[str, Any], *, identity: Optional[Dict[str, str]] = None</em><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="headerlink" href="#ninchat.call.aiohttp.check_call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like call with check set.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Call API support</a><ul>
+<li><a class="reference internal" href="#http-client-implementations">HTTP client implementations</a><ul>
+<li><a class="reference internal" href="#module-ninchat.call.requests">Using requests</a></li>
+<li><a class="reference internal" href="#module-ninchat.call.aiohttp">Asyncio support using aiohttp</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="client.html"
+                        title="previous chapter">Session client support</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/call.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="client.html" title="Session client support"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ninchat-python 1.2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012, Somia Reality Oy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>
