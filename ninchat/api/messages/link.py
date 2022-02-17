@@ -31,7 +31,7 @@ from . import _AbstractObjectMessage, declare_messagetype
 
 @declare_messagetype("ninchat.com/link")
 class LinkMessage(_AbstractObjectMessage):
-    """Handler for ninchat.com/link messages.
+    """Handler for ninchat.com/link messages.  This message type is deprecated.
     """
     __slots__ = _AbstractObjectMessage.__slots__
 
