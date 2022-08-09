@@ -157,7 +157,7 @@ def is_uri(x):
         if o.netloc or o.params or o.query or o.fragment:
             return False
 
-        if re.match(r"^\+?[\d-]+$", o.path):
+        if re.match(r"^ ?\+?[-\d() ]+$", o.path):
             return True
 
     # DENY otherwise
