@@ -24,7 +24,7 @@
 
 from __future__ import absolute_import
 
-from ninchat.api import is_object, is_string, is_url
+from ninchat.api import is_object, is_string, is_uri
 
 from . import _AbstractObjectArrayMessage, _AbstractObjectMessage, _check_object, declare_messagetype
 
@@ -76,7 +76,7 @@ class ComposeUIMessage(_AbstractObjectArrayMessage):
     _specs = {
         "class": (_is_compose_class, False),
         "element": (_is_compose_element, True),
-        "href": (is_url, False),
+        "href": (is_uri, False),
         "id": (_is_nullable_string, False),
         "label": (is_string, False),
         "name": (_is_nullable_string, False),

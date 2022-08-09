@@ -123,33 +123,42 @@ def is_time(x):
     return isinstance(x, _ints) and x >= 0
 
 
-def is_url(x):
+def is_uri(x):
     try:
         o = urlparse(x)
     except ValueError:
         return False
 
-    # DENY if not https
-    if o.scheme != "https":
-        return False
+    if o.scheme == "https":
+        # DENY if ports assigned or ipv6 address
+        if ":" in o.netloc:
+            return False
 
-    # DENY if ports assigned or ipv6 address
-    if ":" in o.netloc:
-        return False
+        host = o.hostname.lower()
 
-    host = o.hostname.lower()
+        # DENY if no alphabet (ipv4 address)
+        if re.match(r"^[^a-z]*$", host):
+            return False
 
-    # DENY if no alphabet (ipv4 address)
-    if re.match(r"^[^a-z]*$", host):
-        return False
+        # DENY if localhost or on local zeroconf network
+        if host == "localhost" or host.startswith("localhost.") or host.endswith(".local"):
+            return False
 
-    # DENY if localhost or on local zeroconf network
-    if host == "localhost" or host.startswith("localhost.") or host.endswith(".local"):
-        return False
+        # ALLOW if based on RFC 956 or RFC 1123
+        if re.match(r"^[a-z0-9][a-z0-9-.]{0,251}[a-z0-9]$", host):
+            return True
+    elif o.scheme == "mailto":
+        if o.netloc or o.params or o.query or o.fragment:
+            return False
 
-    # ALLOW if based on RFC 956 or RFC 1123
-    if re.match(r"^[a-z0-9][a-z0-9-.]{0,251}[a-z0-9]$", host):
-        return True
+        if re.match(r"^[^\s]+@[^\s]+\.[^\s]+$", o.path):
+            return True
+    elif o.scheme == "tel":
+        if o.netloc or o.params or o.query or o.fragment:
+            return False
+
+        if re.match(r"^\+?[\d-]+$", o.path):
+            return True
 
     # DENY otherwise
     return False
